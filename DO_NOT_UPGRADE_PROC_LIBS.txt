@@ -1,0 +1,5 @@
+something about upgrading processing from the version I am using is causing problems.  
+
+with 3.1.1 processing fixed some pshape bugs and subsequently made textures (like on the sails) extremely slow when incorporated into pshape groups.  
+
+futhermore, i'm guessing a processing bug (looks like related to the persistence of the transformation matrix stack across different pshape instances - possibly related to processing issue #4662) was fixed before 3.3.3 was released that changed how pshapes are built which caused the sails and oars of the boats to be built incorrectly.  presumably i was countering an extant bug in how i organized the geometry of the components of the boats when i originally made them, and updating to the new version causes them to build incorrectly.  unfortunately these bugs in processing force me to either not include sails textures, include them on all sails for a boat (instead of only 1 per mast) or have them on 1 per mast but have the blank sail unable to be colored properly (ends up being most recent global fill color despite code settings in pshape instancing code).

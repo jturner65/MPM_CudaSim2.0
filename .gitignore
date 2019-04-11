@@ -1,0 +1,5 @@
+
+*.class
+*.jpg
+/bin/
+.settings
