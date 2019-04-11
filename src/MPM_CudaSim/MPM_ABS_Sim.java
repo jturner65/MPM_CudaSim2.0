@@ -106,7 +106,7 @@ public abstract class MPM_ABS_Sim{
 	public int numThreadsAvail;	
 	
 	//iterations per frame
-	public static int simStepsPerFrame = 1;
+	public static int simStepsPerFrame = 2;
 	//time of simulation start, in millis
 	private long simStartTime;
 
