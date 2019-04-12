@@ -2,3 +2,7 @@
 Update of MPM Cuda project with recompiled kernel, and updated to Jcuda for CUDA 9.2
 
 I've merged a few of the kernels and fixed a few bugs in the calculations, restructured how the kernel calls are built and called, and generally cleaned up and streamlined the java code.  I've also changed some of the default values so that the sim isn't so brittle, which enabled me to increase the timestep by a factor of 10.
+
+Here's a link to a video : 
+
+https://www.dropbox.com/s/8idue9mlvg6lee0/MPM%20Snow%20JCuda.mp4?dl=0

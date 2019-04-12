@@ -60,7 +60,7 @@ public abstract class MPM_ABS_Sim{
 	
 	//parameters
 	//timestep of simulation - 
-	private static float deltaT = 3.5e-4f;
+	private static float deltaT = 4e-4f;
 	//scale w/timestep
 	private static float initVel = 30.0f;
 	//snow density varies from 50 to ~800
@@ -392,7 +392,7 @@ public abstract class MPM_ABS_Sim{
 	}	
 	
 	//create sphere with given center, with passed # of particles
-	private void createSphere(TreeMap<String, ArrayList<Float[]>> partVals, int numParts, float yVel, float[] ctr) {
+	private void createSphere(TreeMap<String, ArrayList<Float[]>> partVals, int numParts, float[] initVel, float[] ctr) {
 		//radius value for particles for display - call after numParts specified
         float rawPartRad = 2.0f, partRad = calcScaledVal(rawPartRad);        
 		//build sphere of particles - scale volume of sphere based on cuberoot of # of particles, with 1000 particles being baseline sphere 
@@ -410,7 +410,7 @@ public abstract class MPM_ABS_Sim{
 			}
 			partVals.get("pos").add(posVals);
 			//init vel
-			partVals.get("vel").add(new Float[] {0f,yVel,0f});
+			partVals.get("vel").add(new Float[] {initVel[0],initVel[1],initVel[2]});
         }
 	}//createSphere
 
@@ -426,9 +426,9 @@ public abstract class MPM_ABS_Sim{
         partVals.get("minMaxVals").add(new Float[] {-100000.0f,-100000.0f,-100000.0f});      
 
 
-        float xVel = -initVel, 
-        	yVel = initVel, 
-        		zVel = 0;//-initVel/3.0f;
+        float xVel = -1.4f*initVel, 
+        	yVel = 0, 
+    		zVel = .5f*-initVel;
         int numPartsPerSphere = 130234/2;
         float ctrOfGrid = (minSimBnds + maxSimBnds)/2.0f, diff = maxSimBnds - minSimBnds; 
         float qtrDiff = .25f*diff, halfDiff = 2*qtrDiff;
@@ -446,13 +446,15 @@ public abstract class MPM_ABS_Sim{
 		float sphereSqRad = sphereRad*sphereRad;
 		float offScl = 600.0f/this.sclAmt;
 		float offsetBase = .25f;
-		float xOff = offsetBase *offScl, 
-				yOff = (-.25f + offsetBase)*offScl, 
+		
+		float xOff = (.25f + offsetBase) *offScl, 
+				yOff = (-.30f + offsetBase)*offScl, 
 				zOff = offsetBase*offScl;
 		int incr = 1;
 		//lower ball
         buildSphere(partVals,new float[] {xOff, yOff, zOff}, new float [] {xVel, yVel, zVel}, incr, sphereSqRad, minVals, maxVals);
-    
+		//createSphere(partVals,numPartsPerSphere, new float [] {xVel, yVel, zVel}, new float[] {xOff, yOff, zOff});
+				
         float rawPartRad = 2.0f;        
         float partRad = calcScaledVal(rawPartRad), ballRad = (float) (3.0*Math.cbrt(numParts) * partRad/2.0f);		
 		System.out.println("Sphere Sq Rad : " + sphereSqRad+ "\t|Scale Amount : " + this.sclAmt+"|part rad : "+ partRad+" ball rad : "+ ballRad+ " * scl amt :  " + (this.sclAmt*ballRad));
@@ -463,11 +465,12 @@ public abstract class MPM_ABS_Sim{
 		}
 		xVel *= -1;
         yVel *= -1;
-        xOff = (-.15f + offsetBase)*offScl;
-        yOff = (.15f + offsetBase)*offScl;
-        zOff = (.15f + offsetBase)*offScl;
+        xOff = (-.35f + offsetBase)*offScl;
+        yOff = (-.30f + offsetBase)*offScl;
+        zOff = (.25f + offsetBase)*offScl;
         //upper ball        
         buildSphere(partVals,new float[] {xOff, yOff, zOff}, new float [] {xVel, yVel, zVel}, incr, sphereSqRad, minVals, maxVals);
+		//createSphere(partVals,numPartsPerSphere, new float [] {xVel, yVel, zVel}, new float[] {xOff, yOff, zOff});
 
          //end create particle layout	
 		return partVals;
