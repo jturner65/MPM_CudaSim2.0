@@ -6,10 +6,11 @@ public class MPM_SimWindow extends myDispWindow {
 
 	//simulator world within which simulation executes
 	//TODO support multiple sim worlds possibly, with different configurations
-	public MPM_ABS_Sim currSim;
+	public MPM_Abs_CUDASim currSim;
 	//grid variables
-	private int numGridCells = 200;
-	private float cellSize = .10f;
+	private int numGridCells = MPM_Abs_CUDASim.numGridCells;
+	private float cellSize = MPM_Abs_CUDASim.cellSize;
+	private int numParts = MPM_Abs_CUDASim.numPartsUI_Init;
 	private float csCube = cellSize*cellSize*cellSize;
 	
 	//motion
@@ -35,9 +36,9 @@ public class MPM_SimWindow extends myDispWindow {
 	public float partMass = csCube*50.0f;
 	//initial values - need one per object
 	public float[] uiVals = new float[]{
-		MPM_ABS_Sim.getDeltaT(),
-		MPM_ABS_Sim.simStepsPerFrame,
-		MPM_ABS_Sim.numPartsUI_Init,
+		MPM_Abs_CUDASim.getDeltaT(),
+		MPM_Abs_CUDASim.simStepsPerFrame,
+		numParts,
 		partMass,
 		cellSize,
 		numGridCells,
@@ -47,8 +48,8 @@ public class MPM_SimWindow extends myDispWindow {
 		myMaterial.base_criticalCompression,			//.040f, 
 		myMaterial.base_criticalStretch,				//.0075f, 
 		myMaterial.base_alphaPicFlip,					//0.95f, 
-		MPM_ABS_Sim.wallFric,							//init value for wall friction
-		MPM_ABS_Sim.collFric,							//init value for collider friction
+		MPM_Abs_CUDASim.wallFric,							//init value for wall friction
+		MPM_Abs_CUDASim.collFric,							//init value for collider friction
 			//
 	};			//values of 8 ui-controlled quantities
 	public final int numGUIObjs = uiVals.length;											//# of gui objects for ui	
@@ -123,7 +124,7 @@ public class MPM_SimWindow extends myDispWindow {
 		
 		//init simulation construct here
 		pa.outStr2Scr("Start building simulation : " + pa.millis());
-		currSim = new MPM_BaseSim(numGridCells, cellSize);		
+		currSim = new MPM_Cuda2Balls(pa,numGridCells, cellSize,numParts);		
 		setPrivFlags(showCollider, true);
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
@@ -132,7 +133,7 @@ public class MPM_SimWindow extends myDispWindow {
 	//call this to initialize or reinitialize simulation (on reset)
 	protected void reinitSim() {
 		pa.setFlags(pa.runSim, false);		
-		currSim.resetSim();
+		currSim.resetSim(true);
 	}
 		
 	@Override
@@ -157,25 +158,25 @@ public class MPM_SimWindow extends myDispWindow {
 				
 				break;}	
 			case showCollider			: {//show collider
-				currSim.setSimFlags(MPM_ABS_Sim.showCollider, val);
+				currSim.setSimFlags(MPM_Abs_CUDASim.showCollider, val);
 				break;}
 			case showParticleVelArrows	: {
-				currSim.setSimFlags(MPM_ABS_Sim.showParticleVelArrows, val);
+				currSim.setSimFlags(MPM_Abs_CUDASim.showParticleVelArrows, val);
 				break;} 
 			case showGrid				: {
-				currSim.setSimFlags(MPM_ABS_Sim.showGrid, val);
+				currSim.setSimFlags(MPM_Abs_CUDASim.showGrid, val);
 				break;} 				
 			case showGridVelArrows 		: {
-				currSim.setSimFlags(MPM_ABS_Sim.showGridVelArrows, val);
+				currSim.setSimFlags(MPM_Abs_CUDASim.showGridVelArrows, val);
 				break;} 		
 			case showGridAccelArrows	: {
-				currSim.setSimFlags(MPM_ABS_Sim.showGridAccelArrows, val);
+				currSim.setSimFlags(MPM_Abs_CUDASim.showGridAccelArrows, val);
 				break;} 	
 			case showGridMass  			: {
-				currSim.setSimFlags(MPM_ABS_Sim.showGridMass, val);
+				currSim.setSimFlags(MPM_Abs_CUDASim.showGridMass, val);
 				break;} 		
 			case showActiveNodes 	: {
-				currSim.setSimFlags(MPM_ABS_Sim.showActiveNodes, val);
+				currSim.setSimFlags(MPM_Abs_CUDASim.showActiveNodes, val);
 				break;} 	
 			case showExecTime			: { 
 				break;}
@@ -275,7 +276,8 @@ public class MPM_SimWindow extends myDispWindow {
 				currSim.setDeltaT(val);
 				break;} 	
 			case gIDX_numParticles				:{
-				currSim.setNumPartsAndReset((int)val);
+				numParts = (int)val;
+				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts);
 				break;}
 			case gIDX_partMass 					:{
 				partMass = val;
@@ -283,11 +285,11 @@ public class MPM_SimWindow extends myDispWindow {
 				break;}
 			case gIDX_gridCellSize				:{
 				cellSize = val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize);
+				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts);
 				break;}
 			case gIDX_gridCount					:{
 				numGridCells = (int)val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize);				
+				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts);				
 				break;}
 			case gIDX_initYoungMod 				:{
 				currSim.mat.setYoungModulus(val);
@@ -321,7 +323,7 @@ public class MPM_SimWindow extends myDispWindow {
 				reinitSim();
 				break;} 
 			case gIDX_simStepsPerFrame 			:{
-				MPM_ABS_Sim.simStepsPerFrame = (int)val;
+				MPM_Abs_CUDASim.simStepsPerFrame = (int)val;
 				break;}
 			default : {break;}
 			}
@@ -366,12 +368,8 @@ public class MPM_SimWindow extends myDispWindow {
 		boolean done = false;
 		if (getPrivFlags(showExecTime)){
 			done = currSim.simMeDebug(modAmtMillis);
-		} else if (getPrivFlags(runMultiThdSim)) {
-			//done = currSim.simMeMThd(modAmtMillis);		
-			done = currSim.simMeCuda(modAmtMillis);	
-		} else {//base sim calculation		
-			//done = currSim.simMe(modAmtMillis);
-			done = currSim.simMeCuda(modAmtMillis);	
+		} else {
+			done = currSim.simMe(modAmtMillis);	
 		}
 		
 		return done;	
@@ -395,7 +393,7 @@ public class MPM_SimWindow extends myDispWindow {
 //		curMseLoc3D = pa.c.getMseLoc(pa.sceneCtrVals[pa.sceneIDX]);
 		
 		//TODO draw simulation results here
-		currSim.drawMe(pa, animTimeMod);
+		currSim.drawMe(animTimeMod);
 	}//drawMe	
 	
 	
