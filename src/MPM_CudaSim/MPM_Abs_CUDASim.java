@@ -537,7 +537,6 @@ public abstract class MPM_Abs_CUDASim{
     
 	//compiles Ptx file from file in passed file name -> cuFileName needs to have format "xxxxx.cu"
 	public void compilePtxFile(String krnFileName, String ptxFileName) throws IOException {
-	//NOTE : using new version of CUDA (as of 8/7/18) w/vs2015 compiles this incorrectly/makes it hang. TODO need to investigate this
 		File cuFile = new File(krnFileName);
 		if (!cuFile.exists()) {
 			throw new IOException("Kernel file not found: " + krnFileName);
