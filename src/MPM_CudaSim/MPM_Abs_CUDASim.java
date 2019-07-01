@@ -803,14 +803,13 @@ public abstract class MPM_Abs_CUDASim{
 		if(!getSimFlags(this.simIsBuiltIDX)) {return;}//if not built yet, don't try to draw anything
 		//render all particles - TODO determine better rendering method
 		pa.pushMatrix();pa.pushStyle();
-		pa.scale(sclAmt);
-		pa.strokeWeight(1.0f/sclAmt);
+		pa.strokeWeight(3.0f/sclAmt);
+		pa.scale(sclAmt);	
 
 		pa.pushMatrix();pa.pushStyle();
 		//draw the points
 		int pincr = 1;
-		for(int i=0;i<=numParts-pincr;i+=pincr) {
-			pa.strokeWeight(3.0f);
+		for(int i=0;i<=numParts-pincr;i+=pincr) {			
 			pa.stroke(h_part_clr[i][0], h_part_clr[i][1], h_part_clr[i][2]);
 			pa.point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
 		}
