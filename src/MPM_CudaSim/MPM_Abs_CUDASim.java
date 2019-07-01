@@ -11,6 +11,11 @@ import java.util.concurrent.*;
 
 import org.jblas.FloatMatrix;
 
+import base_UI_Objects.my_procApplet;
+import base_Utils_Objects.io.ConsoleCLR;
+import base_Utils_Objects.io.MsgCodes;
+import base_Utils_Objects.vectorObjs.myPointf;
+import base_Utils_Objects.vectorObjs.myVectorf;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
@@ -18,7 +23,7 @@ import jcuda.runtime.JCuda;
 //abstract class describing a simulation world.  called by sim window to executed simulation and to render results
 //instancing classes can hold different configurations/initialization setups
 public abstract class MPM_Abs_CUDASim{	
-	public static MPM_SimMain pa;
+	public static my_procApplet pa;
 	//name of instancing sim
 	public final String simName;
 	
@@ -157,7 +162,7 @@ public abstract class MPM_Abs_CUDASim{
 	
 	//grid count per side - center grid always in display; grid cell dim per side
 	@SuppressWarnings("unchecked")
-	public MPM_Abs_CUDASim(MPM_SimMain _pa,String _simName, int _gridCount, float _h, int _numParts) {		
+	public MPM_Abs_CUDASim(my_procApplet _pa,String _simName, int _gridCount, float _h, int _numParts) {		
 		pa=_pa;simName = _simName;
 //		//for multithreading - do not use instanced version in PApplet - we may not use processing-based build to run simulation
 //		th_exec = Executors.newCachedThreadPool();		
@@ -886,7 +891,7 @@ class MPM_Cuda2Balls extends MPM_Abs_CUDASim {
 	//scale w/timestep
 	private static float initVel = 30.0f;
 	
-	public MPM_Cuda2Balls(MPM_SimMain _pa,int _gridCount, float _h, int _numParts) {
+	public MPM_Cuda2Balls(my_procApplet _pa,int _gridCount, float _h, int _numParts) {
 		super(_pa,"2 Big Snowballs",_gridCount, _h,_numParts);
 	}
 	

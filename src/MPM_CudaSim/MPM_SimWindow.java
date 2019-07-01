@@ -1,6 +1,13 @@
 package MPM_CudaSim;
 
+import java.io.File;
 import java.util.*;
+
+import base_UI_Objects.drawnObjs.myDrawnSmplTraj;
+import base_UI_Objects.windowUI.myDispWindow;
+import base_UI_Objects.windowUI.myGUIObj;
+import base_Utils_Objects.vectorObjs.myPoint;
+import base_Utils_Objects.vectorObjs.myVector;
 
 public class MPM_SimWindow extends myDispWindow {
 
@@ -61,6 +68,13 @@ public class MPM_SimWindow extends myDispWindow {
 	//custom debug/function ui button names -empty will do nothing
 	public String[] menuDbgBtnNames = new String[] {};//must have literals for every button or this is ignored
 	public String[] menuFuncBtnNames = new String[] {"Func 1", "Func 2", "Func 3", "Func 4", "Func 5"};//must have literals for every button or ignored
+	public String[][] menuBtnNames = new String[][] {	//each must have literals for every button defined in side bar menu, or ignored
+		{"Func 00", "Func 01", "Func 02"},				//row 1
+		{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 2
+		{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 3
+		{"Func 20", "Func 21", "Func 22", "Func 23"},	//row 4
+		{"Func 30", "Func 31", "Func 32", "Func 33","Func 34"}	//dbg
+	};
 	
 	//private child-class flags - window specific
 	public static final int 
@@ -81,9 +95,6 @@ public class MPM_SimWindow extends myDispWindow {
 		
 	public MPM_SimWindow(MPM_SimMain _p, String _n, int _flagIdx, int[] fc, int[] sc, float[] rd, float[] rdClosed, String _winTxt, boolean _canDrawTraj) {
 		super(_p, _n, _flagIdx, fc, sc, rd, rdClosed, _winTxt, _canDrawTraj);
-		float stY = rectDim[1]+rectDim[3]-4*yOff,stYFlags = stY + 2*yOff;
-		trajFillClrCnst = MPM_SimMain.gui_DarkCyan;		
-		trajStrkClrCnst = MPM_SimMain.gui_Cyan;
 		super.initThisWin(_canDrawTraj, true, false);
 	}//DancingBallWin
 	
@@ -128,11 +139,14 @@ public class MPM_SimWindow extends myDispWindow {
 		setPrivFlags(showCollider, true);
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
+		
+		pa.setAllMenuBtnNames(menuBtnNames);	
+
 	}//initMe	
 	
 	//call this to initialize or reinitialize simulation (on reset)
 	protected void reinitSim() {
-		pa.setFlags(pa.runSim, false);		
+		pa.setSimIsRunning( false);		
 		currSim.resetSim(true);
 	}
 		
@@ -187,7 +201,9 @@ public class MPM_SimWindow extends myDispWindow {
 	//initialize structure to hold modifiable menu regions
 	@Override
 	protected void setupGUIObjsAras(){	
-		//pa.outStr2Scr("setupGUIObjsAras start");
+		//ui list objects
+		TreeMap<Integer, String[]> tmpList = new TreeMap<Integer, String[]>();
+
 		guiMinMaxModVals = new double [][]{
 			{.00005f,.0010f,.00005f},						//delta T for simulation    init  MPM_ABS_Sim.deltaT = 1e-3f;
 			{1,20,1},									//gIDX_simStepsPerFrame  init 5
@@ -257,10 +273,11 @@ public class MPM_SimWindow extends myDispWindow {
 			{false, false, true},                        //gIDX_collFricCoeff 			
 		};						//per-object  list of boolean flags
 		
+		
 		//since horizontal row of UI comps, uiClkCoords[2] will be set in buildGUIObjs		
 		guiObjs = new myGUIObj[numGUIObjs];			//list of modifiable gui objects
 		if(numGUIObjs > 0){
-			buildGUIObjs(guiObjNames,guiStVals,guiMinMaxModVals,guiBoolVals,new double[]{xOff,yOff});			//builds a horizontal list of UI comps
+			buildGUIObjs(guiObjNames,guiStVals,guiMinMaxModVals,guiBoolVals,new double[]{xOff,yOff},tmpList);			//builds a horizontal list of UI comps
 		}
 		
 //		setupGUI_XtraObjs();
@@ -329,15 +346,7 @@ public class MPM_SimWindow extends myDispWindow {
 			}
 		}
 	}
-	//if any ui values have a string behind them for display
-	@Override
-	protected String getUIListValStr(int UIidx, int validx) {			
-		switch(UIidx){
-			//case gIDX_UAVTeamSize : {return uavTeamSizeVals[(validx % uavTeamSizeVals.length)];}
-			default : {break;}
-		}
-		return "";
-	}
+
 	
 	@Override
 	public void initDrwnTrajIndiv(){}
@@ -376,15 +385,6 @@ public class MPM_SimWindow extends myDispWindow {
 	}//simMe
 	
 	
-	@Override
-	//draw 2d constructs over 3d area on screen - draws behind menu section
-	//modAmtMillis is in milliseconds
-	protected void drawRightSideInfoBar(float modAmtMillis) {
-		pa.pushMatrix();pa.pushStyle();
-		//display current simulation variables
-		
-		pa.popStyle();pa.popMatrix();				
-	}//drawOnScreenStuff
 	
 	@Override
 	//animTimeMod is in seconds.
@@ -414,99 +414,14 @@ public class MPM_SimWindow extends myDispWindow {
 	}	
 	
 	@Override
-	protected void showMe() {
-		//things to do when swapping into this window - reinstance released objects, for example.
-		pa.setMenuDbgBtnNames(menuDbgBtnNames);
-		pa.setMenuFuncBtnNames(menuFuncBtnNames);
-	}
-	
-	@Override
 	//stopping simulation
 	protected void stopMe() {
 		System.out.println("Simulation Finished");	
 	}
 	
-	//custom functions launched by UI input
-	//if launching threads for custom functions, need to remove clearFuncBtnState call in function below and call clearFuncBtnState when thread ends
-	private void custFunc0(){
-		clearFuncBtnState(0,false);
-	}			
-	private void custFunc1(){
-		clearFuncBtnState(1,false);
-	}	
 	
-	private void custFunc2(){	
-		//custom function code here
-		clearFuncBtnState(2,false);
-	}			
-	private void custFunc3(){	
-		//custom function code here
-		clearFuncBtnState(3,false);
-	}			
-	private void custFunc4(){	
-		//custom function code here
-		clearFuncBtnState(4,false);
-	}		
-	@Override
-	public void clickFunction(int btnNum) {
-		//pa.outStr2Scr("click cust function in "+name+" : btn : " + btnNum);
-		switch(btnNum){
-			case 0 : {	custFunc0();	break;}
-			case 1 : {	custFunc1();	break;}
-			case 2 : {	custFunc2();	break;}
-			case 3 : {	custFunc3();	break;}
-			case 4 : {	custFunc4();	break;}
-			default : {break;}
-		}	
-	}		//only for display windows
-	
-	private void toggleDbgBtn(int idx, boolean val) {
-		setPrivFlags(idx, !getPrivFlags(idx));
-	}
-	
-	//debug function
-	//if launching threads for debugging, need to remove clearDBGState call in function below and call clearDBGState when thread ends
-	private void dbgFunc0() {			
-		clearDBGBtnState(0,false);
-	}	
-	private void dbgFunc1(){
-		clearDBGBtnState(1,false);
-	}	
-	private void dbgFunc2(){
-		clearDBGBtnState(2,false);
-	}	
-	private void dbgFunc3(){	
-		clearDBGBtnState(3,false);
-	}	
-	private void dbgFunc4(){	
-		clearDBGBtnState(4,false);
-	}	
-	private void dbgFunc5(){	
-		clearDBGBtnState(5,false);
-	}	
-
-	@Override
-	public void clickDebug(int btnNum){
-		pa.outStr2Scr("click debug in "+name+" : btn : " + btnNum);
-		switch(btnNum){
-			case 0 : {	dbgFunc0();	break;}//verify priority queue functionality
-			case 1 : {	dbgFunc1();	break;}//verify FEL pq integrity
-			case 2 : {	dbgFunc2();	break;}
-			case 3 : {	dbgFunc3();	break;}
-			case 4 : {	dbgFunc4();	break;}
-			case 5 : {	dbgFunc5();	break;}
-			default : {break;}
-		}		
-	}//clickDebug
-	
-	@Override
-	public void hndlFileLoadIndiv(String[] vals, int[] stIdx) {}
-	@Override
-	public List<String> hndlFileSaveIndiv() {List<String> res = new ArrayList<String>();return res;}
 	@Override
 	protected void processTrajIndiv(myDrawnSmplTraj drawnNoteTraj){	}
-	@Override
-	protected myPoint getMsePtAs3DPt(int mouseX, int mouseY){return pa.P(mouseX,mouseY,0);}
 	@Override
 	protected boolean hndlMouseMoveIndiv(int mouseX, int mouseY, myPoint mseClckInWorld){
 		return false;
@@ -544,5 +459,64 @@ public class MPM_SimWindow extends myDispWindow {
 	//resize drawn all trajectories
 	@Override
 	protected void resizeMe(float scale) { }
+
+	@Override
+	protected void launchMenuBtnHndlr() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected String[] getSaveFileDirNamesPriv() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected myPoint getMsePtAs3DPt(myPoint mseLoc) {
+		// TODO Auto-generated method stub
+		return new myPoint(mseLoc.x,mseLoc.y,0);
+	}
+
+	@Override
+	protected void setVisScreenDimsPriv() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void setCustMenuBtnNames() {
+		pa.setAllMenuBtnNames(menuBtnNames);	
+	}
+
+	@Override
+	public void hndlFileLoad(File file, String[] vals, int[] stIdx) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ArrayList<String> hndlFileSave(File file) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void drawOnScreenStuffPriv(float modAmtMillis) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void showMe() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void drawRightSideInfoBarPriv(float modAmtMillis) {
+		// TODO Auto-generated method stub
+		
+	}
 }//DESSimWindow
 
