@@ -134,7 +134,7 @@ public class MPM_SimWindow extends myDispWindow {
 		initPrivFlags(numPrivFlags);
 		
 		//init simulation construct here
-		pa.outStr2Scr("Start building simulation : " + pa.millis());
+		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation : " + pa.millis());
 		currSim = new MPM_Cuda2Balls(pa,numGridCells, cellSize,numParts);		
 		setPrivFlags(showCollider, true);
 		//initialize simulation here to simple world sim
@@ -407,18 +407,12 @@ public class MPM_SimWindow extends myDispWindow {
 		pa.popStyle();					pa.popMatrix();		
 	}//drawCustMenuObjs
 
-	
+	//things to do when swapping this window out for another window - release objects that take up a lot of memory, for example.
 	@Override
-	protected void closeMe() {
-		//things to do when swapping this window out for another window - release objects that take up a lot of memory, for example.
-	}	
-	
+	protected void closeMe() {}	
 	@Override
 	//stopping simulation
-	protected void stopMe() {
-		System.out.println("Simulation Finished");	
-	}
-	
+	protected void stopMe() {	msgObj.dispInfoMessage("MPM_SimWindow","stopMe","Simulation Finished");	}	
 	
 	@Override
 	protected void processTrajIndiv(myDrawnSmplTraj drawnNoteTraj){	}
@@ -459,12 +453,12 @@ public class MPM_SimWindow extends myDispWindow {
 	//resize drawn all trajectories
 	@Override
 	protected void resizeMe(float scale) { }
+	@Override
+	protected void showMe() {}
+
 
 	@Override
-	protected void launchMenuBtnHndlr() {
-		// TODO Auto-generated method stub
-		
-	}
+	protected void launchMenuBtnHndlr() {	}
 
 	@Override
 	protected String[] getSaveFileDirNamesPriv() {
@@ -508,15 +502,10 @@ public class MPM_SimWindow extends myDispWindow {
 	}
 
 	@Override
-	protected void showMe() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	protected void drawRightSideInfoBarPriv(float modAmtMillis) {
 		// TODO Auto-generated method stub
 		
 	}
+
 }//DESSimWindow
 

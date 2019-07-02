@@ -166,7 +166,7 @@ public abstract class MPM_Abs_CUDASim{
 		pa=_pa;simName = _simName;
 //		//for multithreading - do not use instanced version in PApplet - we may not use processing-based build to run simulation
 //		th_exec = Executors.newCachedThreadPool();		
-		int numThreadsTtl = Runtime.getRuntime().availableProcessors();
+//		int numThreadsTtl = Runtime.getRuntime().availableProcessors();
 //		//# of threads to use to build structures - doesn't change
 //		numThreadsAvail = (numThreadsTtl > 2 ? numThreadsTtl-2 : 1);
 		
