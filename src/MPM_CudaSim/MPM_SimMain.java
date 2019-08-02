@@ -105,6 +105,12 @@ public class MPM_SimMain extends my_procApplet {
 	@Override
 	protected void initProgram_Indiv() {}
 
+	@Override
+	public String[] getMouseOverSelBtnNames() {
+		// TODO Auto-generated method stub
+		return new String[0];
+	}
+	
 
 	@Override
 	protected String getPrjNmLong() {		return prjNmLong;}
@@ -187,5 +193,5 @@ public class MPM_SimMain extends my_procApplet {
 	
 	@Override
 	protected int[] getClr_Custom(int colorVal, int alpha) {	return new int[] {255,255,255,alpha};}
-	
+
 }//class MPM_SimMain

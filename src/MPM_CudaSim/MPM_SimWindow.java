@@ -458,8 +458,15 @@ public class MPM_SimWindow extends myDispWindow {
 
 
 	@Override
-	protected void launchMenuBtnHndlr() {	}
+	protected final void launchMenuBtnHndlr(int funcRow, int btn) {	}
 
+	@Override
+	public void handleSideMenuMseOvrDispSel(int btn, boolean val) {}
+
+	@Override
+	public void handleSideMenuDebugSel(int btn, int val) {	}
+	
+	
 	@Override
 	protected String[] getSaveFileDirNamesPriv() {
 		// TODO Auto-generated method stub
