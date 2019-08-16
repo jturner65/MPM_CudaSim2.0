@@ -41,26 +41,7 @@ public class MPM_SimWindow extends myDispWindow {
 	
 	//dims x density
 	public float partMass = csCube*50.0f;
-	//initial values - need one per object
-	public float[] uiVals = new float[]{
-		MPM_Abs_CUDASim.getDeltaT(),
-		MPM_Abs_CUDASim.simStepsPerFrame,
-		numParts,
-		partMass,
-		cellSize,
-		numGridCells,
-		myMaterial.base_initYoungMod,					//4.8e4f,
-		myMaterial.base_poissonRatio,					//0.2f,
-		myMaterial.base_hardeningCoeff,					//15.0f, 
-		myMaterial.base_criticalCompression,			//.040f, 
-		myMaterial.base_criticalStretch,				//.0075f, 
-		myMaterial.base_alphaPicFlip,					//0.95f, 
-		MPM_Abs_CUDASim.wallFric,							//init value for wall friction
-		MPM_Abs_CUDASim.collFric,							//init value for collider friction
-			//
-	};			//values of 8 ui-controlled quantities
-	public final int numGUIObjs = uiVals.length;											//# of gui objects for ui	
-	
+
 	//display variables
 	//private float[] UIrectBox;	//box holding x,y,w,h values of black rectangle to hold UI sim display values
 	
@@ -100,24 +81,18 @@ public class MPM_SimWindow extends myDispWindow {
 	
 	@Override
 	//initialize all private-flag based UI buttons here - called by base class
-	public void initAllPrivBtns(){
-		truePrivFlagNames = new String[]{								//needs to be in order of privModFlgIdxs
-				"Visualization Debug","Resetting Simulation", "Showing Collider", "Showing Particle Vel", "Showing Grid", 
-				"Showing Grid Vel", "Showing Grid Accel", "Showing Grid Mass", "Showing Active Nodes",
-				"Showing Execution Time","Running Multi-Thd Sim"
-		};
-		falsePrivFlagNames = new String[]{			//needs to be in order of flags
-				"Enable Debug","Reset Simulation", "Show Collider", "Show Particle Vel", "Show Grid", 
-				"Show Grid Vel", "Show Grid Accel", "Show Grid Mass", "Show Active Nodes",
-				"Show Execution Time","Run Multi-Thd Sim"
-		};
-		privModFlgIdxs = new int[]{
-				debugAnimIDX, resetSimIDX, showCollider, showParticleVelArrows, showGrid, 
-				showGridVelArrows, showGridAccelArrows, showGridMass, showActiveNodes,
-				showExecTime, runMultiThdSim
-		};
-		numClickBools = privModFlgIdxs.length;	
-		initPrivBtnRects(0,numClickBools);
+	public void initAllPrivBtns(ArrayList<Object[]> tmpBtnNamesArray){	
+		tmpBtnNamesArray.add(new Object[]{"Visualization Debug",    "Enable Debug",       debugAnimIDX});          
+		tmpBtnNamesArray.add(new Object[]{"Resetting Simulation",   "Reset Simulation",   resetSimIDX});           
+		tmpBtnNamesArray.add(new Object[]{"Showing Collider",       "Show Collider",      showCollider});          
+		tmpBtnNamesArray.add(new Object[]{"Showing Particle Vel",   "Show Particle Vel",  showParticleVelArrows});  
+		tmpBtnNamesArray.add(new Object[]{"Showing Grid",           "Show Grid",          showGrid});           
+		tmpBtnNamesArray.add(new Object[]{"Showing Grid Vel",       "Show Grid Vel",      showGridVelArrows});     
+		tmpBtnNamesArray.add(new Object[]{"Showing Grid Accel",     "Show Grid Accel",    showGridAccelArrows});    
+		tmpBtnNamesArray.add(new Object[]{"Showing Grid Mass",      "Show Grid Mass",     showGridMass});         
+		tmpBtnNamesArray.add(new Object[]{"Showing Active Nodes",   "Show Active Nodes",  showActiveNodes});     
+		tmpBtnNamesArray.add(new Object[]{"Showing Execution Time", "Show Execution Time",showExecTime});         
+		tmpBtnNamesArray.add(new Object[]{"Running Multi-Thd Sim",   "Run Multi-Thd Sim",   runMultiThdSim });         
 	}//initAllPrivBtns
 	//set labels of boolean buttons 
 
@@ -200,87 +175,22 @@ public class MPM_SimWindow extends myDispWindow {
 		
 	//initialize structure to hold modifiable menu regions
 	@Override
-	protected void setupGUIObjsAras(){	
-		//ui list objects
-		TreeMap<Integer, String[]> tmpList = new TreeMap<Integer, String[]>();
-
-		guiMinMaxModVals = new double [][]{
-			{.00005f,.0010f,.00005f},						//delta T for simulation    init  MPM_ABS_Sim.deltaT = 1e-3f;
-			{1,20,1},									//gIDX_simStepsPerFrame  init 5
-			{100,1000000,100},							//number of particles
-			{.00005, 5.00, .00005},						//particle mass
-			{.001, .1, .001},							//grid cell size
-			{50,300,1},									//# of grid cells per side
-			{1000.0f, 100000.0f, 100.0f},				//gIDX_initYoungMod 		init 4.8e4f, 
-			{.01f,1.0f,.01f},							//gIDX_poissonRatio 		init 0.2f,  
-			{1.0f,100.0f,1.0f},							//gIDX_hardeningCoeff 	    init 15.0f, 
-			{0.001f, 0.1f, 0.001f},						//gIDX_criticalCompression  init .019f, 
-			{0.0005f,0.01f,0.0005f},					//gIDX_criticalStretch 	    init .0075f,
-			{0.0f,1.0f,0.01f},							//gIDX_alphaPicFlip 		init 0.95f, 
-			{0.01f,1.0f,0.01f},							//gIDX_wallfricCoeff 			init 1.0f  
-			{0.01f,1.0f,0.01f},							//gIDX_collfricCoeff 			init 1.0f  
-		};		//min max mod values for each modifiable UI comp	
-
-		guiStVals = new double[]{
-			uiVals[gIDX_timeStep],
-			uiVals[gIDX_simStepsPerFrame],
-			uiVals[gIDX_numParticles],
-			uiVals[gIDX_partMass],
-			uiVals[gIDX_gridCellSize],
-			uiVals[gIDX_gridCount],
-			uiVals[gIDX_initYoungMod], 		
-			uiVals[gIDX_poissonRatio],		
-			uiVals[gIDX_hardeningCoeff], 	  
-			uiVals[gIDX_criticalCompression],
-			uiVals[gIDX_criticalStretch], 	  
-			uiVals[gIDX_alphaPicFlip], 		
-			uiVals[gIDX_wallFricCoeff], 	
-			uiVals[gIDX_collFricCoeff], 	
-		};								//starting value
+	protected void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){	
 		
-		guiObjNames = new String[]{
-				"Sim Time Step",
-				"Sim Steps per Drawn Frame",
-				"# of Particles",
-				"Particle Mass",
-				"Grid Cell Size",
-				"Grid Cell Count Per Side",
-				"Young's Modulus",
-				"Poisson Ratio",
-				"Hardening Coefficient",
-				"Critical Compression",
-				"Critical Stretch",
-				"Particle PIC/FLIP Vel Ratio",
-				"Wall Friction Coefficient",	
-				"Collider Friction Coefficient",
-		};								//name/label of component	
-		
-		//idx 0 is treat as int, idx 1 is obj has list vals, idx 2 is object gets sent to windows
-		guiBoolVals = new boolean [][]{
-			{false, false, true},	                     //delta T for simulation    
-			{true, false, true},                         //gIDX_simStepsPerFrame  ini
-			{true, false, true},	                     //number of particles       
-			{false, false, true},	                     //particle mass             
-			{false, false, true},	                     //grid cell size
-			{true, false, true},	                     //# of grid cells per side
-			{false, false, true},	                     //gIDX_initYoungMod 		
-			{false, false, true},	                     //gIDX_poissonRatio 		
-			{false, false, true},	                     //gIDX_hardeningCoeff 	    
-			{false, false, true},	                     //gIDX_criticalCompression  
-			{false, false, true},	                     //gIDX_criticalStretch 	    
-			{false, false, true},	                     //gIDX_alphaPicFlip 		
-			{false, false, true},                        //gIDX_wallFricCoeff 			
-			{false, false, true},                        //gIDX_collFricCoeff 			
-		};						//per-object  list of boolean flags
-		
-		
-		//since horizontal row of UI comps, uiClkCoords[2] will be set in buildGUIObjs		
-		guiObjs = new myGUIObj[numGUIObjs];			//list of modifiable gui objects
-		if(numGUIObjs > 0){
-			buildGUIObjs(guiObjNames,guiStVals,guiMinMaxModVals,guiBoolVals,new double[]{xOff,yOff},tmpList);			//builds a horizontal list of UI comps
-		}
-		
-//		setupGUI_XtraObjs();
+		tmpUIObjArray.put(gIDX_timeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*MPM_Abs_CUDASim.getDeltaT(),  "Sim Time Step", new boolean[]{false, false, true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
+		tmpUIObjArray.put(gIDX_simStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*MPM_Abs_CUDASim.simStepsPerFrame, "Sim Steps per Drawn Frame",  new boolean[]{true, false, true}});//gIDX_simStepsPerFrame  init 5
+		tmpUIObjArray.put(gIDX_numParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*numParts, "# of Particles", new boolean[]{true, false, true}});//number of particles
+		tmpUIObjArray.put(gIDX_partMass, new Object[] {new double[]{.00005, 5.00, .00005}, 1.0*partMass, "Particle Mass", new boolean[]{false, false, true}});//particle mass
+		tmpUIObjArray.put(gIDX_gridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*cellSize, "Grid Cell Size", new boolean[]{false, false, true}});//grid cell size
+		tmpUIObjArray.put(gIDX_gridCount, new Object[] {new double[]{50, 300, 1}, 1.0*numGridCells,  "Grid Cell Count Per Side", new boolean[]{true, false, true}}); //# of grid cells per side
+		tmpUIObjArray.put(gIDX_initYoungMod, new Object[] {new double[]{1000.0f, 100000.0f, 100.0f}, 1.0*myMaterial.base_initYoungMod, "Young's Modulus", new boolean[]{false, false, true}});//gIDX_initYoungMod init 4.8e4f, 
+		tmpUIObjArray.put(gIDX_poissonRatio, new Object[] {new double[]{.01f, 1.0f, .01f}, 1.0*myMaterial.base_poissonRatio, "Poisson Ratio", new boolean[]{false, false, true}});//gIDX_poissonRatio init 0.2f,  
+		tmpUIObjArray.put(gIDX_hardeningCoeff , new Object[] {new double[]{1.0f, 100.0f, 1.0f}, 1.0*myMaterial.base_hardeningCoeff, "Hardening Coefficient", new boolean[]{false, false, true}});//gIDX_hardeningCoeff init 15.0f, 
+		tmpUIObjArray.put(gIDX_criticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*myMaterial.base_criticalCompression, "Critical Compression", new boolean[]{false, false, true}});//gIDX_criticalCompression  init .019f, 
+		tmpUIObjArray.put(gIDX_criticalStretch , new Object[] {new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*myMaterial.base_criticalStretch, "Critical Stretch",  new boolean[]{false, false, true}});//gIDX_criticalStretch init .0075f, 
+		tmpUIObjArray.put(gIDX_alphaPicFlip, new Object[] {new double[]{0.0f, 1.0f, 0.01f}, 1.0*myMaterial.base_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", new boolean[]{false, false, true}});//gIDX_alphaPicFlip init 0.95f, 
+		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*MPM_Abs_CUDASim.wallFric, "Wall Friction Coefficient",  new boolean[]{false, false, true}});//gIDX_wallfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_collFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*MPM_Abs_CUDASim.collFric, "Collider Friction Coefficient", new boolean[]{false, false, true}});//gIDX_collfricCoeffinit 1.0f  
 	}//setupGUIObjsAras
 	
 	@Override
@@ -426,8 +336,7 @@ public class MPM_SimWindow extends myDispWindow {
 	//cntl key pressed handles unfocus of spherey
 	@Override
 	protected boolean hndlMouseClickIndiv(int mouseX, int mouseY, myPoint mseClckInWorld, int mseBtn) {	
-		boolean res = checkUIButtons(mouseX, mouseY);	
-		return res;}//hndlMouseClickIndiv
+		return false;}//hndlMouseClickIndiv
 	@Override
 	protected boolean hndlMouseDragIndiv(int mouseX, int mouseY, int pmouseX, int pmouseY, myPoint mouseClickIn3D, myVector mseDragInWorld, int mseBtn) {
 		boolean res = false;
