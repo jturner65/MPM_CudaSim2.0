@@ -74,9 +74,9 @@ public class MPM_SimWindow extends myDispWindow {
 
 	public static final int numPrivFlags = 12;
 		
-	public MPM_SimWindow(MPM_SimMain _p, String _n, int _flagIdx, int[] fc, int[] sc, float[] rd, float[] rdClosed, String _winTxt, boolean _canDrawTraj) {
-		super(_p, _n, _flagIdx, fc, sc, rd, rdClosed, _winTxt, _canDrawTraj);
-		super.initThisWin(_canDrawTraj, true, false);
+	public MPM_SimWindow(MPM_SimMain _p, String _n, int _flagIdx, int[] fc, int[] sc, float[] rd, float[] rdClosed, String _winTxt) {
+		super(_p, _n, _flagIdx, fc, sc, rd, rdClosed, _winTxt);
+		super.initThisWin(false);
 	}//DancingBallWin
 	
 	@Override
