@@ -2,9 +2,7 @@ package MPM_CudaSim;
 
 import static jcuda.driver.JCudaDriver.*;
 
-import java.awt.Color;
 import java.io.*;
-import java.nio.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
@@ -161,7 +159,7 @@ public abstract class MPM_Abs_CUDASim{
 	public int numCUDAThreads=128;
 	
 	//grid count per side - center grid always in display; grid cell dim per side
-	@SuppressWarnings("unchecked")
+	//@SuppressWarnings("unchecked")
 	public MPM_Abs_CUDASim(my_procApplet _pa,String _simName, int _gridCount, float _h, int _numParts) {		
 		pa=_pa;simName = _simName;
 //		//for multithreading - do not use instanced version in PApplet - we may not use processing-based build to run simulation
@@ -696,6 +694,7 @@ public abstract class MPM_Abs_CUDASim{
 	//execute simStepsPerFrame step of simulation
 	//modAmtMillis is in milliseconds, counting # of ms since last sim call
 	//returns true when simulation run is complete - true turns run sim flag off
+	@SuppressWarnings("unused")
 	public boolean simMe(float modAmtMillis) {
 		/*cuDeviceGet(dev, 0);
 	    cuCtxCreate(pctx, 0, dev);*/
