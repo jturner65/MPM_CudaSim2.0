@@ -4,7 +4,8 @@ import java.io.File;
 import java.util.*;
 
 import base_UI_Objects.drawnObjs.myDrawnSmplTraj;
-import base_UI_Objects.windowUI.myDispWindow;
+import base_UI_Objects.windowUI.base.base_UpdateFromUIData;
+import base_UI_Objects.windowUI.base.myDispWindow;
 import base_UI_Objects.windowUI.myGUIObj;
 import base_Utils_Objects.vectorObjs.myPoint;
 import base_Utils_Objects.vectorObjs.myVector;
@@ -81,7 +82,7 @@ public class MPM_SimWindow extends myDispWindow {
 	
 	@Override
 	//initialize all private-flag based UI buttons here - called by base class
-	public void initAllPrivBtns(ArrayList<Object[]> tmpBtnNamesArray){	
+	public int initAllPrivBtns(ArrayList<Object[]> tmpBtnNamesArray){	
 		tmpBtnNamesArray.add(new Object[]{"Visualization Debug",    "Enable Debug",       debugAnimIDX});          
 		tmpBtnNamesArray.add(new Object[]{"Resetting Simulation",   "Reset Simulation",   resetSimIDX});           
 		tmpBtnNamesArray.add(new Object[]{"Showing Collider",       "Show Collider",      showCollider});          
@@ -93,6 +94,7 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpBtnNamesArray.add(new Object[]{"Showing Active Nodes",   "Show Active Nodes",  showActiveNodes});     
 		tmpBtnNamesArray.add(new Object[]{"Showing Execution Time", "Show Execution Time",showExecTime});         
 		tmpBtnNamesArray.add(new Object[]{"Running Multi-Thd Sim",   "Run Multi-Thd Sim",   runMultiThdSim });         
+		return numPrivFlags;
 	}//initAllPrivBtns
 	//set labels of boolean buttons 
 
@@ -106,19 +108,25 @@ public class MPM_SimWindow extends myDispWindow {
 		//this window uses right side info window
 		//setFlags(drawRightSideMenu, true);
 		//called once
-		initPrivFlags(numPrivFlags);
+		//initPrivFlags(numPrivFlags);
 		
+//		//init simulation construct here
 		//init simulation construct here
 		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation : " + pa.millis());
 		currSim = new MPM_Cuda2Balls(pa,numGridCells, cellSize,numParts);		
-		setPrivFlags(showCollider, true);
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		
 		pa.setAllMenuBtnNames(menuBtnNames);	
 
 	}//initMe	
-	
+
+	@Override
+	protected int[] getFlagIDXsToInitToTrue() {
+		// TODO Auto-generated method stub
+		return new int[] {showCollider};
+	}
+
 	//call this to initialize or reinitialize simulation (on reset)
 	protected void reinitSim() {
 		pa.setSimIsRunning( false);		
@@ -325,7 +333,7 @@ public class MPM_SimWindow extends myDispWindow {
 	protected void stopMe() {	msgObj.dispInfoMessage("MPM_SimWindow","stopMe","Simulation Finished");	}	
 	
 	@Override
-	protected void processTrajIndiv(myDrawnSmplTraj drawnNoteTraj){	}
+	public void processTrajIndiv(myDrawnSmplTraj drawnNoteTraj){	}
 	@Override
 	protected boolean hndlMouseMoveIndiv(int mouseX, int mouseY, myPoint mseClckInWorld){
 		return false;
@@ -406,22 +414,21 @@ public class MPM_SimWindow extends myDispWindow {
 	}
 
 	@Override
-	public ArrayList<String> hndlFileSave(File file) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public ArrayList<String> hndlFileSave(File file) {		return null;	}
 
 	@Override
-	protected void drawOnScreenStuffPriv(float modAmtMillis) {
-		// TODO Auto-generated method stub
-		
-	}
+	protected void drawOnScreenStuffPriv(float modAmtMillis) {	}
 
 	@Override
-	protected void drawRightSideInfoBarPriv(float modAmtMillis) {
-		// TODO Auto-generated method stub
-		
+	protected void drawRightSideInfoBarPriv(float modAmtMillis) {	}
+
+	@Override
+	protected base_UpdateFromUIData buildUIDataUpdateObject() {		return null;	}
+
+	@Override
+	protected void buildUIUpdateStruct_Indiv(TreeMap<Integer, Integer> intValues, TreeMap<Integer, Float> floatValues,TreeMap<Integer, Boolean> boolValues) {
 	}
+
 
 }//DESSimWindow
 

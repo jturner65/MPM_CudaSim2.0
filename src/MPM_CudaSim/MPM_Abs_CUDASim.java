@@ -804,7 +804,7 @@ public abstract class MPM_Abs_CUDASim{
 		
 	//draw 1 frame of results	//animTimeMod is in seconds, counting # of seconds since last draw
 	public void drawMe(float animTimeMod) {
-		if(!getSimFlags(this.simIsBuiltIDX)) {return;}//if not built yet, don't try to draw anything
+		if(!getSimFlags(simIsBuiltIDX)) {return;}//if not built yet, don't try to draw anything
 		//render all particles - TODO determine better rendering method
 		pa.pushMatrix();pa.pushStyle();
 		pa.strokeWeight(3.0f/sclAmt);
@@ -860,6 +860,7 @@ public abstract class MPM_Abs_CUDASim{
 	//some utility functions and constants
 	protected myPointf Pf(myPointf O, float x, myVectorf I, double y, myVectorf J, double z, myVectorf K) {return new myPointf(O.x+x*I.x+y*J.x+z*K.x,O.y+x*I.y+y*J.y+z*K.y,O.z+x*I.z+y*J.z+z*K.z);}  // O+xI+yJ+zK
 	//returns arrays of start and end points for cylinder of passed radius r going from point a to point b
+	@SuppressWarnings("unchecked")
 	protected ArrayList<myPointf>[] buildCylinder(myPointf A, myPointf B, float r){
 		myPointf P = A;
 		myVectorf V = new myVectorf(A, B);
@@ -915,8 +916,8 @@ class MPM_Cuda2Balls extends MPM_Abs_CUDASim {
         //float ctrOfGrid = (minSimBnds + maxSimBnds)/2.0f, diff = maxSimBnds - minSimBnds; 
         //float qtrDiff = .25f*diff, halfDiff = 2*qtrDiff;
        
-		Float[] minVals = partVals.get("minMaxVals").get(0);
-		Float[] maxVals = partVals.get("minMaxVals").get(1);       
+		//Float[] minVals = partVals.get("minMaxVals").get(0);
+		//Float[] maxVals = partVals.get("minMaxVals").get(1);       
 		//float hSq = h*h;
 		//scale amt is width divided by # of grid cells and size of each cell
 		//float scaledRad = 150.0f/this.sclAmt;		//was .25
