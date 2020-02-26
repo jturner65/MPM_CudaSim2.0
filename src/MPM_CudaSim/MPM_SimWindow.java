@@ -3,9 +3,11 @@ package MPM_CudaSim;
 import java.io.File;
 import java.util.*;
 
-import base_UI_Objects.drawnObjs.myDrawnSmplTraj;
+import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
+import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.base_UpdateFromUIData;
 import base_UI_Objects.windowUI.base.myDispWindow;
+import base_UI_Objects.windowUI.drawnObjs.myDrawnSmplTraj;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
 
@@ -74,8 +76,8 @@ public class MPM_SimWindow extends myDispWindow {
 
 	public static final int numPrivFlags = 12;
 		
-	public MPM_SimWindow(MPM_SimMain _p, String _n, int _flagIdx, int[] fc, int[] sc, float[] rd, float[] rdClosed, String _winTxt) {
-		super(_p, _n, _flagIdx, fc, sc, rd, rdClosed, _winTxt);
+	public MPM_SimWindow(IRenderInterface _p, GUI_AppManager _AppMgr, String _n, int _flagIdx, int[] fc, int[] sc, float[] rd, float[] rdClosed, String _winTxt) {
+		super(_p, _AppMgr, _n, _flagIdx, fc, sc, rd, rdClosed, _winTxt);
 		super.initThisWin(false);
 	}//DancingBallWin
 	
@@ -116,7 +118,7 @@ public class MPM_SimWindow extends myDispWindow {
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		
-		pa.setAllMenuBtnNames(menuBtnNames);	
+		AppMgr.setAllMenuBtnNames(menuBtnNames);	
 
 	}//initMe	
 
@@ -128,7 +130,7 @@ public class MPM_SimWindow extends myDispWindow {
 
 	//call this to initialize or reinitialize simulation (on reset)
 	protected void reinitSim() {
-		pa.setSimIsRunning( false);		
+		AppMgr.setSimIsRunning( false);		
 		currSim.resetSim(true);
 	}
 		
@@ -280,7 +282,7 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	protected void setCameraIndiv(float[] camVals){		
 		//, float rx, float ry, float dz are now member variables of every window
-		pa.camera(camVals[0],camVals[1],camVals[2],camVals[3],camVals[4],camVals[5],camVals[6],camVals[7],camVals[8]);      
+		pa.setCameraWinVals(camVals);//(camVals[0],camVals[1],camVals[2],camVals[3],camVals[4],camVals[5],camVals[6],camVals[7],camVals[8]);      
 		// puts origin of all drawn objects at screen center and moves forward/away by dz
 		pa.translate(camVals[0],camVals[1],(float)dz); 
 	    setCamOrient();	
@@ -317,11 +319,11 @@ public class MPM_SimWindow extends myDispWindow {
 	//draw custom 2d constructs below interactive component of menu
 	@Override
 	public void drawCustMenuObjs(){
-		pa.pushMatrix();				pa.pushStyle();		
+		pa.pushMatState();	
 		//all sub menu drawing within push mat call
 		pa.translate(0,custMenuOffset+yOff);		
 		//draw any custom menu stuff here
-		pa.popStyle();					pa.popMatrix();		
+		pa.popMatState();
 	}//drawCustMenuObjs
 
 	//things to do when swapping this window out for another window - release objects that take up a lot of memory, for example.
@@ -403,7 +405,7 @@ public class MPM_SimWindow extends myDispWindow {
 
 	@Override
 	protected void setCustMenuBtnNames() {
-		pa.setAllMenuBtnNames(menuBtnNames);	
+		AppMgr.setAllMenuBtnNames(menuBtnNames);	
 	}
 
 	@Override

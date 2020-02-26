@@ -9,11 +9,12 @@ import java.util.concurrent.*;
 
 import org.jblas.FloatMatrix;
 
-import base_UI_Objects.my_procApplet;
+import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Utils_Objects.io.ConsoleCLR;
 import base_Utils_Objects.io.MsgCodes;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
+import base_UI_Objects.my_procApplet;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
@@ -22,7 +23,7 @@ import processing.core.PConstants;
 //abstract class describing a simulation world.  called by sim window to executed simulation and to render results
 //instancing classes can hold different configurations/initialization setups
 public abstract class MPM_Abs_CUDASim{	
-	public static my_procApplet pa;
+	public static IRenderInterface pa;
 	//name of instancing sim
 	public final String simName;
 	
@@ -162,7 +163,7 @@ public abstract class MPM_Abs_CUDASim{
 	
 	//grid count per side - center grid always in display; grid cell dim per side
 	//@SuppressWarnings("unchecked")
-	public MPM_Abs_CUDASim(my_procApplet _pa,String _simName, int _gridCount, float _h, int _numParts) {		
+	public MPM_Abs_CUDASim(IRenderInterface _pa,String _simName, int _gridCount, float _h, int _numParts) {		
 		pa=_pa;simName = _simName;
 //		//for multithreading - do not use instanced version in PApplet - we may not use processing-based build to run simulation
 //		th_exec = Executors.newCachedThreadPool();		
@@ -820,26 +821,36 @@ public abstract class MPM_Abs_CUDASim{
 	public void drawMe(float animTimeMod) {
 		if(!getSimFlags(simIsBuiltIDX)) {return;}//if not built yet, don't try to draw anything
 		//render all particles - TODO determine better rendering method
-		pa.pushMatrix();pa.pushStyle();
-		pa.strokeWeight(3.0f/sclAmt);
+		pa.pushMatState();
+		pa.setStrokeWt(3.0f/sclAmt);
 		pa.scale(sclAmt);	
 
-		pa.pushMatrix();pa.pushStyle();
+		pa.pushMatState();
+//		//draw the points
 		//draw the points
 		int pincr = 1;
-		pa.beginShape(PConstants.POINTS);
+		((my_procApplet)pa).beginShape(PConstants.POINTS);
 		for(int i=0;i<=numParts-pincr;i+=pincr) {				
 			//pa.stroke(h_part_clr[i][0], h_part_clr[i][1], h_part_clr[i][2]);
-			pa.stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
+			((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
 			//pa.point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-			pa.vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+			((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
 		}
-		pa.endShape();
-		pa.popStyle();pa.popMatrix();
+		((my_procApplet)pa).endShape();
+//		int pincr = 1;
+//		pa.gl_beginShape(PConstants.POINTS);
+//		for(int i=0;i<=numParts-pincr;i+=pincr) {				
+//			//pa.stroke(h_part_clr[i][0], h_part_clr[i][1], h_part_clr[i][2]);
+//			pa.gl_SetStroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2], 255);
+//			//pa.point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+//			pa.gl_vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+//		}
+//		pa.gl_endShape();
+		pa.popMatState();
 		
 		if(getSimFlags(showGrid)) {
-			pa.pushMatrix();pa.pushStyle();			
-			pa.stroke(0,0,0,20);
+			pa.pushMatState();		
+			pa.setStroke(0,0,0,20);
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
 			int incr = 10;
 			//shows every "incr" gridcells
@@ -848,12 +859,12 @@ public abstract class MPM_Abs_CUDASim{
 				for(int j=0;j<=gridCount;j+=incr) {
 					myVectorf startPos=new myVectorf(iLoc,j*h,0.0f);
 					myVectorf endPos=new myVectorf(iLoc,j*h,gridDim);
-					pa.line(startPos,endPos);
+					pa.drawLine(startPos,endPos);
 				}
 				for(int k=0;k<=gridCount;k+=incr) {
 					myVectorf startPos=new myVectorf(iLoc,0.0f, k*h);
 					myVectorf endPos=new myVectorf(iLoc,gridDim,k*h);
-					pa.line(startPos,endPos);
+					pa.drawLine(startPos,endPos);
 				}
 			}
 			for(int j=0;j<=gridCount;j+=incr) {
@@ -861,12 +872,12 @@ public abstract class MPM_Abs_CUDASim{
 				for(int k=0;k<=gridCount;k+=incr) {
 					myVectorf startPos=new myVectorf(0.0f,jLoc,k*h);
 					myVectorf endPos=new myVectorf(gridDim,jLoc,k*h);
-					pa.line(startPos,endPos);
+					pa.drawLine(startPos,endPos);
 				}
 			}
-			pa.popStyle();pa.popMatrix();
+			pa.popMatState();
 		}
-		pa.popStyle();pa.popMatrix();
+		pa.popMatState();
 	}//drawMe
 	
 	
@@ -909,7 +920,7 @@ class MPM_Cuda2Balls extends MPM_Abs_CUDASim {
 	//scale w/timestep
 	private static float initVel = 30.0f;
 	
-	public MPM_Cuda2Balls(my_procApplet _pa,int _gridCount, float _h, int _numParts) {
+	public MPM_Cuda2Balls(IRenderInterface _pa,int _gridCount, float _h, int _numParts) {
 		super(_pa,"2 Big Snowballs",_gridCount, _h,_numParts);
 	}
 	

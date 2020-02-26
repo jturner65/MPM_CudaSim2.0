@@ -1,15 +1,17 @@
 package MPM_CudaSim;
 
 
+import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.my_procApplet;
 import base_UI_Objects.windowUI.base.myDispWindow;
+import processing.core.PConstants;
 
 /**
 * MPM Snow Simulation in CUDA 2.0
 * @author john turner
 */
 
-public class MPM_SimMain extends my_procApplet {
+public class MPM_SimMain extends GUI_AppManager {
 	
 	public String prjNmLong = "MPM Simulation CUDA 2.0", prjNmShrt = "MPM_SnowSim_cuda_2.0";
 	public String authorString = "John Turner";
@@ -33,8 +35,8 @@ public class MPM_SimMain extends my_procApplet {
 //////////////////////////////////////////////// code																		//set array of vector values (sceneFcsVals) based on application
 	//needs main to run project - do not modify this code in any way
 	public static void main(String[] passedArgs) {		
-		String[] appletArgs = new String[] { "MPM_CudaSim.MPM_SimMain" };
-	    my_procApplet._invokedMain(appletArgs, passedArgs);
+		MPM_SimMain me = new MPM_SimMain();
+	    my_procApplet._invokedMain(me, passedArgs);
 	}//main	
 	
 	/**
@@ -55,10 +57,10 @@ public class MPM_SimMain extends my_procApplet {
 		setBkgrnd();
 	}	
 	@Override
-	public void setBkgrnd(){background(bground[0],bground[1],bground[2],bground[3]);}//setBkgrnd
+	public void setBkgrnd(){((my_procApplet)pa).background(bground[0],bground[1],bground[2],bground[3]);}//setBkgrnd
 
 	@Override
-	protected void initMainFlags_Priv() {
+	protected void initMainFlags_Indiv() {
 		setMainFlagToShow_debugMode(false);
 		setMainFlagToShow_saveAnim(true); 
 		setMainFlagToShow_runSim(true);
@@ -66,9 +68,10 @@ public class MPM_SimMain extends my_procApplet {
 		setMainFlagToShow_showRtSideMenu(true);
 	}
 	@Override
-	protected void initVisOnce_Priv() {
+	protected void initVisOnce_Indiv() {
+		((my_procApplet)pa).strokeCap(PConstants.SQUARE);
 		showInfo = true;
-		drawnTrajEditWidth = 10;
+		
 		//includes 1 for menu window (never < 1) - always have same # of visFlags as myDispWindows
 		int numWins = numVisFlags;		
 		//titles and descs, need to be set before sidebar menu is defined
@@ -83,8 +86,8 @@ public class MPM_SimMain extends my_procApplet {
 				
 		//new mySideBarMenu(this, winTitles[wIdx], fIdx, winFillClrs[wIdx], winStrkClrs[wIdx], winRectDimOpen[wIdx], winRectDimClose[wIdx], winDescr[wIdx]);	
 		//instanced window dimensions when open and closed - only showing 1 open at a time
-		float[] _dimOpen  =  new float[]{menuWidth, 0, width-menuWidth, height}, 
-				_dimClosed  =  new float[]{menuWidth, 0, hideWinWidth, height};	
+		float[] _dimOpen  =  new float[]{menuWidth, 0, pa.getWidth()-menuWidth, pa.getHeight()}, 
+				_dimClosed  =  new float[]{menuWidth, 0, hideWinWidth, pa.getHeight()};	
 		//setInitDispWinVals : use this to define the values of a display window
 		//int _winIDX, 
 		//float[] _dimOpen, float[] _dimClosed  : dimensions opened or closed
@@ -96,7 +99,7 @@ public class MPM_SimMain extends my_procApplet {
 
 		wIdx = dispMPMWinIDX; fIdx= showMPMwin;
 		setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
-		dispWinFrames[wIdx] = new MPM_SimWindow(this, winTitles[wIdx], fIdx, winFillClrs[wIdx], winStrkClrs[wIdx], winRectDimOpen[wIdx], winRectDimClose[wIdx], winDescr[wIdx]);
+		dispWinFrames[wIdx] = new MPM_SimWindow(pa, this, winTitles[wIdx], fIdx, winFillClrs[wIdx], winStrkClrs[wIdx], winRectDimOpen[wIdx], winRectDimClose[wIdx], winDescr[wIdx]);
 		
 		//specify windows that cannot be shown simultaneously here
 		initXORWins(new int[]{showMPMwin},new int[]{dispMPMWinIDX});
@@ -104,7 +107,7 @@ public class MPM_SimMain extends my_procApplet {
 	}//initVisOnce_Priv
 	
 	@Override
-	protected void initOnce_Priv() {
+	protected void initOnce_Indiv() {
 		//which objects to initially show
 		setVisFlag(showUIMenu, true);					//show input UI menu	
 		setVisFlag(showMPMwin, true);		
@@ -196,12 +199,9 @@ public class MPM_SimMain extends my_procApplet {
 	}//setFlags  
 	
 	@Override
-	protected int[] getClr_Custom(int colorVal, int alpha) {	return new int[] {255,255,255,alpha};}
+	public int[] getClr_Custom(int colorVal, int alpha) {	return new int[] {255,255,255,alpha};}
 
 	@Override
-	protected void setSmoothing() {
-		smooth(4);
-		//noSmooth();
-	}
+	protected void setSmoothing() {		pa.setSmoothing(4);		}
 
 }//class MPM_SimMain
