@@ -6,7 +6,6 @@ import java.util.*;
 import base_UI_Objects.drawnObjs.myDrawnSmplTraj;
 import base_UI_Objects.windowUI.base.base_UpdateFromUIData;
 import base_UI_Objects.windowUI.base.myDispWindow;
-import base_UI_Objects.windowUI.myGUIObj;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
 
@@ -112,7 +111,7 @@ public class MPM_SimWindow extends myDispWindow {
 		
 //		//init simulation construct here
 		//init simulation construct here
-		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation : " + pa.millis());
+		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation now.");
 		currSim = new MPM_Cuda2Balls(pa,numGridCells, cellSize,numParts);		
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	

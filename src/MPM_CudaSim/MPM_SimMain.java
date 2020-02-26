@@ -81,9 +81,10 @@ public class MPM_SimMain extends my_procApplet {
 		int wIdx = dispMenuIDX,fIdx=showUIMenu;
 		dispWinFrames[wIdx] = this.buildSideBarMenu(wIdx, fIdx, new String[]{"Functions 1","Functions 2","Functions 3","Functions 4"}, new int[] {3,4,4,4}, 5, false, false);
 				
-				//new mySideBarMenu(this, winTitles[wIdx], fIdx, winFillClrs[wIdx], winStrkClrs[wIdx], winRectDimOpen[wIdx], winRectDimClose[wIdx], winDescr[wIdx]);	
+		//new mySideBarMenu(this, winTitles[wIdx], fIdx, winFillClrs[wIdx], winStrkClrs[wIdx], winRectDimOpen[wIdx], winRectDimClose[wIdx], winDescr[wIdx]);	
 		//instanced window dimensions when open and closed - only showing 1 open at a time
-		float[] _dimOpen  =  new float[]{menuWidth, 0, width-menuWidth, height}, _dimClosed  =  new float[]{menuWidth, 0, hideWinWidth, height};	
+		float[] _dimOpen  =  new float[]{menuWidth, 0, width-menuWidth, height}, 
+				_dimClosed  =  new float[]{menuWidth, 0, hideWinWidth, height};	
 		//setInitDispWinVals : use this to define the values of a display window
 		//int _winIDX, 
 		//float[] _dimOpen, float[] _dimClosed  : dimensions opened or closed
@@ -134,7 +135,7 @@ public class MPM_SimMain extends my_procApplet {
 			case 'a' :
 			case 'A' : {toggleSaveAnim();break;}						//start/stop saving every frame for making into animation
 			case 's' :
-			case 'S' : {save(getScreenShotSaveName(prjNmShrt));break;}//save picture of current image			
+			case 'S' : {break;}//save(getScreenShotSaveName(prjNmShrt));break;}//save picture of current image			
 			default : {	}
 		}//switch	
 	}
@@ -200,6 +201,7 @@ public class MPM_SimMain extends my_procApplet {
 	@Override
 	protected void setSmoothing() {
 		smooth(4);
+		//noSmooth();
 	}
 
 }//class MPM_SimMain

@@ -17,6 +17,7 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
+import processing.core.PConstants;
 
 //abstract class describing a simulation world.  called by sim window to executed simulation and to render results
 //instancing classes can hold different configurations/initialization setups
@@ -145,7 +146,8 @@ public abstract class MPM_Abs_CUDASim{
 
     float[] h_part_pos_x,h_part_pos_y, h_part_pos_z;
     //colors based on initial location
-    float[][] h_part_clr;
+    //float[][] h_part_clr;
+    int[][] h_part_clr_int;
     
     CUcontext pctx;
     CUdevice dev;
@@ -230,6 +232,12 @@ public abstract class MPM_Abs_CUDASim{
 		return 55.0f + 200.0f * (val - min)/denom;	
 	}
 	
+	private int getClrValInt(Float val, Float min, Float max) {
+		Float denom = (max-min);
+		if(denom <=0) return 255;
+		return (int) (55.0f + 200.0f * (val - min)/denom);	
+	}
+	
 	//allocate dev mem for all objects based on number of particles
 	private void initCUDAMemPtrs_Parts(TreeMap<String, ArrayList<Float[]>> partVals) {
         float h_part_mass[] =new float[numParts];
@@ -241,7 +249,8 @@ public abstract class MPM_Abs_CUDASim{
         h_part_pos_x = new float[numParts];
         h_part_pos_y =new float[numParts];
         h_part_pos_z =new float[numParts];
-        h_part_clr = new float[numParts][3];
+        //h_part_clr = new float[numParts][3];
+        h_part_clr_int = new int[numParts][3];
         
 		Float[] minVals = partVals.get("minMaxVals").get(0);
 		Float[] maxVals = partVals.get("minMaxVals").get(1);       
@@ -254,10 +263,15 @@ public abstract class MPM_Abs_CUDASim{
         	h_part_pos_x[i]=posAra[0];
         	h_part_pos_y[i]=posAra[1];
         	h_part_pos_z[i]=posAra[2];
-        	h_part_clr[i] = new float[] {
-    			getClrVal(h_part_pos_x[i],minVals[0],maxVals[0]), 
-				getClrVal(h_part_pos_y[i],minVals[1],maxVals[1]), 
-				getClrVal(h_part_pos_z[i],minVals[2],maxVals[2]) 
+//        	h_part_clr[i] = new float[] {
+//    			getClrVal(h_part_pos_x[i],minVals[0],maxVals[0]), 
+//				getClrVal(h_part_pos_y[i],minVals[1],maxVals[1]), 
+//				getClrVal(h_part_pos_z[i],minVals[2],maxVals[2]) 
+//        	};  
+        	h_part_clr_int[i] = new int[] {
+        			getClrValInt(h_part_pos_x[i],minVals[0],maxVals[0]), 
+        			getClrValInt(h_part_pos_y[i],minVals[1],maxVals[1]), 
+        			getClrValInt(h_part_pos_z[i],minVals[2],maxVals[2]) 
         	};  
         	velAra = partVals.get("vel").get(i);
         	//h_part_clr[i] = new float[] {(.5f + h_part_pos_x[i])*128, (.5f + h_part_pos_y[i])*128, (.5f + h_part_pos_z[i])*128};
@@ -813,10 +827,14 @@ public abstract class MPM_Abs_CUDASim{
 		pa.pushMatrix();pa.pushStyle();
 		//draw the points
 		int pincr = 1;
-		for(int i=0;i<=numParts-pincr;i+=pincr) {			
-			pa.stroke(h_part_clr[i][0], h_part_clr[i][1], h_part_clr[i][2]);
-			pa.point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+		pa.beginShape(PConstants.POINTS);
+		for(int i=0;i<=numParts-pincr;i+=pincr) {				
+			//pa.stroke(h_part_clr[i][0], h_part_clr[i][1], h_part_clr[i][2]);
+			pa.stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
+			//pa.point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+			pa.vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
 		}
+		pa.endShape();
 		pa.popStyle();pa.popMatrix();
 		
 		if(getSimFlags(showGrid)) {
