@@ -15,6 +15,7 @@ import base_Utils_Objects.io.MsgCodes;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_UI_Objects.my_procApplet;
+import base_UI_Objects.windowUI.base.myDispWindow;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
@@ -826,17 +827,17 @@ public abstract class MPM_Abs_CUDASim{
 		pa.scale(sclAmt);	
 
 		pa.pushMatState();
-//		//draw the points
 		//draw the points
 		int pincr = 1;
-		((my_procApplet)pa).beginShape(PConstants.POINTS);
+//		((my_procApplet)pa).drawPointsWithColors(numParts, pincr, h_part_clr_int, h_part_pos_x, h_part_pos_y, h_part_pos_z);
+		//((my_procApplet)pa).beginShape(PConstants.POINTS);
 		for(int i=0;i<=numParts-pincr;i+=pincr) {				
-			//pa.stroke(h_part_clr[i][0], h_part_clr[i][1], h_part_clr[i][2]);
-			((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
-			//pa.point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-			((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+			pa.setStroke(h_part_clr_int[i], 255);
+			//((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
+			((my_procApplet)pa).point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+			//((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
 		}
-		((my_procApplet)pa).endShape();
+		//((my_procApplet)pa).endShape();
 //		int pincr = 1;
 //		pa.gl_beginShape(PConstants.POINTS);
 //		for(int i=0;i<=numParts-pincr;i+=pincr) {				
