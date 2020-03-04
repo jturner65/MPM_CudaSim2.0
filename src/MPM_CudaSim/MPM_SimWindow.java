@@ -3,6 +3,7 @@ package MPM_CudaSim;
 import java.io.File;
 import java.util.*;
 
+import MPM_CudaSim.base.base_MPMCudaSim;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.base_UpdateFromUIData;
@@ -15,11 +16,11 @@ public class MPM_SimWindow extends myDispWindow {
 
 	//simulator world within which simulation executes
 	//TODO support multiple sim worlds possibly, with different configurations
-	public MPM_Abs_CUDASim currSim;
+	public base_MPMCudaSim currSim;
 	//grid variables
-	private int numGridCells = MPM_Abs_CUDASim.numGridCells;
-	private float cellSize = MPM_Abs_CUDASim.cellSize;
-	private int numParts = MPM_Abs_CUDASim.numPartsUI_Init;
+	private int numGridCells = base_MPMCudaSim.numGridCells;
+	private float cellSize = base_MPMCudaSim.cellSize;
+	private int numParts = base_MPMCudaSim.numPartsUI_Init;
 	private float csCube = cellSize*cellSize*cellSize;
 	
 	//motion
@@ -65,14 +66,14 @@ public class MPM_SimWindow extends myDispWindow {
 		resetSimIDX				= 1,			//whether or not to reset sim	
 		resetReqIDX				= 2,			//reset of sim is required for best results
 		showCollider			= 3,			//show collider cylinder
-		showParticleVelArrows 	= 4,			//plot velocity arrows for each particle	
-		showGrid				= 5,  			//plot the computational grid
-		showGridVelArrows 		= 6,			//plot velocity arrows for each gridNode
-		showGridAccelArrows 	= 7,			//plot acceleration arrows for each gridNode
-		showGridMass  			= 8,			//plot variable sized spheres proportional to gridnode mass
-		showActiveNodes  		= 9,				//show the grid nodes influenced by each particle
-		showExecTime			= 10,			//show time of execution for each step in simulation
-		runMultiThdSim			= 11;			//run the multi-threaded version of the simulation
+		showParticles			= 4,
+		showParticleVelArrows 	= 5,			//plot velocity arrows for each particle	
+		showGrid				= 6,  			//plot the computational grid
+		showGridVelArrows 		= 7,			//plot velocity arrows for each gridNode
+		showGridAccelArrows 	= 8,			//plot acceleration arrows for each gridNode
+		showGridMass  			= 9,			//plot variable sized spheres proportional to gridnode mass
+		showActiveNodes  		= 10,				//show the grid nodes influenced by each particle
+		showExecTime			= 11;			//show time of execution for each step in simulation
 
 	public static final int numPrivFlags = 12;
 		
@@ -87,14 +88,14 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpBtnNamesArray.add(new Object[]{"Visualization Debug",    "Enable Debug",       debugAnimIDX});          
 		tmpBtnNamesArray.add(new Object[]{"Resetting Simulation",   "Reset Simulation",   resetSimIDX});           
 		tmpBtnNamesArray.add(new Object[]{"Showing Collider",       "Show Collider",      showCollider});          
+		tmpBtnNamesArray.add(new Object[]{"Showing Particles",   "Show Particles",  showParticles});  
 		tmpBtnNamesArray.add(new Object[]{"Showing Particle Vel",   "Show Particle Vel",  showParticleVelArrows});  
 		tmpBtnNamesArray.add(new Object[]{"Showing Grid",           "Show Grid",          showGrid});           
 		tmpBtnNamesArray.add(new Object[]{"Showing Grid Vel",       "Show Grid Vel",      showGridVelArrows});     
 		tmpBtnNamesArray.add(new Object[]{"Showing Grid Accel",     "Show Grid Accel",    showGridAccelArrows});    
 		tmpBtnNamesArray.add(new Object[]{"Showing Grid Mass",      "Show Grid Mass",     showGridMass});         
 		tmpBtnNamesArray.add(new Object[]{"Showing Active Nodes",   "Show Active Nodes",  showActiveNodes});     
-		tmpBtnNamesArray.add(new Object[]{"Showing Execution Time", "Show Execution Time",showExecTime});         
-		tmpBtnNamesArray.add(new Object[]{"Running Multi-Thd Sim",   "Run Multi-Thd Sim",   runMultiThdSim });         
+		tmpBtnNamesArray.add(new Object[]{"Showing Execution Time", "Show Execution Time",showExecTime});        
 		return numPrivFlags;
 	}//initAllPrivBtns
 	//set labels of boolean buttons 
@@ -117,6 +118,7 @@ public class MPM_SimWindow extends myDispWindow {
 		currSim = new MPM_Cuda2Balls(pa,numGridCells, cellSize,numParts);		
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
+		setPrivFlags(showParticles, true);
 		
 		AppMgr.setAllMenuBtnNames(menuBtnNames);	
 
@@ -125,7 +127,7 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	protected int[] getFlagIDXsToInitToTrue() {
 		// TODO Auto-generated method stub
-		return new int[] {showCollider};
+		return null;//new int[] {showCollider, showParticles};
 	}
 
 	//call this to initialize or reinitialize simulation (on reset)
@@ -156,25 +158,28 @@ public class MPM_SimWindow extends myDispWindow {
 				
 				break;}	
 			case showCollider			: {//show collider
-				currSim.setSimFlags(MPM_Abs_CUDASim.showCollider, val);
+				currSim.setSimFlags(base_MPMCudaSim.showCollider, val);
+				break;}
+			case showParticles			: {
+				currSim.setSimFlags(base_MPMCudaSim.showParticles, val);				
 				break;}
 			case showParticleVelArrows	: {
-				currSim.setSimFlags(MPM_Abs_CUDASim.showParticleVelArrows, val);
+				currSim.setSimFlags(base_MPMCudaSim.showParticleVelArrows, val);
 				break;} 
 			case showGrid				: {
-				currSim.setSimFlags(MPM_Abs_CUDASim.showGrid, val);
+				currSim.setSimFlags(base_MPMCudaSim.showGrid, val);
 				break;} 				
 			case showGridVelArrows 		: {
-				currSim.setSimFlags(MPM_Abs_CUDASim.showGridVelArrows, val);
+				currSim.setSimFlags(base_MPMCudaSim.showGridVelArrows, val);
 				break;} 		
 			case showGridAccelArrows	: {
-				currSim.setSimFlags(MPM_Abs_CUDASim.showGridAccelArrows, val);
+				currSim.setSimFlags(base_MPMCudaSim.showGridAccelArrows, val);
 				break;} 	
 			case showGridMass  			: {
-				currSim.setSimFlags(MPM_Abs_CUDASim.showGridMass, val);
+				currSim.setSimFlags(base_MPMCudaSim.showGridMass, val);
 				break;} 		
 			case showActiveNodes 	: {
-				currSim.setSimFlags(MPM_Abs_CUDASim.showActiveNodes, val);
+				currSim.setSimFlags(base_MPMCudaSim.showActiveNodes, val);
 				break;} 	
 			case showExecTime			: { 
 				break;}
@@ -186,8 +191,8 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	protected void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){	
 		
-		tmpUIObjArray.put(gIDX_timeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*MPM_Abs_CUDASim.getDeltaT(),  "Sim Time Step", new boolean[]{false, false, true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
-		tmpUIObjArray.put(gIDX_simStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*MPM_Abs_CUDASim.simStepsPerFrame, "Sim Steps per Drawn Frame",  new boolean[]{true, false, true}});//gIDX_simStepsPerFrame  init 5
+		tmpUIObjArray.put(gIDX_timeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*base_MPMCudaSim.getDeltaT(),  "Sim Time Step", new boolean[]{false, false, true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
+		tmpUIObjArray.put(gIDX_simStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*base_MPMCudaSim.simStepsPerFrame, "Sim Steps per Drawn Frame",  new boolean[]{true, false, true}});//gIDX_simStepsPerFrame  init 5
 		tmpUIObjArray.put(gIDX_numParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*numParts, "# of Particles", new boolean[]{true, false, true}});//number of particles
 		tmpUIObjArray.put(gIDX_partMass, new Object[] {new double[]{.00005, 5.00, .00005}, 1.0*partMass, "Particle Mass", new boolean[]{false, false, true}});//particle mass
 		tmpUIObjArray.put(gIDX_gridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*cellSize, "Grid Cell Size", new boolean[]{false, false, true}});//grid cell size
@@ -198,8 +203,8 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpUIObjArray.put(gIDX_criticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*myMaterial.base_criticalCompression, "Critical Compression", new boolean[]{false, false, true}});//gIDX_criticalCompression  init .019f, 
 		tmpUIObjArray.put(gIDX_criticalStretch , new Object[] {new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*myMaterial.base_criticalStretch, "Critical Stretch",  new boolean[]{false, false, true}});//gIDX_criticalStretch init .0075f, 
 		tmpUIObjArray.put(gIDX_alphaPicFlip, new Object[] {new double[]{0.0f, 1.0f, 0.01f}, 1.0*myMaterial.base_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", new boolean[]{false, false, true}});//gIDX_alphaPicFlip init 0.95f, 
-		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*MPM_Abs_CUDASim.wallFric, "Wall Friction Coefficient",  new boolean[]{false, false, true}});//gIDX_wallfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_collFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*MPM_Abs_CUDASim.collFric, "Collider Friction Coefficient", new boolean[]{false, false, true}});//gIDX_collfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.wallFric, "Wall Friction Coefficient",  new boolean[]{false, false, true}});//gIDX_wallfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_collFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.collFric, "Collider Friction Coefficient", new boolean[]{false, false, true}});//gIDX_collfricCoeffinit 1.0f  
 	}//setupGUIObjsAras
 	
 	@Override
@@ -259,7 +264,7 @@ public class MPM_SimWindow extends myDispWindow {
 				reinitSim();
 				break;} 
 			case gIDX_simStepsPerFrame 			:{
-				MPM_Abs_CUDASim.simStepsPerFrame = (int)val;
+				base_MPMCudaSim.simStepsPerFrame = (int)val;
 				break;}
 			default : {break;}
 			}

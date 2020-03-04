@@ -1,4 +1,4 @@
-package MPM_CudaSim;
+package MPM_CudaSim.base;
 
 import static jcuda.driver.JCudaDriver.*;
 
@@ -7,23 +7,22 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 
-import org.jblas.FloatMatrix;
+//import org.jblas.FloatMatrix;
 
+import MPM_CudaSim.myMaterial;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Utils_Objects.io.ConsoleCLR;
 import base_Utils_Objects.io.MsgCodes;
+import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
-import base_UI_Objects.my_procApplet;
-import base_UI_Objects.windowUI.base.myDispWindow;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
-import processing.core.PConstants;
 
 //abstract class describing a simulation world.  called by sim window to executed simulation and to render results
 //instancing classes can hold different configurations/initialization setups
-public abstract class MPM_Abs_CUDASim{	
+public abstract class base_MPMCudaSim{	
 	public static IRenderInterface pa;
 	//name of instancing sim
 	public final String simName;
@@ -42,8 +41,8 @@ public abstract class MPM_Abs_CUDASim{
 	//grid dim - cube so same in all 3 dims; # of particles in sim
 	protected int gridCount = numGridCells;
 	protected float h = cellSize;
-	//# parts * size of float - currently always builds same # of particles
-	protected long numPartsFloatSz;
+	//# parts * size of float & num grid cells * size float 
+	protected long numPartsFloatSz, numGridFloatSz;
 	
 	//simulation boundaries - symmetric cube, only need min and max, grid length per dim
 	protected float minSimBnds, maxSimBnds, gridDim;
@@ -53,15 +52,15 @@ public abstract class MPM_Abs_CUDASim{
 	public static boolean supportsANSITerm = false;
 	//parameters
 	//timestep of simulation - 
-	private static float deltaT = 4e-4f;
+	protected  static float deltaT = 4e-4f;
 	//snow density varies from 50 to ~800
 	//powdery snow is about 100
 	//wet firm compacted snow is about 600
-	private static float initDensity = 100.0f;
+	protected  static float initDensity = 100.0f;
 
 	//const matrix for calculations - z is down
-	final FloatMatrix gravity = new FloatMatrix(new float[] {0, 0, -9.8f});
-
+	//protected final FloatMatrix gravity = new FloatMatrix(new float[] {0, 0, -9.8f});
+	protected final float[] gravity = new float[] {0, 0, -9.8f};
 	//scale amount for visualization to fill cube frame in 3d world; particle radius, scaled by different visual scales
 	protected float sclAmt;
 	
@@ -78,14 +77,15 @@ public abstract class MPM_Abs_CUDASim{
 		simIsBuiltIDX			= 1,			//simulation is finished being built - set in thread manager
 		gridIsBuiltIDX			= 2,			//sim grid is built
 		showCollider			= 3,			//display visual rep of collider object, if one exists
-		showParticleVelArrows 	= 4,			//plot velocity arrows for each particle	
-		showGrid				= 5,			//plot the computational grid
-		showGridVelArrows 		= 6,			//plot velocity arrows for each gridNode
-		showGridAccelArrows 	= 7,			//plot acceleration arrows for each gridNode
-		showGridMass  			= 8,			//plot variable sized spheres proportional to gridnode mass
-		showActiveNodes		  	= 9,			//show the grid nodes influenced by each particle
-		CUDADevInit				= 10;			//if 1 time cuda device and kernel file init is complete
-	protected static final int numSimFlags = 11;
+		showParticles			= 4,			//display visual rep of material points
+		showParticleVelArrows 	= 5,			//plot velocity arrows for each particle	
+		showGrid				= 6,			//plot the computational grid
+		showGridVelArrows 		= 7,			//plot velocity arrows for each gridNode
+		showGridAccelArrows 	= 8,			//plot acceleration arrows for each gridNode
+		showGridMass  			= 9,			//plot variable sized spheres proportional to gridnode mass
+		showActiveNodes		  	= 10,			//show the grid nodes influenced by each particle
+		CUDADevInit				= 11;			//if 1 time cuda device and kernel file init is complete
+	protected static final int numSimFlags = 12;
 
 	//iterations per frame
 	public static int simStepsPerFrame = 2;
@@ -100,77 +100,98 @@ public abstract class MPM_Abs_CUDASim{
 	protected TreeMap<String, Pointer> kernelParams;
 	protected TreeMap<String, CUfunction> cuFuncs;
 	protected String[] CUFileFuncNames = new String[] {"projectToGridandComputeForces","projectToGridInit", "computeVol", "updPartVelocities",  "compGridVelocities", "partCollAndUpdPos", "gridCollisions", "clearGrid", "updDeformationGradient" };
-	protected String[] initStepFuncKeys = new String[] {"projectToGridInit", "computeVol","compGridVelocities", "gridCollisions", "updDeformationGradient", "updPartVelocities", "clearGrid","partCollAndUpdPos"}; 
-	protected String[] simStepFuncKeys = new String[] {"projectToGridandComputeForces", "compGridVelocities", "gridCollisions", "updDeformationGradient", "updPartVelocities", "clearGrid", "partCollAndUpdPos"}; 
+	protected String[] initStepFuncKeys = new String[] {"clearGrid","projectToGridInit", "computeVol","compGridVelocities", "gridCollisions", "updDeformationGradient", "updPartVelocities", "partCollAndUpdPos"}; 
+	protected String[] simStepFuncKeys = new String[] {"clearGrid", "projectToGridandComputeForces", "compGridVelocities", "gridCollisions", "updDeformationGradient", "updPartVelocities", "partCollAndUpdPos"}; 
    
 	protected HashMap<String, int[]> funcGridDimAndMemSize;
     
-    CUdeviceptr part_mass = new CUdeviceptr();
-    CUdeviceptr part_vol = new CUdeviceptr();
-    CUdeviceptr part_pos_x = new CUdeviceptr();
-    CUdeviceptr part_pos_y = new CUdeviceptr();
-    CUdeviceptr part_pos_z = new CUdeviceptr();    
-    CUdeviceptr part_vel_x = new CUdeviceptr();
-    CUdeviceptr part_vel_y = new CUdeviceptr();
-    CUdeviceptr part_vel_z = new CUdeviceptr();    
-    CUdeviceptr part_fe_11 = new CUdeviceptr();
-    CUdeviceptr part_fe_12 = new CUdeviceptr();
-    CUdeviceptr part_fe_13 = new CUdeviceptr();
-    CUdeviceptr part_fe_21 = new CUdeviceptr();
-    CUdeviceptr part_fe_22 = new CUdeviceptr();
-    CUdeviceptr part_fe_23 = new CUdeviceptr();
-    CUdeviceptr part_fe_31 = new CUdeviceptr();
-    CUdeviceptr part_fe_32 = new CUdeviceptr();
-    CUdeviceptr part_fe_33 = new CUdeviceptr();    
-    CUdeviceptr part_fp_11 = new CUdeviceptr();
-    CUdeviceptr part_fp_12 = new CUdeviceptr();
-    CUdeviceptr part_fp_13 = new CUdeviceptr();
-    CUdeviceptr part_fp_21 = new CUdeviceptr();
-    CUdeviceptr part_fp_22 = new CUdeviceptr();
-    CUdeviceptr part_fp_23 = new CUdeviceptr();
-    CUdeviceptr part_fp_31 = new CUdeviceptr();
-    CUdeviceptr part_fp_32 = new CUdeviceptr();
-    CUdeviceptr part_fp_33 = new CUdeviceptr();    
+	protected CUdeviceptr part_mass, part_vol;
+	protected CUdeviceptr part_pos_x, part_pos_y, part_pos_z;    
+	protected CUdeviceptr part_vel_x, part_vel_y, part_vel_z; 
     
-    CUdeviceptr grid_mass = new CUdeviceptr();
-    CUdeviceptr grid_pos_x = new CUdeviceptr();
-    CUdeviceptr grid_pos_y = new CUdeviceptr();
-    CUdeviceptr grid_pos_z = new CUdeviceptr();    
-    CUdeviceptr grid_vel_x = new CUdeviceptr();
-    CUdeviceptr grid_vel_y = new CUdeviceptr();
-    CUdeviceptr grid_vel_z = new CUdeviceptr();    
-    CUdeviceptr grid_newvel_x = new CUdeviceptr();
-    CUdeviceptr grid_newvel_y = new CUdeviceptr();
-    CUdeviceptr grid_newvel_z = new CUdeviceptr();    
-    CUdeviceptr grid_force_x = new CUdeviceptr();
-    CUdeviceptr grid_force_y = new CUdeviceptr();
-    CUdeviceptr grid_force_z = new CUdeviceptr();
+	protected CUdeviceptr 
+		part_fe_11, part_fe_12, part_fe_13,
+		part_fe_21, part_fe_22, part_fe_23,
+    	part_fe_31, part_fe_32, part_fe_33;  
+    
+	protected CUdeviceptr 
+	    part_fp_11, part_fp_12, part_fp_13,
+	    part_fp_21, part_fp_22, part_fp_23,
+	    part_fp_31, part_fp_32, part_fp_33;    
 
-    float[] h_part_pos_x,h_part_pos_y, h_part_pos_z;
+    
+    protected CUdeviceptr grid_mass;
+    //protected CUdeviceptr grid_pos_x, grid_pos_y, grid_pos_z;    
+    protected CUdeviceptr grid_vel_x, grid_vel_y, grid_vel_z;    
+    protected CUdeviceptr grid_newvel_x, grid_newvel_y, grid_newvel_z;    
+    protected CUdeviceptr grid_force_x, grid_force_y, grid_force_z;
+    
+    //local representation of particle positions, for rendering
+    protected float[] h_part_pos_x,h_part_pos_y, h_part_pos_z,h_part_vel_x,h_part_vel_y, h_part_vel_z;
+    
+    //local representation of grid velocities, for rendering
+    protected float[] h_grid_pos_x,h_grid_pos_y, h_grid_pos_z, h_grid_vel_x, h_grid_vel_y, h_grid_vel_z, h_grid_accel_x, h_grid_accel_y, h_grid_accel_z, h_grid_mass; 
+    
     //colors based on initial location
     //float[][] h_part_clr;
-    int[][] h_part_clr_int;
+    protected int[][] h_part_clr_int;
     
-    CUcontext pctx;
-    CUdevice dev;
-    CUmodule module;
-    CUgraphicsResource pCudaResource;
+    protected CUcontext pctx;
+    protected CUdevice dev;
+    protected CUmodule module;
+    protected CUgraphicsResource pCudaResource;
     
-    public int gridSize;
-	public int numBlocksParticles;
-	public int numBlocksGrid;
+    protected  int gridSize;
+    protected  int numBlocksParticles;
+    protected  int numBlocksGrid;
 	//# of cuda threads
-	public int numCUDAThreads=128;
+    protected  int numCUDAThreads=128;
 	
 	//grid count per side - center grid always in display; grid cell dim per side
 	//@SuppressWarnings("unchecked")
-	public MPM_Abs_CUDASim(IRenderInterface _pa,String _simName, int _gridCount, float _h, int _numParts) {		
+	public base_MPMCudaSim(IRenderInterface _pa,String _simName, int _gridCount, float _h, int _numParts) {		
 		pa=_pa;simName = _simName;
-//		//for multithreading - do not use instanced version in PApplet - we may not use processing-based build to run simulation
-//		th_exec = Executors.newCachedThreadPool();		
-//		int numThreadsTtl = Runtime.getRuntime().availableProcessors();
-//		//# of threads to use to build structures - doesn't change
-//		numThreadsAvail = (numThreadsTtl > 2 ? numThreadsTtl-2 : 1);
+		part_mass = new CUdeviceptr();       
+		part_vol = new CUdeviceptr();        
+		part_pos_x = new CUdeviceptr();      
+		part_pos_y = new CUdeviceptr();      
+		part_pos_z = new CUdeviceptr();      
+		part_vel_x = new CUdeviceptr();      
+		part_vel_y = new CUdeviceptr();      
+		part_vel_z = new CUdeviceptr();      
+		part_fe_11 = new CUdeviceptr();      
+		part_fe_12 = new CUdeviceptr();      
+		part_fe_13 = new CUdeviceptr();      
+		part_fe_21 = new CUdeviceptr();      
+		part_fe_22 = new CUdeviceptr();      
+		part_fe_23 = new CUdeviceptr();      
+		part_fe_31 = new CUdeviceptr();      
+		part_fe_32 = new CUdeviceptr();      
+		part_fe_33 = new CUdeviceptr();      
+		part_fp_11 = new CUdeviceptr();      
+		part_fp_12 = new CUdeviceptr();      
+		part_fp_13 = new CUdeviceptr();      
+		part_fp_21 = new CUdeviceptr();      
+		part_fp_22 = new CUdeviceptr();      
+		part_fp_23 = new CUdeviceptr();      
+		part_fp_31 = new CUdeviceptr();      
+		part_fp_32 = new CUdeviceptr();      
+		part_fp_33 = new CUdeviceptr();      
+		                                     
+		grid_mass = new CUdeviceptr();       
+//		grid_pos_x = new CUdeviceptr();      
+//		grid_pos_y = new CUdeviceptr();      
+//		grid_pos_z = new CUdeviceptr();      
+		grid_vel_x = new CUdeviceptr();      
+		grid_vel_y = new CUdeviceptr();      
+		grid_vel_z = new CUdeviceptr();      
+		grid_newvel_x = new CUdeviceptr();   
+		grid_newvel_y = new CUdeviceptr();   
+		grid_newvel_z = new CUdeviceptr();   
+		grid_force_x = new CUdeviceptr();    
+		grid_force_y = new CUdeviceptr();    
+		grid_force_z = new CUdeviceptr();    
+		
 		
 		//whether this system supports an ansi terminal or not
 		supportsANSITerm = (System.console() != null && System.getenv().get("TERM") != null);	
@@ -224,7 +245,7 @@ public abstract class MPM_Abs_CUDASim{
 			cuFuncs.put(key,  c);
 		}
     
-        this.setSimFlags(CUDADevInit, true);
+        setSimFlags(CUDADevInit, true);
 	}//loadModuleAndSetFuncPtrs
 	
 	//returns a color value (0.0f -> 255.0f) in appropriate location in span of min to max
@@ -243,14 +264,16 @@ public abstract class MPM_Abs_CUDASim{
 	//allocate dev mem for all objects based on number of particles
 	private void initCUDAMemPtrs_Parts(TreeMap<String, ArrayList<Float[]>> partVals) {
         float h_part_mass[] =new float[numParts];
-        float h_part_vel_x[] =new float[numParts];
-        float h_part_vel_y[] =new float[numParts];
-        float h_part_vel_z[] =new float[numParts];
         float h_part_eye[] =new float[numParts];
         //making class variables so can be rendered
         h_part_pos_x = new float[numParts];
         h_part_pos_y =new float[numParts];
         h_part_pos_z =new float[numParts];
+        
+        h_part_vel_x = new float[numParts];
+        h_part_vel_y = new float[numParts];
+        h_part_vel_z = new float[numParts];
+        
         //h_part_clr = new float[numParts][3];
         h_part_clr_int = new int[numParts][3];
         
@@ -258,7 +281,7 @@ public abstract class MPM_Abs_CUDASim{
 		Float[] maxVals = partVals.get("minMaxVals").get(1);       
         Float[] posAra, velAra;
         
-        float initMass = h*h*h*initDensity;//myParticle.density;
+        float initMass = h*h*h*initDensity;//myParticle.density;  //set to be constant
         for(int i = 0; i < numParts; ++i){
         	h_part_mass[i]=initMass;
         	posAra = partVals.get("pos").get(i);
@@ -344,22 +367,51 @@ public abstract class MPM_Abs_CUDASim{
     }
 	
 	//allocate dev mem for all objects based on number of grid cells
-	private void initCUDAMemPtrs_Grids(int gridSzFltSz) {        
-        cuMemAlloc(grid_mass, gridSzFltSz); 
-        cuMemAlloc(grid_pos_x, gridSzFltSz);     
-        cuMemAlloc(grid_pos_y, gridSzFltSz);   
-        cuMemAlloc(grid_pos_z, gridSzFltSz); 
-        cuMemAlloc(grid_vel_x, gridSzFltSz);  
-        cuMemAlloc(grid_vel_y, gridSzFltSz);     
-        cuMemAlloc(grid_vel_z, gridSzFltSz);        
+	private void initCUDAMemPtrs_Grids() {   
+		
+		h_grid_vel_x = new float[gridSize];
+		h_grid_vel_y = new float[gridSize];
+		h_grid_vel_z = new float[gridSize];
+		
+		h_grid_accel_x = new float[gridSize];
+		h_grid_accel_y = new float[gridSize];
+		h_grid_accel_z = new float[gridSize];
+		
+		h_grid_mass = new float[gridSize];
+		
+		h_grid_pos_x = new float[gridSize];
+		h_grid_pos_y = new float[gridSize];
+		h_grid_pos_z = new float[gridSize];
+		
+		//build grid locations
+		int gridDim=0;
+		for(int i=0;i<gridCount;++i) {
+			float xPos = (i+.5f)*h;
+			for(int j=0;j<gridCount;++j) {		
+				float yPos = (j+.5f)*h;
+				for(int k=0;k<gridCount;++k) {
+					float zPos = (k+.5f)*h;
+					//weird orientation stuffs
+					h_grid_pos_x[gridDim] = zPos;
+					h_grid_pos_y[gridDim] = yPos;
+					h_grid_pos_z[gridDim] = xPos;					
+					++gridDim;
+				}
+			}
+		}				
+		
+        cuMemAlloc(grid_mass, numGridFloatSz); 
+        cuMemAlloc(grid_vel_x, numGridFloatSz);  
+        cuMemAlloc(grid_vel_y, numGridFloatSz);     
+        cuMemAlloc(grid_vel_z, numGridFloatSz);        
  
-        cuMemAlloc(grid_newvel_x, gridSzFltSz);
-        cuMemAlloc(grid_newvel_y, gridSzFltSz);    
-        cuMemAlloc(grid_newvel_z, gridSzFltSz);        
+        cuMemAlloc(grid_newvel_x, numGridFloatSz);
+        cuMemAlloc(grid_newvel_y, numGridFloatSz);    
+        cuMemAlloc(grid_newvel_z, numGridFloatSz);        
  
-        cuMemAlloc(grid_force_x, gridSzFltSz);   
-        cuMemAlloc(grid_force_y, gridSzFltSz);
-        cuMemAlloc(grid_force_z, gridSzFltSz);		
+        cuMemAlloc(grid_force_x, numGridFloatSz);   
+        cuMemAlloc(grid_force_y, numGridFloatSz);
+        cuMemAlloc(grid_force_z, numGridFloatSz);		
         
 		cuMemsetD32(grid_mass, 0, gridSize);
 		cuMemsetD32(grid_vel_x, 0, gridSize);
@@ -392,7 +444,7 @@ public abstract class MPM_Abs_CUDASim{
 	}//getRandPosInSphereAra
 	
 	//create a sphere with given center, with passed # of particles -0 returns ball radius
-	protected float createSphere(TreeMap<String, ArrayList<Float[]>> partVals, int numParts, float[] initVel, float[] ctr) {
+	protected final float createSphere(TreeMap<String, ArrayList<Float[]>> partVals, int numParts, float[] initVel, float[] ctr) {
     
 		//build sphere of particles - scale volume of sphere based on cuberoot of # of particles, with 1000 particles being baseline sphere - radius will be function of how many particles are built
         float ballRad = (float) (3.0*Math.cbrt(numParts)/sclAmt);		
@@ -439,8 +491,8 @@ public abstract class MPM_Abs_CUDASim{
         //init grid ptrs
         float delT = getDeltaT();
 
-        int gridSzFltSz = gridSize * Sizeof.FLOAT;
-        initCUDAMemPtrs_Grids(gridSzFltSz);
+        numGridFloatSz = gridSize * Sizeof.FLOAT;
+        initCUDAMemPtrs_Grids();
         
         numBlocksParticles=numParts/numCUDAThreads+1;
         numBlocksGrid=gridSize/numCUDAThreads+1;
@@ -448,8 +500,8 @@ public abstract class MPM_Abs_CUDASim{
         funcGridDimAndMemSize = new HashMap<String, int[]>();
         
         kernelParams.put("projectToGridandComputeForces",Pointer.to(
-        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {this.minSimBnds}),
-        		Pointer.to(new float[] {this.mat.getLambda0()}), Pointer.to(new float[] {this.mat.getMu0()}), Pointer.to(new float[] {this.mat.hardeningCoeff}),
+        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
+        		Pointer.to(new float[] {mat.getLambda0()}), Pointer.to(new float[] {mat.getMu0()}), Pointer.to(new float[] {mat.hardeningCoeff}),
         		Pointer.to(part_mass), Pointer.to(part_vol),
 				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
 				Pointer.to(part_vel_x),Pointer.to(part_vel_y),Pointer.to(part_vel_z),
@@ -468,22 +520,22 @@ public abstract class MPM_Abs_CUDASim{
         funcGridDimAndMemSize.put("projectToGridandComputeForces", new int[] {numBlocksParticles*4, 0});
 		
         kernelParams.put("projectToGridInit", Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {this.minSimBnds}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(part_mass),
 				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
 				Pointer.to(grid_mass)));
         funcGridDimAndMemSize.put("projectToGridInit", new int[] {numBlocksParticles, 0});
 		
 		kernelParams.put("computeVol", Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {this.minSimBnds}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(part_mass),Pointer.to(part_vol),
 				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
 				Pointer.to(grid_mass)));
 		funcGridDimAndMemSize.put("computeVol", new int[] {numBlocksParticles, 0});
 		
 		kernelParams.put("updPartVelocities",Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {this.minSimBnds}),
-				Pointer.to(new float[] {this.mat.alphaPicFlip}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
+				Pointer.to(new float[] {mat.alphaPicFlip}),
 				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
 				Pointer.to(part_vel_x),Pointer.to(part_vel_y),Pointer.to(part_vel_z),
 				Pointer.to(grid_vel_x),Pointer.to(grid_vel_y),Pointer.to(grid_vel_z),				
@@ -491,7 +543,7 @@ public abstract class MPM_Abs_CUDASim{
 		funcGridDimAndMemSize.put("updPartVelocities", new int[] {numBlocksParticles*4, numCUDAThreads*6*Sizeof.FLOAT});
 		
 	    kernelParams.put("compGridVelocities", Pointer.to(
-				Pointer.to(new int[] {gridSize}), Pointer.to(new float[] {gravity.data[0]}),Pointer.to(new float[] {gravity.data[1]}),Pointer.to(new float[] {gravity.data[2]}),Pointer.to(new float[] {delT}),
+				Pointer.to(new int[] {gridSize}), Pointer.to(new float[] {gravity[0]}),Pointer.to(new float[] {gravity[1]}),Pointer.to(new float[] {gravity[2]}),Pointer.to(new float[] {delT}),
 				Pointer.to(grid_mass),
 		
 				Pointer.to(grid_vel_x),Pointer.to(grid_vel_y),Pointer.to(grid_vel_z),				
@@ -508,54 +560,60 @@ public abstract class MPM_Abs_CUDASim{
 
 	    kernelParams.put("gridCollisions", Pointer.to(
         		Pointer.to(new int[] {gridSize}),Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {h}), 
-        		Pointer.to(new float[] {this.minSimBnds}),Pointer.to(new float[] {this.maxSimBnds}),
+        		Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
         		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {delT}),Pointer.to(grid_mass),
         		Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z)));
 		funcGridDimAndMemSize.put("gridCollisions", new int[] {numBlocksGrid, 0});
 
- 
+        kernelParams.put("updDeformationGradient", Pointer.to(
+        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {delT}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
+        		Pointer.to(new float[] {mat.criticalCompression}), Pointer.to(new float[] {mat.criticalStretch}),
+    			Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
+    			//elastic matrix
+				Pointer.to(part_fe_11), Pointer.to(part_fe_12), Pointer.to(part_fe_13),
+				Pointer.to(part_fe_21), Pointer.to(part_fe_22), Pointer.to(part_fe_23),
+				Pointer.to(part_fe_31), Pointer.to(part_fe_32), Pointer.to(part_fe_33),
+				//plastic matrix
+				Pointer.to(part_fp_11), Pointer.to(part_fp_12), Pointer.to(part_fp_13),
+				Pointer.to(part_fp_21), Pointer.to(part_fp_22), Pointer.to(part_fp_23),
+				Pointer.to(part_fp_31), Pointer.to(part_fp_32), Pointer.to(part_fp_33),
+				//results
+        		Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z)));     
+        funcGridDimAndMemSize.put("updDeformationGradient", new int[] {numBlocksParticles, 0});  
+        
         kernelParams.put("partCollAndUpdPos", Pointer.to(
-        		Pointer.to(new int[] {numParts}), Pointer.to(new float[] {this.minSimBnds}),Pointer.to(new float[] {this.maxSimBnds}),
+        		Pointer.to(new int[] {numParts}), Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
         		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {delT}),
 				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
 				Pointer.to(part_vel_x),Pointer.to(part_vel_y),Pointer.to(part_vel_z)));   
         funcGridDimAndMemSize.put("partCollAndUpdPos", new int[] {numBlocksParticles, 0});
         
         
-        kernelParams.put("updDeformationGradient", Pointer.to(
-        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {delT}), Pointer.to(new float[] {h}), Pointer.to(new float[] {this.minSimBnds}),
-        		Pointer.to(new float[] {this.mat.criticalCompression}), Pointer.to(new float[] {this.mat.criticalStretch}),
-    			Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
-    			
-				Pointer.to(part_fe_11), Pointer.to(part_fe_12), Pointer.to(part_fe_13),
-				Pointer.to(part_fe_21), Pointer.to(part_fe_22), Pointer.to(part_fe_23),
-				Pointer.to(part_fe_31), Pointer.to(part_fe_32), Pointer.to(part_fe_33),
-
-				Pointer.to(part_fp_11), Pointer.to(part_fp_12), Pointer.to(part_fp_13),
-				Pointer.to(part_fp_21), Pointer.to(part_fp_22), Pointer.to(part_fp_23),
-				Pointer.to(part_fp_31), Pointer.to(part_fp_32), Pointer.to(part_fp_33),
-				
-        		Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z)));     
-        funcGridDimAndMemSize.put("updDeformationGradient", new int[] {numBlocksParticles, 0});     
+   
         dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished CUDA Init | Launch first MPM Pass.", MsgCodes.info1);
 	 	//launch init functions
-        for (int j=0;j<initStepFuncKeys.length;++j) {
-        	String key = initStepFuncKeys[j];    
-        	//System.out.println("Building Init Kernels Key : " + key);
-        	int[] kernelVal = funcGridDimAndMemSize.get(key);
-            cuLaunchKernel(cuFuncs.get(key), 
-            		kernelVal[0], 1, 1,           // Grid dimension 
-                    numCUDAThreads, 1, 1,  // Block dimension
-                    kernelVal[1], null,           // Shared memory size and stream 
-                    kernelParams.get(key), null);// Kernel- and extra parameters
-        }
+        for (int j=0;j<initStepFuncKeys.length;++j) {        	launchKernel(initStepFuncKeys[j]);	}
     	setSimFlags(gridIsBuiltIDX, true);
     	setSimFlags(simIsBuiltIDX, true);
     	dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished first MPM Pass.", MsgCodes.info1);
 	}//cudaSetup
+	
+	/**
+	 * launch the kernel specified by the string key
+	 * @param kernelVal values for specific kernal 
+	 * @param key string key of kernel to launch
+	 */
+	private void launchKernel(String key) {
+		int[] kernelVal = funcGridDimAndMemSize.get(key);
+        cuLaunchKernel(cuFuncs.get(key), 
+        		kernelVal[0], 1, 1,           // Grid dimension 
+                numCUDAThreads, 1, 1,  // Block dimension
+                kernelVal[1], null,           // Shared memory size and stream 
+                kernelParams.get(key), null);// Kernel- and extra parameters		
+	}
     
 	//compiles Ptx file from file in passed file name -> cuFileName needs to have format "xxxxx.cu"
-	public void compilePtxFile(String krnFileName, String ptxFileName) throws IOException {
+	public final void compilePtxFile(String krnFileName, String ptxFileName) throws IOException {
 		File cuFile = new File(krnFileName);
 		if (!cuFile.exists()) {
 			throw new IOException("Kernel file not found: " + krnFileName);
@@ -592,19 +650,24 @@ public abstract class MPM_Abs_CUDASim{
      * @throws IOException If an I/O error occurs
      */
     private static byte[] toByteArray(InputStream inputStream) throws IOException{
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         byte buffer[] = new byte[8192];
         while (true){
             int read = inputStream.read(buffer);
             if (read == -1){       break;     }
-            baos.write(buffer, 0, read);
+            bytes.write(buffer, 0, read);
         }
-        return baos.toByteArray();
+        return bytes.toByteArray();
     }
 
 	
-	//call whenever grid dimensions change
-	public void setGridValsAndInit(int _gridCount, float _h, int _numParts) {
+	/**
+	 * call whenever grid dimensions change
+	 * @param _gridCount # of grid cells per dim
+	 * @param _h cell size
+	 * @param _numParts # of material points to draw
+	 */
+	public final void setGridValsAndInit(int _gridCount, float _h, int _numParts) {
 		//# of grid cells per side of cube
 		gridCount = _gridCount;
 		//# of particles
@@ -631,7 +694,7 @@ public abstract class MPM_Abs_CUDASim{
 
 	//call whenever setting/resetting simulation world - no changes to particle count/grid dimensions, just resetting to initial state
 	//does not rebuild thread worker list, just re-executes existing thread workers
-	public void resetSim(boolean freeCuda) {
+	public final void resetSim(boolean freeCuda) {
 		if(freeCuda) {
 			//reset active ptrs
 			JCuda.cudaFree(part_mass);		  
@@ -649,7 +712,7 @@ public abstract class MPM_Abs_CUDASim{
 	        JCuda.cudaFree(part_fp_31);JCuda.cudaFree(part_fp_32);JCuda.cudaFree(part_fp_33);       
 	 
 	        JCuda.cudaFree(grid_mass); 
-	        JCuda.cudaFree(grid_pos_x);JCuda.cudaFree(grid_pos_y);JCuda.cudaFree(grid_pos_z); 	  
+	        //JCuda.cudaFree(grid_pos_x);JCuda.cudaFree(grid_pos_y);JCuda.cudaFree(grid_pos_z); 	  
 	        JCuda.cudaFree(grid_vel_x);JCuda.cudaFree(grid_vel_y);JCuda.cudaFree(grid_vel_z); 	 
 	        JCuda.cudaFree(grid_newvel_x);JCuda.cudaFree(grid_newvel_y);JCuda.cudaFree(grid_newvel_z); 
 	        JCuda.cudaFree(grid_force_x);JCuda.cudaFree(grid_force_y);JCuda.cudaFree(grid_force_z);
@@ -691,6 +754,8 @@ public abstract class MPM_Abs_CUDASim{
 			case gridIsBuiltIDX	 		: {break;}		
 			case showCollider 			: {
 				break;}
+			case showParticles			: {				
+				break;}
 			case showParticleVelArrows 	: {
 				break;}
 			case showGrid				: {
@@ -706,42 +771,57 @@ public abstract class MPM_Abs_CUDASim{
 			default :{}			
 		}			
 	}//setExecFlags
-
-	//execute simStepsPerFrame step of simulation
-	//modAmtMillis is in milliseconds, counting # of ms since last sim call
-	//returns true when simulation run is complete - true turns run sim flag off
-	@SuppressWarnings("unused")
-	public boolean simMe(float modAmtMillis) {
-		/*cuDeviceGet(dev, 0);
-	    cuCtxCreate(pctx, 0, dev);*/
+	
+	/**
+	 * Execute simStepsPerFrame step of simulation
+	 * @param modAmtMillis is in milliseconds, counting # of ms since last sim call 
+	 * @return true when simulation run is complete - true turns run sim flag off
+	 */	
+	public final boolean simMe(float modAmtMillis) {
 	 	JCudaDriver.cuCtxSetCurrent(pctx);
-	 	int updPartVelMemSz =  numCUDAThreads*6*Sizeof.FLOAT;
-	 	int gridSzFltSz = gridSize * Sizeof.FLOAT;
  		for (int i=0;i<simStepsPerFrame;++i) { 	        
-			for (int j=0;j<simStepFuncKeys.length;++j) {
-				String key = simStepFuncKeys[j];
-				//System.out.println("Running kernel : " + key);				
-	        	int[] kernelVal = funcGridDimAndMemSize.get(key);
-	            cuLaunchKernel(cuFuncs.get(key), 
-	            		kernelVal[0], 1, 1,           // Grid dimension 
-	                    numCUDAThreads, 1, 1,  // Block dimension
-	                    kernelVal[1], null,           // Shared memory size and stream 
-	                    kernelParams.get(key), null);// Kernel- and extra parameters
-			}
-		}
+ 			//for every sim step, launch each kernel by key specified in simStepFuncKeys
+			for (int j=0;j<simStepFuncKeys.length;++j) {	        	launchKernel(simStepFuncKeys[j]);		}
+ 		}
  		
-		//copy from device data to host particle position arrays
-		cuMemcpyDtoH(Pointer.to(h_part_pos_x),part_pos_x, numPartsFloatSz);
-		cuMemcpyDtoH(Pointer.to(h_part_pos_y),part_pos_y, numPartsFloatSz);
-		cuMemcpyDtoH(Pointer.to(h_part_pos_z),part_pos_z, numPartsFloatSz);
+ 		if((getSimFlags(showParticles)) || getSimFlags(showParticleVelArrows)) {
+			//copy from device data to host particle position arrays
+			cuMemcpyDtoH(Pointer.to(h_part_pos_x),part_pos_x, numPartsFloatSz);
+			cuMemcpyDtoH(Pointer.to(h_part_pos_y),part_pos_y, numPartsFloatSz);
+			cuMemcpyDtoH(Pointer.to(h_part_pos_z),part_pos_z, numPartsFloatSz);
+		
+ 		} 		
+		
+ 		if(getSimFlags(showParticleVelArrows)) {
+			cuMemcpyDtoH(Pointer.to(h_part_vel_x),part_vel_x, numPartsFloatSz);
+			cuMemcpyDtoH(Pointer.to(h_part_vel_y),part_vel_y, numPartsFloatSz);
+			cuMemcpyDtoH(Pointer.to(h_part_vel_z),part_vel_z, numPartsFloatSz);
+ 		}
+ 		
+		if(getSimFlags(showGridVelArrows)) {
+			cuMemcpyDtoH(Pointer.to(h_grid_vel_x),grid_newvel_x, numGridFloatSz);
+			cuMemcpyDtoH(Pointer.to(h_grid_vel_y),grid_newvel_y, numGridFloatSz);
+			cuMemcpyDtoH(Pointer.to(h_grid_vel_z),grid_newvel_z, numGridFloatSz);
+		}
+		if(getSimFlags(showGridAccelArrows)) {
+			cuMemcpyDtoH(Pointer.to(h_grid_accel_x),grid_force_x, numGridFloatSz);
+			cuMemcpyDtoH(Pointer.to(h_grid_accel_y),grid_force_y, numGridFloatSz);
+			cuMemcpyDtoH(Pointer.to(h_grid_accel_z),grid_force_z, numGridFloatSz);
+		
+		}
+		
+		if(getSimFlags(showGridMass)) {
+			cuMemcpyDtoH(Pointer.to(h_grid_mass),grid_mass, numGridFloatSz);	
+		}
+		//Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z)
 		return false;
 	}//simMe}
 	
 	//sim method to show execution time for each step
 	public abstract boolean simMeDebug(float modAmtMillis);	//simMeDebug	
 
-	public static float getDeltaT() {return MPM_Abs_CUDASim.deltaT;}
-	public void setDeltaT(float _delT) {MPM_Abs_CUDASim.deltaT = _delT;}
+	public static float getDeltaT() {return base_MPMCudaSim.deltaT;}
+	public void setDeltaT(float _delT) {base_MPMCudaSim.deltaT = _delT;}
 
 	public void showTimeMsgSimStart(String _str) {dispMessage("MPM_Abs_CUDASim : "+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - simStartTime), MsgCodes.info1);}
 	//display message and time now
@@ -817,43 +897,83 @@ public abstract class MPM_Abs_CUDASim{
 	
 	///////////////////////////
 	// end message display functionality
-		
+
+	
+	private final int[] gridVecClr = new int[] {250,0,0}, gridAccelClr = new int[] {0,0,250}, gridMassClr = new int[] {0,150,50};
+
 	//draw 1 frame of results	//animTimeMod is in seconds, counting # of seconds since last draw
-	public void drawMe(float animTimeMod) {
+	public final void drawMe(float animTimeMod) {
 		if(!getSimFlags(simIsBuiltIDX)) {return;}//if not built yet, don't try to draw anything
 		//render all particles - TODO determine better rendering method
 		pa.pushMatState();
-		pa.setStrokeWt(3.0f/sclAmt);
-		pa.scale(sclAmt);	
-
+		//set stroke values and visual scale
+			pa.setStrokeWt(2.0f/sclAmt);
+			pa.scale(sclAmt);	
+			
+			//draw material points
+			if(getSimFlags(showParticles)){drawPoints(true,getSimFlags(showParticleVelArrows));}
+			else if(getSimFlags(showParticleVelArrows)){drawPoints(false,true);}
+			
+			//draw colliders, if exist
+			drawCollider(animTimeMod);
+			
+			//if desired, draw grid
+			if(getSimFlags(showGrid)) {							drawGrid(true, getSimFlags(showGridVelArrows),getSimFlags(showGridAccelArrows));	}
+			else if (getSimFlags(showGridVelArrows)) {			drawGrid(false, true,getSimFlags(showGridAccelArrows));	}
+			else if (getSimFlags(showGridAccelArrows)){			drawGrid(false, false,true);	}
+			
+			if(getSimFlags(showGridMass)) {
+				float mult = 0.1f;
+				_drawGridScalar(mult, gridMassClr, h_grid_mass);
+				
+			}
+		pa.popMatState();
+	}//drawMe
+	
+	private void drawPoints(boolean showPoints, boolean showPointVel) {
 		pa.pushMatState();
 		//draw the points
 		int pincr = 1;
-//		((my_procApplet)pa).drawPointsWithColors(numParts, pincr, h_part_clr_int, h_part_pos_x, h_part_pos_y, h_part_pos_z);
-		//((my_procApplet)pa).beginShape(PConstants.POINTS);
-		for(int i=0;i<=numParts-pincr;i+=pincr) {				
-			pa.setStroke(h_part_clr_int[i], 255);
-			//((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
-			((my_procApplet)pa).point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-			//((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-		}
-		//((my_procApplet)pa).endShape();
-//		int pincr = 1;
-//		pa.gl_beginShape(PConstants.POINTS);
-//		for(int i=0;i<=numParts-pincr;i+=pincr) {				
-//			//pa.stroke(h_part_clr[i][0], h_part_clr[i][1], h_part_clr[i][2]);
-//			pa.gl_SetStroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2], 255);
-//			//pa.point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-//			pa.gl_vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-//		}
-//		pa.gl_endShape();
-		pa.popMatState();
+		//draw all points as a shape object
+		if(showPoints) {pa.drawPointCloudWithColors(numParts, pincr, h_part_clr_int, h_part_pos_x, h_part_pos_y, h_part_pos_z);}
 		
-		if(getSimFlags(showGrid)) {
-			pa.pushMatState();		
+		if(showPointVel) {
+			float mult = .01f;
+			float minMag = MyMathUtils.eps_f/mult;
+			for(int i=0;i<=numParts-pincr;i+=pincr) {					
+				if(		(Math.abs(h_part_vel_x[i]) > minMag) || 
+						(Math.abs(h_part_vel_y[i]) > minMag) || 
+						(Math.abs(h_part_vel_z[i]) > minMag)) {
+
+					pa.pushMatState();
+					pa.setStroke(h_part_clr_int[i], 100);
+					pa.translate(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+					//((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
+					pa.drawLine(0,0,0, mult*h_part_vel_x[i],mult*h_part_vel_y[i],mult*h_part_vel_z[i]);
+					//((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+					pa.popMatState();
+				}
+			}
+			
+		}
+		//((my_procApplet)pa).beginShape(PConstants.POINTS);
+//		for(int i=0;i<=numParts-pincr;i+=pincr) {				
+//			pa.setStroke(h_part_clr_int[i], 255);
+//			//((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
+//			((my_procApplet)pa).point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+//			//((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+//		}
+		//((my_procApplet)pa).endShape();
+		pa.popMatState();
+	}
+
+	private void drawGrid(boolean showGrid, boolean showGridVel, boolean showGridForce) {
+		int incr = 10;
+		pa.pushMatState();		
+		if(showGrid) {	
+			pa.pushMatState();	
 			pa.setStroke(0,0,0,20);
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
-			int incr = 10;
 			//shows every "incr" gridcells
 			for (int i=0; i<=gridCount;i+=incr) {
 				float iLoc = i*h;
@@ -878,8 +998,54 @@ public abstract class MPM_Abs_CUDASim{
 			}
 			pa.popMatState();
 		}
+		if(showGridVel) {
+			float mult = .01f;
+			_drawGridVec(mult, gridVecClr, h_grid_vel_x, h_grid_vel_y, h_grid_vel_z);
+		}
+		
+		if(showGridForce) {
+			float mult = .01f;
+			_drawGridVec(mult, gridAccelClr, h_grid_accel_x, h_grid_accel_y, h_grid_accel_z);
+		}
+		
 		pa.popMatState();
-	}//drawMe
+		
+	}
+	
+	private void _drawGridVec(float mult, int[] clr, float[] xVal, float[] yVal, float[] zVal) {
+		float minMag = MyMathUtils.eps_f/mult;
+		pa.pushMatState();	
+		pa.setStroke(clr,20);
+		pa.translate(minSimBnds,minSimBnds,minSimBnds);
+		for (int i=0; i<gridSize;++i) {			
+			if(		(Math.abs(xVal[i]) > minMag) || 
+					(Math.abs(yVal[i]) > minMag) || 
+					(Math.abs(zVal[i]) > minMag)) {
+				pa.pushMatState();	
+				pa.translate(h_grid_pos_x[i], h_grid_pos_y[i], h_grid_pos_z[i]);
+				pa.drawLine(0,0,0, mult*xVal[i],mult*yVal[i],mult*zVal[i]);
+				pa.popMatState();
+			}
+		}
+		pa.popMatState();
+	}
+	
+	private void _drawGridScalar(float mult, int[] clr, float[] xVal) {
+		float minMag = MyMathUtils.eps_f/(.01f * mult);
+		pa.pushMatState();	
+		pa.setSphereDetail(4);
+		pa.setStroke(clr,20);
+		pa.translate(minSimBnds,minSimBnds,minSimBnds);
+		for (int i=0; i<gridSize;++i) {			
+			if(		(Math.abs(xVal[i]) > minMag)) {
+				pa.pushMatState();	
+				pa.translate(h_grid_pos_x[i], h_grid_pos_y[i], h_grid_pos_z[i]);
+				pa.drawSphere(xVal[i]*mult);
+				pa.popMatState();
+			}
+		}
+		pa.popMatState();		
+	}
 	
 	
 	//reinitialize instanced Simulation- set up all resources - re call this every time new sim is being set up
@@ -915,87 +1081,6 @@ public abstract class MPM_Abs_CUDASim{
 	}
 	
 }//class MPM_ABS_Sim 
-
-//instance of sim world with 2 big snow boulders slamming into each other 
-class MPM_Cuda2Balls extends MPM_Abs_CUDASim {
-	//scale w/timestep
-	private static float initVel = 30.0f;
-	
-	public MPM_Cuda2Balls(IRenderInterface _pa,int _gridCount, float _h, int _numParts) {
-		super(_pa,"2 Big Snowballs",_gridCount, _h,_numParts);
-	}
-	
-	@Override
-	protected void resetSimEnd_Priv() {
-
-	}//resetSimPriv
-	
-	//build particle layout for cuda sim - use multiples of h as radius
-	@Override
-	protected TreeMap<String, ArrayList<Float[]>> buildPartLayout() {	
-        //create particle layout
-        TreeMap<String, ArrayList<Float[]>> partVals = new TreeMap<String, ArrayList<Float[]>>();
-        partVals.put("pos",new ArrayList<Float[]>());
-        partVals.put("vel",new ArrayList<Float[]>());
-        partVals.put("minMaxVals",new ArrayList<Float[]>());
-        //initialize min and max values
-        partVals.get("minMaxVals").add(new Float[] {100000.0f,100000.0f,100000.0f});
-        partVals.get("minMaxVals").add(new Float[] {-100000.0f,-100000.0f,-100000.0f});      
-
-        int numPartsPerSphere = numParts/2;
-        //float ctrOfGrid = (minSimBnds + maxSimBnds)/2.0f, diff = maxSimBnds - minSimBnds; 
-        //float qtrDiff = .25f*diff, halfDiff = 2*qtrDiff;
-       
-		//Float[] minVals = partVals.get("minMaxVals").get(0);
-		//Float[] maxVals = partVals.get("minMaxVals").get(1);       
-		//float hSq = h*h;
-		//scale amt is width divided by # of grid cells and size of each cell
-		//float scaledRad = 150.0f/this.sclAmt;		//was .25
-		//float sphereRad = scaledRad/h;
-		//float sphereSqRad = sphereRad*sphereRad;
-		float offScl = 600.0f/this.sclAmt;
-
-        float xVel = -1.4f*initVel, 
-        	yVel = 0, 
-    		zVel = .5f*-initVel;
-		
-		float xOff = .4f  *offScl, 
-			yOff = .5f*offScl, 
-			zOff = .4f *offScl;
-		//int incr = 1;
-		//lower ball
-        //buildSphere(partVals,new float[] {xOff, yOff, zOff}, new float [] {xVel, yVel, zVel}, incr, sphereSqRad, minVals, maxVals);
-		float sphereRad = createSphere(partVals,numPartsPerSphere, new float [] {xVel, yVel, zVel}, new float[] {xOff, yOff, zOff});
-				
-		//find min and max values for 1st built sphere
-//		for(int i=0;i<3;++i) {
-//			float rad = (maxVals[i] - minVals[i]) * .5f;
-//			System.out.println("First built sphere idx "+i+" max : " + maxVals[i]+" and min : " + minVals[i] + " -> unscaled radius : " + rad + " Scaled (apparent) radius : "+ (rad*this.sclAmt));
-//		}
-		xVel *= -1;
-        yVel *= -1;
-        xOff = -.1f*sphereRad *offScl;
-        yOff = .5f*offScl;
-        zOff = (.4f*sphereRad)*offScl;
-        //upper ball        
-        //buildSphere(partVals,new float[] {xOff, yOff, zOff}, new float [] {xVel, yVel, zVel}, incr, sphereSqRad, minVals, maxVals);
-		createSphere(partVals,numPartsPerSphere, new float [] {xVel, yVel, zVel}, new float[] {xOff, yOff, zOff});
-
-         //end create particle layout	
-		return partVals;
-	}//buildPartLayout
-
-	
-	@Override
-	//draw scene-specific collider, if it existss
-	protected void drawCollider(float animTimeMod) {}
-	
-	//sim method to show execution time for each step
-	public boolean simMeDebug(float modAmtMillis) {
-		//TODO any debugging that might be supportable here
-		return false;
-	}//simMeDebug
-}//class MPM_Cuda2Balls
 
 
 
