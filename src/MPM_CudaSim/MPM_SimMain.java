@@ -4,7 +4,6 @@ package MPM_CudaSim;
 import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.my_procApplet;
 import base_UI_Objects.windowUI.base.myDispWindow;
-import processing.core.PConstants;
 
 /**
 * MPM Snow Simulation in CUDA 2.0
@@ -69,14 +68,14 @@ public class MPM_SimMain extends GUI_AppManager {
 	}
 	@Override
 	protected void initVisOnce_Indiv() {
-		((my_procApplet)pa).strokeCap(PConstants.SQUARE);
+		//((my_procApplet)pa).strokeCap(PConstants.SQUARE);
 		showInfo = true;
 		
 		//includes 1 for menu window (never < 1) - always have same # of visFlags as myDispWindows
 		int numWins = numVisFlags;		
 		//titles and descs, need to be set before sidebar menu is defined
-		String[] _winTitles = new String[]{"","Sphere World","Lines World","Planes World","SOM Map UI"},
-				_winDescr = new String[] {"", "Display Spheres and Sphere surface samples","Display Lines and sample points","Display Planes and plan surface samples","Visualize Sphere SOM Node location and color mapping"};
+		String[] _winTitles = new String[]{"","Snow Balls"},
+				_winDescr = new String[] {"", "Display Two Colliding Snowballs Simulated via MPM"};
 		initWins(numWins,_winTitles, _winDescr);
 		//call for menu window
 		buildInitMenuWin(showUIMenu);

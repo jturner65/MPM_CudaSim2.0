@@ -18,10 +18,10 @@ public class MPM_SimWindow extends myDispWindow {
 	//TODO support multiple sim worlds possibly, with different configurations
 	public base_MPMCudaSim currSim;
 	//grid variables
-	private int numGridCells = base_MPMCudaSim.numGridCells;
-	private float cellSize = base_MPMCudaSim.cellSize;
+	private int numGridCells = base_MPMCudaSim.numGridCellsDefault;
+	private float cellSize = base_MPMCudaSim.cellSizeDefault;
 	private int numParts = base_MPMCudaSim.numPartsUI_Init;
-	private float csCube = cellSize*cellSize*cellSize;
+	private float particleMass = cellSize *cellSize *cellSize * 50; 
 	
 	//motion
 	///////////
@@ -41,12 +41,6 @@ public class MPM_SimWindow extends myDispWindow {
 		gIDX_alphaPicFlip 			= 11,
 		gIDX_wallFricCoeff 			= 12,
 		gIDX_collFricCoeff			= 13;
-	
-	//dims x density
-	public float partMass = csCube*50.0f;
-
-	//display variables
-	//private float[] UIrectBox;	//box holding x,y,w,h values of black rectangle to hold UI sim display values
 	
 	/////////
 	//custom debug/function ui button names -empty will do nothing
@@ -107,15 +101,15 @@ public class MPM_SimWindow extends myDispWindow {
 		setFlags(isRunnable, true);
 		//this window uses a customizable camera
 		setFlags(useCustCam, true);
-		//this window uses right side info window
-		//setFlags(drawRightSideMenu, true);
+		// capable of using right side menu
+		setFlags(drawRightSideMenu, true);
 		//called once
 		//initPrivFlags(numPrivFlags);
 		
 //		//init simulation construct here
 		//init simulation construct here
 		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation now.");
-		currSim = new MPM_Cuda2Balls(pa,numGridCells, cellSize,numParts);		
+		currSim = new MPM_Cuda2Balls(pa,numGridCells, cellSize,numParts, particleMass);		
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		setPrivFlags(showParticles, true);
@@ -194,7 +188,7 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpUIObjArray.put(gIDX_timeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*base_MPMCudaSim.getDeltaT(),  "Sim Time Step", new boolean[]{false, false, true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
 		tmpUIObjArray.put(gIDX_simStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*base_MPMCudaSim.simStepsPerFrame, "Sim Steps per Drawn Frame",  new boolean[]{true, false, true}});//gIDX_simStepsPerFrame  init 5
 		tmpUIObjArray.put(gIDX_numParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*numParts, "# of Particles", new boolean[]{true, false, true}});//number of particles
-		tmpUIObjArray.put(gIDX_partMass, new Object[] {new double[]{.00005, 5.00, .00005}, 1.0*partMass, "Particle Mass", new boolean[]{false, false, true}});//particle mass
+		tmpUIObjArray.put(gIDX_partMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*particleMass, "Particle Mass", new boolean[]{false, false, true}});//particle mass
 		tmpUIObjArray.put(gIDX_gridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*cellSize, "Grid Cell Size", new boolean[]{false, false, true}});//grid cell size
 		tmpUIObjArray.put(gIDX_gridCount, new Object[] {new double[]{50, 300, 1}, 1.0*numGridCells,  "Grid Cell Count Per Side", new boolean[]{true, false, true}}); //# of grid cells per side
 		tmpUIObjArray.put(gIDX_initYoungMod, new Object[] {new double[]{1000.0f, 100000.0f, 100.0f}, 1.0*myMaterial.base_initYoungMod, "Young's Modulus", new boolean[]{false, false, true}});//gIDX_initYoungMod init 4.8e4f, 
@@ -218,19 +212,19 @@ public class MPM_SimWindow extends myDispWindow {
 				break;} 	
 			case gIDX_numParticles				:{
 				numParts = (int)val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts);
+				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts, particleMass);
 				break;}
 			case gIDX_partMass 					:{
-				partMass = val;
-				//pa.outStr2Scr("Changing simulation parameter (particle mass) may require simulation reset; Not doing so may result in instability");
+				particleMass = val;
+				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts, particleMass);
 				break;}
 			case gIDX_gridCellSize				:{
 				cellSize = val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts);
+				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts, particleMass);
 				break;}
 			case gIDX_gridCount					:{
 				numGridCells = (int)val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts);				
+				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts, particleMass);				
 				break;}
 			case gIDX_initYoungMod 				:{
 				currSim.mat.setYoungModulus(val);
@@ -275,11 +269,6 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	public void initDrwnTrajIndiv(){}
 	
-//	public void setLights(){
-//		pa.ambientLight(102, 102, 102);
-//		pa.lightSpecular(204, 204, 204);
-//		pa.directionalLight(180, 180, 180, 0, 1, -1);	
-//	}	
 	//overrides function in base class mseClkDisp
 	@Override
 	public void drawTraj3D(float animTimeMod,myPoint trans){}//drawTraj3D	
@@ -307,8 +296,7 @@ public class MPM_SimWindow extends myDispWindow {
 		
 		return done;	
 	}//simMe
-	
-	
+		
 	
 	@Override
 	//animTimeMod is in seconds.

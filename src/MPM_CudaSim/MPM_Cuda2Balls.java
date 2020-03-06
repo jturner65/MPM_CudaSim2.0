@@ -11,14 +11,10 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 	//scale w/timestep
 	private static float initVel = 30.0f;
 	
-	public MPM_Cuda2Balls(IRenderInterface _pa,int _gridCount, float _h, int _numParts) {
-		super(_pa,"2 Big Snowballs",_gridCount, _h,_numParts);
+	public MPM_Cuda2Balls(IRenderInterface _pa,int _gridCount, float _h, int _numParts, float _density) {
+		super(_pa,"2 Big Snowballs",_gridCount, _h,_numParts, _density);
 	}
 	
-	@Override
-	protected void resetSimEnd_Priv() {
-
-	}//resetSimPriv
 	
 	//build particle layout for cuda sim - use multiples of h as radius
 	@Override

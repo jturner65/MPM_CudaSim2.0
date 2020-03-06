@@ -32,31 +32,32 @@ public abstract class base_MPMCudaSim{
 	//vs c++ compiler location
 	//private final static String VSCppCompLoc = "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\x86_amd64\\";
 	//these values are just to set initial values for simulation
-	public static int numGridCells = 200;
-	public static float cellSize = .10f;
+	public static int numGridCellsDefault = 200;
+	public static float cellSizeDefault = .10f;
 	public static int numPartsUI_Init = 100000;
+	//snow density varies from 50 to ~800
+	//powdery snow is about 100
+	//wet firm compacted snow is about 600
+	//public static float materialDensityDefault = 100.0f;
 	
 	//# of particles to have in sim
 	protected int numParts = numPartsUI_Init;
 	//grid dim - cube so same in all 3 dims; # of particles in sim
-	protected int gridCount = numGridCells;
-	protected float h = cellSize;
+	protected int gridCount = numGridCellsDefault;
+	protected float cellSize = cellSizeDefault;
 	//# parts * size of float & num grid cells * size float 
 	protected long numPartsFloatSz, numGridFloatSz;
 	
 	//simulation boundaries - symmetric cube, only need min and max, grid length per dim
 	protected float minSimBnds, maxSimBnds, gridDim;
 	//dimension of grid cells
-	protected float half_h, h3;
+	protected float particleMass;
 	//whether current OS supports ansi terminal color settings
 	public static boolean supportsANSITerm = false;
 	//parameters
 	//timestep of simulation - 
 	protected  static float deltaT = 4e-4f;
-	//snow density varies from 50 to ~800
-	//powdery snow is about 100
-	//wet firm compacted snow is about 600
-	protected  static float initDensity = 100.0f;
+
 
 	//const matrix for calculations - z is down
 	//protected final FloatMatrix gravity = new FloatMatrix(new float[] {0, 0, -9.8f});
@@ -106,31 +107,19 @@ public abstract class base_MPMCudaSim{
 	protected HashMap<String, int[]> funcGridDimAndMemSize;
     
 	protected CUdeviceptr part_mass, part_vol;
-	protected CUdeviceptr part_pos_x, part_pos_y, part_pos_z;    
-	protected CUdeviceptr part_vel_x, part_vel_y, part_vel_z; 
-    
-	protected CUdeviceptr 
-		part_fe_11, part_fe_12, part_fe_13,
-		part_fe_21, part_fe_22, part_fe_23,
-    	part_fe_31, part_fe_32, part_fe_33;  
-    
-	protected CUdeviceptr 
-	    part_fp_11, part_fp_12, part_fp_13,
-	    part_fp_21, part_fp_22, part_fp_23,
-	    part_fp_31, part_fp_32, part_fp_33;    
+	protected CUdeviceptr[] part_pos, part_vel; 
+    protected CUdeviceptr[] grid_vel, grid_newvel, grid_force;
 
+	protected CUdeviceptr[][] part_fe, part_fp;
     
     protected CUdeviceptr grid_mass;
-    //protected CUdeviceptr grid_pos_x, grid_pos_y, grid_pos_z;    
-    protected CUdeviceptr grid_vel_x, grid_vel_y, grid_vel_z;    
-    protected CUdeviceptr grid_newvel_x, grid_newvel_y, grid_newvel_z;    
-    protected CUdeviceptr grid_force_x, grid_force_y, grid_force_z;
     
-    //local representation of particle positions, for rendering
-    protected float[] h_part_pos_x,h_part_pos_y, h_part_pos_z,h_part_vel_x,h_part_vel_y, h_part_vel_z;
+    //local representation of particle quantities for rendering
+    protected float[][] h_part_pos, h_part_vel;
+    //local representation of grid quantities for rendering
+    protected float [][] h_grid_pos, h_grid_vel, h_grid_accel;
     
-    //local representation of grid velocities, for rendering
-    protected float[] h_grid_pos_x,h_grid_pos_y, h_grid_pos_z, h_grid_vel_x, h_grid_vel_y, h_grid_vel_z, h_grid_accel_x, h_grid_accel_y, h_grid_accel_z, h_grid_mass; 
+	protected float[] h_grid_mass; 
     
     //colors based on initial location
     //float[][] h_part_clr;
@@ -141,58 +130,39 @@ public abstract class base_MPMCudaSim{
     protected CUmodule module;
     protected CUgraphicsResource pCudaResource;
     
-    protected  int gridSize;
-    protected  int numBlocksParticles;
-    protected  int numBlocksGrid;
+    protected int gridSize;
+    protected int numBlocksParticles;
+    protected int numBlocksGrid;
 	//# of cuda threads
     protected  int numCUDAThreads=128;
 	
 	//grid count per side - center grid always in display; grid cell dim per side
 	//@SuppressWarnings("unchecked")
-	public base_MPMCudaSim(IRenderInterface _pa,String _simName, int _gridCount, float _h, int _numParts) {		
-		pa=_pa;simName = _simName;
-		part_mass = new CUdeviceptr();       
-		part_vol = new CUdeviceptr();        
-		part_pos_x = new CUdeviceptr();      
-		part_pos_y = new CUdeviceptr();      
-		part_pos_z = new CUdeviceptr();      
-		part_vel_x = new CUdeviceptr();      
-		part_vel_y = new CUdeviceptr();      
-		part_vel_z = new CUdeviceptr();      
-		part_fe_11 = new CUdeviceptr();      
-		part_fe_12 = new CUdeviceptr();      
-		part_fe_13 = new CUdeviceptr();      
-		part_fe_21 = new CUdeviceptr();      
-		part_fe_22 = new CUdeviceptr();      
-		part_fe_23 = new CUdeviceptr();      
-		part_fe_31 = new CUdeviceptr();      
-		part_fe_32 = new CUdeviceptr();      
-		part_fe_33 = new CUdeviceptr();      
-		part_fp_11 = new CUdeviceptr();      
-		part_fp_12 = new CUdeviceptr();      
-		part_fp_13 = new CUdeviceptr();      
-		part_fp_21 = new CUdeviceptr();      
-		part_fp_22 = new CUdeviceptr();      
-		part_fp_23 = new CUdeviceptr();      
-		part_fp_31 = new CUdeviceptr();      
-		part_fp_32 = new CUdeviceptr();      
-		part_fp_33 = new CUdeviceptr();      
-		                                     
-		grid_mass = new CUdeviceptr();       
-//		grid_pos_x = new CUdeviceptr();      
-//		grid_pos_y = new CUdeviceptr();      
-//		grid_pos_z = new CUdeviceptr();      
-		grid_vel_x = new CUdeviceptr();      
-		grid_vel_y = new CUdeviceptr();      
-		grid_vel_z = new CUdeviceptr();      
-		grid_newvel_x = new CUdeviceptr();   
-		grid_newvel_y = new CUdeviceptr();   
-		grid_newvel_z = new CUdeviceptr();   
-		grid_force_x = new CUdeviceptr();    
-		grid_force_y = new CUdeviceptr();    
-		grid_force_z = new CUdeviceptr();    
+	public base_MPMCudaSim(IRenderInterface _pa,String _simName, int _gridCount, float _h, int _numParts, float _density) {		
+		pa=_pa;simName = _simName;	
 		
+		part_mass = new CUdeviceptr();   		part_vol = new CUdeviceptr();   
+		grid_mass = new CUdeviceptr();    
+		part_pos = new CUdeviceptr[3];			part_vel = new CUdeviceptr[3];
+		grid_vel = new CUdeviceptr[3];			grid_newvel = new CUdeviceptr[3];			grid_force = new CUdeviceptr[3];
+		part_fe = new CUdeviceptr[3][];
+		part_fp = new CUdeviceptr[3][];
+		for(int i=0;i<part_pos.length;++i) {			
+			part_pos[i] = new CUdeviceptr(); 
+			part_vel[i] = new CUdeviceptr();		
 		
+			grid_vel[i] = new CUdeviceptr(); 		   
+			grid_newvel[i] = new CUdeviceptr();  	   
+			grid_force[i] = new CUdeviceptr();
+			part_fe[i] = new CUdeviceptr[3];
+			part_fp[i] = new CUdeviceptr[3];
+			
+			for(int j=0;j<part_pos.length;++j) {
+				part_fe[i][j] = new CUdeviceptr();
+				part_fp[i][j] = new CUdeviceptr();
+			}
+		}
+
 		//whether this system supports an ansi terminal or not
 		supportsANSITerm = (System.console() != null && System.getenv().get("TERM") != null);	
 		
@@ -207,8 +177,8 @@ public abstract class base_MPMCudaSim{
 		initSimFlags();
 		
 		//set up grid and initialize sim
-		setGridValsAndInit(_gridCount, _h, _numParts);
-		resetSim(false);
+		setGridValsAndInit(_gridCount, _h, _numParts, _density);
+		//resetSim(false);
 	}//MPM_ABS_Sim
 	//run 1 time to load kernel and assign function pointers to functions
 	private void initOnceCUDASetup() {
@@ -261,19 +231,51 @@ public abstract class base_MPMCudaSim{
 		return (int) (55.0f + 200.0f * (val - min)/denom);	
 	}
 	
+
+	
+	/**
+	 * call whenever grid dimensions change
+	 * @param _gridCount # of grid cells per dim
+	 * @param _h cell size
+	 * @param _numParts # of material points to draw
+	 */
+	public final void setGridValsAndInit(int _gridCount, float _h, int _numParts, float _partMass) {
+		//# of grid cells per side of cube
+		gridCount = _gridCount;
+		//# of particles
+		numParts = _numParts;
+		//cell size
+		cellSize = _h;	
+		
+		particleMass = _partMass;		
+		maxSimBnds = (gridCount*cellSize)/2.0f;
+		minSimBnds = -maxSimBnds;
+		gridDim = maxSimBnds - minSimBnds;		
+		//scale amount to fill 1500 x 1500 x 1500 visualization cube
+		sclAmt = 1500.0f/(gridCount * cellSize);
+
+		//notify gridbuilder that we have a new grid
+		//gridThdMgr.setNewSimVals();
+		setSimFlags(gridIsBuiltIDX, false);
+		//partThdMgr.setNewSimVals();
+		setSimFlags(simIsBuiltIDX, false);
+		//build grid - upon completion the gridbuilder will call resetSim to build particles
+		resetSim(true);
+	}//setGridValsAndInit
+
+	
 	//allocate dev mem for all objects based on number of particles
 	private void initCUDAMemPtrs_Parts(TreeMap<String, ArrayList<Float[]>> partVals) {
         float h_part_mass[] =new float[numParts];
         float h_part_eye[] =new float[numParts];
         //making class variables so can be rendered
-        h_part_pos_x = new float[numParts];
-        h_part_pos_y =new float[numParts];
-        h_part_pos_z =new float[numParts];
-        
-        h_part_vel_x = new float[numParts];
-        h_part_vel_y = new float[numParts];
-        h_part_vel_z = new float[numParts];
-        
+        h_part_pos = new float[3][];
+        h_part_vel = new float[3][];
+        for(int i=0;i<h_part_pos.length;++i) {
+        	h_part_pos[i] = new float[numParts];
+        	h_part_vel[i] = new float[numParts];
+        }
+       
         //h_part_clr = new float[numParts][3];
         h_part_clr_int = new int[numParts][3];
         
@@ -281,150 +283,91 @@ public abstract class base_MPMCudaSim{
 		Float[] maxVals = partVals.get("minMaxVals").get(1);       
         Float[] posAra, velAra;
         
-        float initMass = h*h*h*initDensity;//myParticle.density;  //set to be constant
+        
         for(int i = 0; i < numParts; ++i){
-        	h_part_mass[i]=initMass;
+        	h_part_mass[i] = particleMass;
         	posAra = partVals.get("pos").get(i);
-        	h_part_pos_x[i]=posAra[0];
-        	h_part_pos_y[i]=posAra[1];
-        	h_part_pos_z[i]=posAra[2];
-//        	h_part_clr[i] = new float[] {
-//    			getClrVal(h_part_pos_x[i],minVals[0],maxVals[0]), 
-//				getClrVal(h_part_pos_y[i],minVals[1],maxVals[1]), 
-//				getClrVal(h_part_pos_z[i],minVals[2],maxVals[2]) 
-//        	};  
-        	h_part_clr_int[i] = new int[] {
-        			getClrValInt(h_part_pos_x[i],minVals[0],maxVals[0]), 
-        			getClrValInt(h_part_pos_y[i],minVals[1],maxVals[1]), 
-        			getClrValInt(h_part_pos_z[i],minVals[2],maxVals[2]) 
-        	};  
         	velAra = partVals.get("vel").get(i);
-        	//h_part_clr[i] = new float[] {(.5f + h_part_pos_x[i])*128, (.5f + h_part_pos_y[i])*128, (.5f + h_part_pos_z[i])*128};
-        	h_part_vel_x[i]=velAra[0];
-        	h_part_vel_y[i]=velAra[1];
-        	h_part_vel_z[i]=velAra[2];
+        	
+        	for(int j=0;j<h_part_pos.length;++j) {
+        		h_part_pos[j][i]=posAra[j];
+        		h_part_vel[j][i]=velAra[j];
+        	}
+        	int[] clrAra = new int[3];
+        	for(int j=0;j<clrAra.length;++j) {
+        		clrAra[j] = getClrValInt(h_part_pos[j][i],minVals[j],maxVals[j]);
+        	}
+        	h_part_clr_int[i] = clrAra;
         	h_part_eye[i]=1.0f;
 
         }
         cuMemAlloc(part_mass, numPartsFloatSz);  
-        cuMemAlloc(part_vol, numPartsFloatSz); 
-        cuMemAlloc(part_pos_x, numPartsFloatSz);
-        cuMemAlloc(part_pos_y, numPartsFloatSz);
-        cuMemAlloc(part_pos_z, numPartsFloatSz); 
-        cuMemAlloc(part_vel_x, numPartsFloatSz);
-        cuMemAlloc(part_vel_y, numPartsFloatSz); 
-        cuMemAlloc(part_vel_z, numPartsFloatSz);        
-
-        cuMemAlloc(part_fe_11, numPartsFloatSz);
-        cuMemAlloc(part_fe_12, numPartsFloatSz);
-        cuMemAlloc(part_fe_13, numPartsFloatSz);  
-        cuMemAlloc(part_fe_21, numPartsFloatSz);  
-        cuMemAlloc(part_fe_22, numPartsFloatSz);
-        cuMemAlloc(part_fe_23, numPartsFloatSz); 
-        cuMemAlloc(part_fe_31, numPartsFloatSz);   
-        cuMemAlloc(part_fe_32, numPartsFloatSz);
-        cuMemAlloc(part_fe_33, numPartsFloatSz);        
-    
-        cuMemAlloc(part_fp_11, numPartsFloatSz); 
-        cuMemAlloc(part_fp_12, numPartsFloatSz);
-        cuMemAlloc(part_fp_13, numPartsFloatSz);   
-        cuMemAlloc(part_fp_21, numPartsFloatSz);  
-        cuMemAlloc(part_fp_22, numPartsFloatSz);   
-        cuMemAlloc(part_fp_23, numPartsFloatSz);   
-        cuMemAlloc(part_fp_31, numPartsFloatSz);  
-        cuMemAlloc(part_fp_32, numPartsFloatSz);    
-        cuMemAlloc(part_fp_33, numPartsFloatSz);
-        
         cuMemcpyHtoD(part_mass, 	Pointer.to(h_part_mass), numPartsFloatSz);
-        cuMemcpyHtoD(part_pos_x,	Pointer.to(h_part_pos_x), numPartsFloatSz);
-        cuMemcpyHtoD(part_pos_y,	Pointer.to(h_part_pos_y), numPartsFloatSz);
-        cuMemcpyHtoD(part_pos_z,	Pointer.to(h_part_pos_z), numPartsFloatSz);
-        cuMemcpyHtoD(part_vel_x,	Pointer.to(h_part_vel_x), numPartsFloatSz);
-        cuMemcpyHtoD(part_vel_y,	Pointer.to(h_part_vel_y), numPartsFloatSz);
-        cuMemcpyHtoD(part_vel_z,	Pointer.to(h_part_vel_z), numPartsFloatSz);
-      
-        cuMemcpyHtoD(part_fe_11,	Pointer.to(h_part_eye), numPartsFloatSz);
-        cuMemcpyHtoD(part_fe_22,	Pointer.to(h_part_eye), numPartsFloatSz);
-        cuMemcpyHtoD(part_fe_33,	Pointer.to(h_part_eye), numPartsFloatSz);
-        
-        cuMemcpyHtoD(part_fp_11,	Pointer.to(h_part_eye), numPartsFloatSz);
-        cuMemcpyHtoD(part_fp_22,	Pointer.to(h_part_eye), numPartsFloatSz);
-        cuMemcpyHtoD(part_fp_33,	Pointer.to(h_part_eye), numPartsFloatSz);
-        
-        cuMemsetD32(part_fe_12, 0, numParts);
-        cuMemsetD32(part_fe_13, 0, numParts);
-        cuMemsetD32(part_fe_21, 0, numParts);
-        cuMemsetD32(part_fe_23, 0, numParts);
-        cuMemsetD32(part_fe_31, 0, numParts);
-        cuMemsetD32(part_fe_32, 0, numParts);
-        
-        cuMemsetD32(part_fp_12, 0, numParts);
-        cuMemsetD32(part_fp_13, 0, numParts);
-        cuMemsetD32(part_fp_21, 0, numParts);
-        cuMemsetD32(part_fp_23, 0, numParts);
-        cuMemsetD32(part_fp_31, 0, numParts);
-        cuMemsetD32(part_fp_32, 0, numParts);
+        cuMemAlloc(part_vol, numPartsFloatSz); 
+        cuMemsetD32(part_vol, 0, numParts);	//part_vol is a calculated quantity
+
+        for(int i=0;i<part_pos.length;++i) {
+           	cuMemAlloc(part_pos[i], numPartsFloatSz); 
+           	cuMemAlloc(part_vel[i], numPartsFloatSz); 
+
+            cuMemcpyHtoD(part_pos[i],	Pointer.to(h_part_pos[i]), numPartsFloatSz);
+            cuMemcpyHtoD(part_vel[i],	Pointer.to(h_part_vel[i]), numPartsFloatSz);
+            for(int j=0;j<part_fe[0].length;++j) {		//build identity mats for this
+                cuMemAlloc(part_fe[i][j], numPartsFloatSz);
+                cuMemAlloc(part_fp[i][j], numPartsFloatSz); 
+                if(i==j) {
+                    cuMemcpyHtoD(part_fe[i][j],	Pointer.to(h_part_eye), numPartsFloatSz);                    
+                    cuMemcpyHtoD(part_fp[i][j],	Pointer.to(h_part_eye), numPartsFloatSz);             	
+                } else {
+                    cuMemsetD32(part_fe[i][j], 0, numParts);                    
+                    cuMemsetD32(part_fp[i][j], 0, numParts);             	
+                }        	
+            }    	        	
+        }
     }
 	
 	//allocate dev mem for all objects based on number of grid cells
-	private void initCUDAMemPtrs_Grids() {   
+	private void initCUDAMemPtrs_Grids() {   		
+		h_grid_pos = new float[3][];
+		h_grid_vel = new float[3][];
+		h_grid_accel = new float[3][];
+		for(int i=0;i<h_part_pos.length;++i) {
+			h_grid_pos[i] = new float[gridSize];
+			h_grid_vel[i] = new float[gridSize];
+	       	h_grid_accel[i] = new float[gridSize];
+        }
 		
-		h_grid_vel_x = new float[gridSize];
-		h_grid_vel_y = new float[gridSize];
-		h_grid_vel_z = new float[gridSize];
-		
-		h_grid_accel_x = new float[gridSize];
-		h_grid_accel_y = new float[gridSize];
-		h_grid_accel_z = new float[gridSize];
-		
-		h_grid_mass = new float[gridSize];
-		
-		h_grid_pos_x = new float[gridSize];
-		h_grid_pos_y = new float[gridSize];
-		h_grid_pos_z = new float[gridSize];
-		
+		h_grid_mass = new float[gridSize];		
 		//build grid locations
 		int gridDim=0;
 		for(int i=0;i<gridCount;++i) {
-			float xPos = (i+.5f)*h;
+			float xPos = (i+.5f)*cellSize;
 			for(int j=0;j<gridCount;++j) {		
-				float yPos = (j+.5f)*h;
+				float yPos = (j+.5f)*cellSize;
 				for(int k=0;k<gridCount;++k) {
-					float zPos = (k+.5f)*h;
+					float zPos = (k+.5f)*cellSize;
 					//weird orientation stuffs
-					h_grid_pos_x[gridDim] = zPos;
-					h_grid_pos_y[gridDim] = yPos;
-					h_grid_pos_z[gridDim] = xPos;					
+					h_grid_pos[0][gridDim] = zPos;
+					h_grid_pos[1][gridDim] = yPos;
+					h_grid_pos[2][gridDim] = xPos;					
 					++gridDim;
 				}
 			}
 		}				
 		
         cuMemAlloc(grid_mass, numGridFloatSz); 
-        cuMemAlloc(grid_vel_x, numGridFloatSz);  
-        cuMemAlloc(grid_vel_y, numGridFloatSz);     
-        cuMemAlloc(grid_vel_z, numGridFloatSz);        
- 
-        cuMemAlloc(grid_newvel_x, numGridFloatSz);
-        cuMemAlloc(grid_newvel_y, numGridFloatSz);    
-        cuMemAlloc(grid_newvel_z, numGridFloatSz);        
- 
-        cuMemAlloc(grid_force_x, numGridFloatSz);   
-        cuMemAlloc(grid_force_y, numGridFloatSz);
-        cuMemAlloc(grid_force_z, numGridFloatSz);		
-        
 		cuMemsetD32(grid_mass, 0, gridSize);
-		cuMemsetD32(grid_vel_x, 0, gridSize);
-		cuMemsetD32(grid_vel_y, 0, gridSize);
-		cuMemsetD32(grid_vel_z, 0, gridSize);
-		cuMemsetD32(grid_newvel_x, 0, gridSize);
-		cuMemsetD32(grid_newvel_y, 0, gridSize);
-		cuMemsetD32(grid_newvel_z, 0, gridSize);
-		cuMemsetD32(grid_force_x, 0, gridSize);
-		cuMemsetD32(grid_force_y, 0, gridSize);
-		cuMemsetD32(grid_force_z, 0, gridSize);	
-	}
-	
+
+		for(int i=0;i<grid_vel.length;++i) {
+            cuMemAlloc(grid_vel[i], numGridFloatSz);  
+            cuMemAlloc(grid_newvel[i], numGridFloatSz);
+            cuMemAlloc(grid_force[i], numGridFloatSz);
+            
+            cuMemsetD32(grid_vel[i], 0, gridSize);  
+            cuMemsetD32(grid_newvel[i], 0, gridSize);
+            cuMemsetD32(grid_force[i], 0, gridSize);           	
+        }
+	}//initCUDAMemPtrs_Grids	
 	
 	private static final double lcl_third = 1.0/3.0;
 	//return a float array of random positions within a sphere of radius rad at ctr 
@@ -476,7 +419,7 @@ public abstract class base_MPMCudaSim{
             //init cuda device and kernel file if not done already - only do 1 time
             initOnceCUDASetup();
         }
-
+		//Build the particle layout for this simulation
 		TreeMap<String, ArrayList<Float[]>> partVals = buildPartLayout();
 		//total grid size       
         gridSize=gridCount*gridCount*gridCount;
@@ -500,95 +443,94 @@ public abstract class base_MPMCudaSim{
         funcGridDimAndMemSize = new HashMap<String, int[]>();
         
         kernelParams.put("projectToGridandComputeForces",Pointer.to(
-        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
+        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
         		Pointer.to(new float[] {mat.getLambda0()}), Pointer.to(new float[] {mat.getMu0()}), Pointer.to(new float[] {mat.hardeningCoeff}),
         		Pointer.to(part_mass), Pointer.to(part_vol),
-				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
-				Pointer.to(part_vel_x),Pointer.to(part_vel_y),Pointer.to(part_vel_z),
-
-				Pointer.to(part_fe_11), Pointer.to(part_fe_12), Pointer.to(part_fe_13),
-				Pointer.to(part_fe_21), Pointer.to(part_fe_22), Pointer.to(part_fe_23),
-				Pointer.to(part_fe_31), Pointer.to(part_fe_32), Pointer.to(part_fe_33),
-
-				Pointer.to(part_fp_11), Pointer.to(part_fp_12), Pointer.to(part_fp_13),
-				Pointer.to(part_fp_21), Pointer.to(part_fp_22), Pointer.to(part_fp_23),
-				Pointer.to(part_fp_31), Pointer.to(part_fp_32), Pointer.to(part_fp_33),
+				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
+				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2]),
+    			//elastic matrix
+				Pointer.to(part_fe[0][0]), Pointer.to(part_fe[0][1]), Pointer.to(part_fe[0][2]),
+				Pointer.to(part_fe[1][0]), Pointer.to(part_fe[1][1]), Pointer.to(part_fe[1][2]),
+				Pointer.to(part_fe[2][0]), Pointer.to(part_fe[2][1]), Pointer.to(part_fe[2][2]),
+				//plastic matrix
+				Pointer.to(part_fp[0][0]), Pointer.to(part_fp[0][1]), Pointer.to(part_fp[0][2]),
+				Pointer.to(part_fp[1][0]), Pointer.to(part_fp[1][1]), Pointer.to(part_fp[1][2]),
+				Pointer.to(part_fp[2][0]), Pointer.to(part_fp[2][1]), Pointer.to(part_fp[2][2]),
 
 				Pointer.to(grid_mass),
-				Pointer.to(grid_vel_x),Pointer.to(grid_vel_y),Pointer.to(grid_vel_z),
-				Pointer.to(grid_force_x),Pointer.to(grid_force_y),Pointer.to(grid_force_z)));
+				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),
+				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
         funcGridDimAndMemSize.put("projectToGridandComputeForces", new int[] {numBlocksParticles*4, 0});
 		
         kernelParams.put("projectToGridInit", Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(part_mass),
-				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
+				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(grid_mass)));
         funcGridDimAndMemSize.put("projectToGridInit", new int[] {numBlocksParticles, 0});
 		
 		kernelParams.put("computeVol", Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(part_mass),Pointer.to(part_vol),
-				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
+				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(grid_mass)));
 		funcGridDimAndMemSize.put("computeVol", new int[] {numBlocksParticles, 0});
 		
 		kernelParams.put("updPartVelocities",Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(new float[] {mat.alphaPicFlip}),
-				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
-				Pointer.to(part_vel_x),Pointer.to(part_vel_y),Pointer.to(part_vel_z),
-				Pointer.to(grid_vel_x),Pointer.to(grid_vel_y),Pointer.to(grid_vel_z),				
-				Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z)));  
+				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
+				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2]),
+				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),		
+				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));  
 		funcGridDimAndMemSize.put("updPartVelocities", new int[] {numBlocksParticles*4, numCUDAThreads*6*Sizeof.FLOAT});
 		
 	    kernelParams.put("compGridVelocities", Pointer.to(
 				Pointer.to(new int[] {gridSize}), Pointer.to(new float[] {gravity[0]}),Pointer.to(new float[] {gravity[1]}),Pointer.to(new float[] {gravity[2]}),Pointer.to(new float[] {delT}),
 				Pointer.to(grid_mass),
 		
-				Pointer.to(grid_vel_x),Pointer.to(grid_vel_y),Pointer.to(grid_vel_z),				
-				Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z),
-				Pointer.to(grid_force_x),Pointer.to(grid_force_y),Pointer.to(grid_force_z)));
+				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),			
+				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2]),
+				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
 		funcGridDimAndMemSize.put("compGridVelocities", new int[] {numBlocksGrid, 0});
 	    
 	    kernelParams.put("clearGrid", Pointer.to(
 	    		Pointer.to(new int[] {gridSize}), Pointer.to(grid_mass),		
-				Pointer.to(grid_vel_x),Pointer.to(grid_vel_y),Pointer.to(grid_vel_z),				
-				Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z),
-				Pointer.to(grid_force_x),Pointer.to(grid_force_y),Pointer.to(grid_force_z)));
+	    		Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),			
+	    		Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2]),
+				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
 		funcGridDimAndMemSize.put("clearGrid", new int[] {numBlocksGrid, 0});
 
 	    kernelParams.put("gridCollisions", Pointer.to(
-        		Pointer.to(new int[] {gridSize}),Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {h}), 
+        		Pointer.to(new int[] {gridSize}),Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {cellSize}), 
         		Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
         		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {delT}),Pointer.to(grid_mass),
-        		Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z)));
+        		Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));
 		funcGridDimAndMemSize.put("gridCollisions", new int[] {numBlocksGrid, 0});
 
         kernelParams.put("updDeformationGradient", Pointer.to(
-        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {delT}), Pointer.to(new float[] {h}), Pointer.to(new float[] {minSimBnds}),
+        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {delT}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
         		Pointer.to(new float[] {mat.criticalCompression}), Pointer.to(new float[] {mat.criticalStretch}),
-    			Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
+				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
     			//elastic matrix
-				Pointer.to(part_fe_11), Pointer.to(part_fe_12), Pointer.to(part_fe_13),
-				Pointer.to(part_fe_21), Pointer.to(part_fe_22), Pointer.to(part_fe_23),
-				Pointer.to(part_fe_31), Pointer.to(part_fe_32), Pointer.to(part_fe_33),
+				Pointer.to(part_fe[0][0]), Pointer.to(part_fe[0][1]), Pointer.to(part_fe[0][2]),
+				Pointer.to(part_fe[1][0]), Pointer.to(part_fe[1][1]), Pointer.to(part_fe[1][2]),
+				Pointer.to(part_fe[2][0]), Pointer.to(part_fe[2][1]), Pointer.to(part_fe[2][2]),
 				//plastic matrix
-				Pointer.to(part_fp_11), Pointer.to(part_fp_12), Pointer.to(part_fp_13),
-				Pointer.to(part_fp_21), Pointer.to(part_fp_22), Pointer.to(part_fp_23),
-				Pointer.to(part_fp_31), Pointer.to(part_fp_32), Pointer.to(part_fp_33),
+				Pointer.to(part_fp[0][0]), Pointer.to(part_fp[0][1]), Pointer.to(part_fp[0][2]),
+				Pointer.to(part_fp[1][0]), Pointer.to(part_fp[1][1]), Pointer.to(part_fp[1][2]),
+				Pointer.to(part_fp[2][0]), Pointer.to(part_fp[2][1]), Pointer.to(part_fp[2][2]),
 				//results
-        		Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z)));     
+				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));     
         funcGridDimAndMemSize.put("updDeformationGradient", new int[] {numBlocksParticles, 0});  
         
         kernelParams.put("partCollAndUpdPos", Pointer.to(
         		Pointer.to(new int[] {numParts}), Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
         		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {delT}),
-				Pointer.to(part_pos_x),Pointer.to(part_pos_y),Pointer.to(part_pos_z),
-				Pointer.to(part_vel_x),Pointer.to(part_vel_y),Pointer.to(part_vel_z)));   
-        funcGridDimAndMemSize.put("partCollAndUpdPos", new int[] {numBlocksParticles, 0});
-        
-        
+				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
+				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2])				
+        		));   
+        funcGridDimAndMemSize.put("partCollAndUpdPos", new int[] {numBlocksParticles, 0});        
    
         dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished CUDA Init | Launch first MPM Pass.", MsgCodes.info1);
 	 	//launch init functions
@@ -625,7 +567,8 @@ public abstract class base_MPMCudaSim{
 		System.out.println("Executing\n" + command);
 		Process process = Runtime.getRuntime().exec(command);
 
-		String errorMessage = new String(toByteArray(process.getErrorStream())), outputMessage = new String(toByteArray(process.getInputStream()));
+		String errorMessage = new String(toByteArray(process.getErrorStream())), 
+				outputMessage = new String(toByteArray(process.getInputStream()));
 		int exitValue = 0;
 		try {exitValue = process.waitFor();} 
 		catch (InterruptedException e) {
@@ -660,37 +603,6 @@ public abstract class base_MPMCudaSim{
         return bytes.toByteArray();
     }
 
-	
-	/**
-	 * call whenever grid dimensions change
-	 * @param _gridCount # of grid cells per dim
-	 * @param _h cell size
-	 * @param _numParts # of material points to draw
-	 */
-	public final void setGridValsAndInit(int _gridCount, float _h, int _numParts) {
-		//# of grid cells per side of cube
-		gridCount = _gridCount;
-		//# of particles
-		numParts = _numParts;
-		//cell size
-		h = _h;	
-		half_h = h*.5f;
-		h3 = h*h*h;
-		maxSimBnds = (gridCount*h)/2.0f;
-		minSimBnds = -maxSimBnds;
-		gridDim = maxSimBnds - minSimBnds;		
-		//scale amount to fill 1500 x 1500 x 1500 visualization cube
-		sclAmt = 1500.0f/(gridCount * h);
-
-		//notify gridbuilder that we have a new grid
-		//gridThdMgr.setNewSimVals();
-		setSimFlags(gridIsBuiltIDX, false);
-		//partThdMgr.setNewSimVals();
-		setSimFlags(simIsBuiltIDX, false);
-		//build grid - upon completion the gridbuilder will call resetSim to build particles
-		resetSim(true);
-	}//setGridValsAndInit	
-
 
 	//call whenever setting/resetting simulation world - no changes to particle count/grid dimensions, just resetting to initial state
 	//does not rebuild thread worker list, just re-executes existing thread workers
@@ -699,23 +611,19 @@ public abstract class base_MPMCudaSim{
 			//reset active ptrs
 			JCuda.cudaFree(part_mass);		  
 	        JCuda.cudaFree(part_vol); 
-	        JCuda.cudaFree(part_pos_x); JCuda.cudaFree(part_pos_y);JCuda.cudaFree(part_pos_z);        
-	
-	        JCuda.cudaFree(part_vel_x); JCuda.cudaFree(part_vel_y);JCuda.cudaFree(part_vel_z);        
-	
-	        JCuda.cudaFree(part_fe_11);JCuda.cudaFree(part_fe_12);JCuda.cudaFree(part_fe_13);  
-	        JCuda.cudaFree(part_fe_21);JCuda.cudaFree(part_fe_22);JCuda.cudaFree(part_fe_23); 
-	        JCuda.cudaFree(part_fe_31);JCuda.cudaFree(part_fe_32);JCuda.cudaFree(part_fe_33);        
-	    
-	        JCuda.cudaFree(part_fp_11);JCuda.cudaFree(part_fp_12);JCuda.cudaFree(part_fp_13);
-	        JCuda.cudaFree(part_fp_21);JCuda.cudaFree(part_fp_22);JCuda.cudaFree(part_fp_23);   
-	        JCuda.cudaFree(part_fp_31);JCuda.cudaFree(part_fp_32);JCuda.cudaFree(part_fp_33);       
-	 
 	        JCuda.cudaFree(grid_mass); 
-	        //JCuda.cudaFree(grid_pos_x);JCuda.cudaFree(grid_pos_y);JCuda.cudaFree(grid_pos_z); 	  
-	        JCuda.cudaFree(grid_vel_x);JCuda.cudaFree(grid_vel_y);JCuda.cudaFree(grid_vel_z); 	 
-	        JCuda.cudaFree(grid_newvel_x);JCuda.cudaFree(grid_newvel_y);JCuda.cudaFree(grid_newvel_z); 
-	        JCuda.cudaFree(grid_force_x);JCuda.cudaFree(grid_force_y);JCuda.cudaFree(grid_force_z);
+	        for(int i=0;i<part_pos.length;++i) {
+	        	JCuda.cudaFree(part_pos[i]);
+	        	JCuda.cudaFree(part_vel[i]);
+		        JCuda.cudaFree(grid_vel[i]); 
+		        JCuda.cudaFree(grid_newvel[i]);
+		        JCuda.cudaFree(grid_force[i]);
+		        
+		        for(int j=0;j<part_fe[0].length;++j) {
+		        	JCuda.cudaFree(part_fe[i][j]);                    
+		        	JCuda.cudaFree(part_fp[i][j]);		        	
+		        }
+	        }
 		}
 		//sim start time - time from when sim object was first instanced
 		simStartTime = getCurTime();	
@@ -728,13 +636,7 @@ public abstract class base_MPMCudaSim{
 		setSimFlags(simIsBuiltIDX, true);
 		dispMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Finished resetting sim", MsgCodes.info1);
 	}//initOnce
-	
-	//called by partThdMgr runnable after particles are all built
-	public void resetSimEnd() {
-		System.out.println("Finished rebuilding particles of sim : " + getCurTime());
-		//initial "sim" run - sets initial particle volume and density
-		resetSimEnd_Priv();		
-	}//resetSimEnd
+
 
 	//only called after particles are built
 	public void setSimPartsAreBuilt() {setSimFlags(simIsBuiltIDX, true);}
@@ -786,28 +688,19 @@ public abstract class base_MPMCudaSim{
  		
  		if((getSimFlags(showParticles)) || getSimFlags(showParticleVelArrows)) {
 			//copy from device data to host particle position arrays
-			cuMemcpyDtoH(Pointer.to(h_part_pos_x),part_pos_x, numPartsFloatSz);
-			cuMemcpyDtoH(Pointer.to(h_part_pos_y),part_pos_y, numPartsFloatSz);
-			cuMemcpyDtoH(Pointer.to(h_part_pos_z),part_pos_z, numPartsFloatSz);
-		
+ 			for(int i=0;i<h_part_pos.length;++i) {			cuMemcpyDtoH(Pointer.to(h_part_pos[i]),part_pos[i], numPartsFloatSz);			}
+//		
  		} 		
 		
  		if(getSimFlags(showParticleVelArrows)) {
-			cuMemcpyDtoH(Pointer.to(h_part_vel_x),part_vel_x, numPartsFloatSz);
-			cuMemcpyDtoH(Pointer.to(h_part_vel_y),part_vel_y, numPartsFloatSz);
-			cuMemcpyDtoH(Pointer.to(h_part_vel_z),part_vel_z, numPartsFloatSz);
+ 			for(int i=0;i<h_part_vel.length;++i) { 				cuMemcpyDtoH(Pointer.to(h_part_vel[i]),part_vel[i], numPartsFloatSz);			}
  		}
  		
 		if(getSimFlags(showGridVelArrows)) {
-			cuMemcpyDtoH(Pointer.to(h_grid_vel_x),grid_newvel_x, numGridFloatSz);
-			cuMemcpyDtoH(Pointer.to(h_grid_vel_y),grid_newvel_y, numGridFloatSz);
-			cuMemcpyDtoH(Pointer.to(h_grid_vel_z),grid_newvel_z, numGridFloatSz);
+ 			for(int i=0;i<h_grid_vel.length;++i) { 				cuMemcpyDtoH(Pointer.to(h_grid_vel[i]),grid_newvel[i], numGridFloatSz);			}
 		}
 		if(getSimFlags(showGridAccelArrows)) {
-			cuMemcpyDtoH(Pointer.to(h_grid_accel_x),grid_force_x, numGridFloatSz);
-			cuMemcpyDtoH(Pointer.to(h_grid_accel_y),grid_force_y, numGridFloatSz);
-			cuMemcpyDtoH(Pointer.to(h_grid_accel_z),grid_force_z, numGridFloatSz);
-		
+ 			for(int i=0;i<h_grid_accel.length;++i) { 				cuMemcpyDtoH(Pointer.to(h_grid_accel[i]),grid_force[i], numGridFloatSz);			}		
 		}
 		
 		if(getSimFlags(showGridMass)) {
@@ -935,35 +828,25 @@ public abstract class base_MPMCudaSim{
 		//draw the points
 		int pincr = 1;
 		//draw all points as a shape object
-		if(showPoints) {pa.drawPointCloudWithColors(numParts, pincr, h_part_clr_int, h_part_pos_x, h_part_pos_y, h_part_pos_z);}
+		if(showPoints) {pa.drawPointCloudWithColors(numParts, pincr, h_part_clr_int, h_part_pos[0], h_part_pos[1], h_part_pos[2]);}
 		
 		if(showPointVel) {
 			float mult = .01f;
 			float minMag = MyMathUtils.eps_f/mult;
 			for(int i=0;i<=numParts-pincr;i+=pincr) {					
-				if(		(Math.abs(h_part_vel_x[i]) > minMag) || 
-						(Math.abs(h_part_vel_y[i]) > minMag) || 
-						(Math.abs(h_part_vel_z[i]) > minMag)) {
-
+				if(		(Math.abs(h_part_vel[0][i]) > minMag) || 
+						(Math.abs(h_part_vel[1][i]) > minMag) || 
+						(Math.abs(h_part_vel[2][i]) > minMag)) {
 					pa.pushMatState();
 					pa.setStroke(h_part_clr_int[i], 100);
-					pa.translate(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
+					pa.translate(h_part_pos[0][i], h_part_pos[1][i], h_part_pos[2][i]);
 					//((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
-					pa.drawLine(0,0,0, mult*h_part_vel_x[i],mult*h_part_vel_y[i],mult*h_part_vel_z[i]);
+					pa.drawLine(0,0,0, mult*h_part_vel[0][i],mult*h_part_vel[1][i],mult*h_part_vel[2][i]);
 					//((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
 					pa.popMatState();
 				}
-			}
-			
+			}			
 		}
-		//((my_procApplet)pa).beginShape(PConstants.POINTS);
-//		for(int i=0;i<=numParts-pincr;i+=pincr) {				
-//			pa.setStroke(h_part_clr_int[i], 255);
-//			//((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
-//			((my_procApplet)pa).point(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-//			//((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-//		}
-		//((my_procApplet)pa).endShape();
 		pa.popMatState();
 	}
 
@@ -976,23 +859,23 @@ public abstract class base_MPMCudaSim{
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
 			//shows every "incr" gridcells
 			for (int i=0; i<=gridCount;i+=incr) {
-				float iLoc = i*h;
+				float iLoc = i*cellSize;
 				for(int j=0;j<=gridCount;j+=incr) {
-					myVectorf startPos=new myVectorf(iLoc,j*h,0.0f);
-					myVectorf endPos=new myVectorf(iLoc,j*h,gridDim);
+					myVectorf startPos=new myVectorf(iLoc,j*cellSize,0.0f);
+					myVectorf endPos=new myVectorf(iLoc,j*cellSize,gridDim);
 					pa.drawLine(startPos,endPos);
 				}
 				for(int k=0;k<=gridCount;k+=incr) {
-					myVectorf startPos=new myVectorf(iLoc,0.0f, k*h);
-					myVectorf endPos=new myVectorf(iLoc,gridDim,k*h);
+					myVectorf startPos=new myVectorf(iLoc,0.0f, k*cellSize);
+					myVectorf endPos=new myVectorf(iLoc,gridDim,k*cellSize);
 					pa.drawLine(startPos,endPos);
 				}
 			}
 			for(int j=0;j<=gridCount;j+=incr) {
-				float jLoc = j*h;
+				float jLoc = j*cellSize;
 				for(int k=0;k<=gridCount;k+=incr) {
-					myVectorf startPos=new myVectorf(0.0f,jLoc,k*h);
-					myVectorf endPos=new myVectorf(gridDim,jLoc,k*h);
+					myVectorf startPos=new myVectorf(0.0f,jLoc,k*cellSize);
+					myVectorf endPos=new myVectorf(gridDim,jLoc,k*cellSize);
 					pa.drawLine(startPos,endPos);
 				}
 			}
@@ -1000,12 +883,12 @@ public abstract class base_MPMCudaSim{
 		}
 		if(showGridVel) {
 			float mult = .01f;
-			_drawGridVec(mult, gridVecClr, h_grid_vel_x, h_grid_vel_y, h_grid_vel_z);
+			_drawGridVec(mult, gridVecClr, h_grid_vel[0], h_grid_vel[1], h_grid_vel[2]);
 		}
 		
 		if(showGridForce) {
 			float mult = .01f;
-			_drawGridVec(mult, gridAccelClr, h_grid_accel_x, h_grid_accel_y, h_grid_accel_z);
+			_drawGridVec(mult, gridAccelClr, h_grid_accel[0], h_grid_accel[1], h_grid_accel[2]);
 		}
 		
 		pa.popMatState();
@@ -1022,7 +905,7 @@ public abstract class base_MPMCudaSim{
 					(Math.abs(yVal[i]) > minMag) || 
 					(Math.abs(zVal[i]) > minMag)) {
 				pa.pushMatState();	
-				pa.translate(h_grid_pos_x[i], h_grid_pos_y[i], h_grid_pos_z[i]);
+				pa.translate(h_grid_pos[0][i], h_grid_pos[1][i], h_grid_pos[2][i]);
 				pa.drawLine(0,0,0, mult*xVal[i],mult*yVal[i],mult*zVal[i]);
 				pa.popMatState();
 			}
@@ -1039,7 +922,8 @@ public abstract class base_MPMCudaSim{
 		for (int i=0; i<gridSize;++i) {			
 			if(		(Math.abs(xVal[i]) > minMag)) {
 				pa.pushMatState();	
-				pa.translate(h_grid_pos_x[i], h_grid_pos_y[i], h_grid_pos_z[i]);
+				//pa.translate(h_grid_pos_x[i], h_grid_pos_y[i], h_grid_pos_z[i]);
+				pa.translate(h_grid_pos[0][i], h_grid_pos[1][i], h_grid_pos[2][i]);
 				pa.drawSphere(xVal[i]*mult);
 				pa.popMatState();
 			}
@@ -1047,9 +931,6 @@ public abstract class base_MPMCudaSim{
 		pa.popMatState();		
 	}
 	
-	
-	//reinitialize instanced Simulation- set up all resources - re call this every time new sim is being set up
-	protected abstract void resetSimEnd_Priv();
 	//draw internal-to-sim colliders, if they exist
 	protected abstract void drawCollider(float animTimeMod);
 	
