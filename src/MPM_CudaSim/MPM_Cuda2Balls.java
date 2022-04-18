@@ -18,15 +18,7 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 	
 	//build particle layout for cuda sim - use multiples of h as radius
 	@Override
-	protected TreeMap<String, ArrayList<Float[]>> buildPartLayout() {	
-        //create particle layout
-        TreeMap<String, ArrayList<Float[]>> partVals = new TreeMap<String, ArrayList<Float[]>>();
-        partVals.put("pos",new ArrayList<Float[]>());
-        partVals.put("vel",new ArrayList<Float[]>());
-        partVals.put("minMaxVals",new ArrayList<Float[]>());
-        //initialize min and max values
-        partVals.get("minMaxVals").add(new Float[] {100000.0f,100000.0f,100000.0f});
-        partVals.get("minMaxVals").add(new Float[] {-100000.0f,-100000.0f,-100000.0f});      
+	protected void buildPartLayoutMap(TreeMap<String, ArrayList<Float[]>> partVals) {	
 
         int numPartsPerSphere = numParts/2;
         //float ctrOfGrid = (minSimBnds + maxSimBnds)/2.0f, diff = maxSimBnds - minSimBnds; 
@@ -41,17 +33,20 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 		//float sphereSqRad = sphereRad*sphereRad;
 		float offScl = 600.0f/this.sclAmt;
 
-        float xVel = -1.4f*initVel, 
+        float xVel = -1.0f*initVel, 
         	yVel = 0, 
-    		zVel = .5f*-initVel;
+    		zVel = .2f*-initVel;
 		
-		float xOff = .4f  *offScl, 
-			yOff = .5f*offScl, 
-			zOff = .4f *offScl;
+        float[] sphere1_Ctr = new float[] {.4f  *offScl, .5f*offScl, .4f *offScl};
+		
+		//build sphere of particles - scale volume of sphere based on cuberoot of # of particles, with 1000 particles being baseline sphere - radius will be function of how many particles are built
+        float ballRad = (float) (3.0*Math.cbrt(numParts)/sclAmt);		
+
 		//int incr = 1;
 		//lower ball
         //buildSphere(partVals,new float[] {xOff, yOff, zOff}, new float [] {xVel, yVel, zVel}, incr, sphereSqRad, minVals, maxVals);
-		float sphereRad = createSphere(partVals,numPartsPerSphere, new float [] {xVel, yVel, zVel}, new float[] {xOff, yOff, zOff});
+		float sphereRad = createSphere(partVals, ballRad, numPartsPerSphere, new float [] {xVel, yVel, zVel}, sphere1_Ctr);
+        float[] sphere2_Ctr = new float[] {-.1f*sphereRad *offScl, .5f*offScl, .4f*sphereRad*offScl};
 				
 		//find min and max values for 1st built sphere
 //		for(int i=0;i<3;++i) {
@@ -59,16 +54,13 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 //			System.out.println("First built sphere idx "+i+" max : " + maxVals[i]+" and min : " + minVals[i] + " -> unscaled radius : " + rad + " Scaled (apparent) radius : "+ (rad*this.sclAmt));
 //		}
 		xVel *= -1;
-        yVel *= -1;
-        xOff = -.1f*sphereRad *offScl;
-        yOff = .5f*offScl;
-        zOff = (.4f*sphereRad)*offScl;
+        //yVel *= -1;
+		zVel = .5f*-initVel;
         //upper ball        
         //buildSphere(partVals,new float[] {xOff, yOff, zOff}, new float [] {xVel, yVel, zVel}, incr, sphereSqRad, minVals, maxVals);
-		createSphere(partVals,numPartsPerSphere, new float [] {xVel, yVel, zVel}, new float[] {xOff, yOff, zOff});
+		createSphere(partVals, ballRad, numPartsPerSphere, new float [] {xVel, yVel, zVel}, sphere2_Ctr);
 
          //end create particle layout	
-		return partVals;
 	}//buildPartLayout
 
 	

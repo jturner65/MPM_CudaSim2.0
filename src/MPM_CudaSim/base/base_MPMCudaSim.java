@@ -56,11 +56,9 @@ public abstract class base_MPMCudaSim{
 	public static boolean supportsANSITerm = false;
 	//parameters
 	//timestep of simulation - 
-	protected  static float deltaT = 4e-4f;
+	protected static float deltaT = 4e-4f;
 
-
-	//const matrix for calculations - z is down
-	//protected final FloatMatrix gravity = new FloatMatrix(new float[] {0, 0, -9.8f});
+	//const matrix for calculations - z is up/down
 	protected final float[] gravity = new float[] {0, 0, -9.8f};
 	//scale amount for visualization to fill cube frame in 3d world; particle radius, scaled by different visual scales
 	protected float sclAmt;
@@ -181,7 +179,7 @@ public abstract class base_MPMCudaSim{
 		//resetSim(false);
 	}//MPM_ABS_Sim
 	//run 1 time to load kernel and assign function pointers to functions
-	private void initOnceCUDASetup() {
+	private void initCUDAModuleSetup() {
 		// Enable exceptions and omit all subsequent error checks
         JCudaDriver.setExceptionsEnabled(true); 
         //Initialize the driver and create a context for the first device. (device 0
@@ -208,8 +206,8 @@ public abstract class base_MPMCudaSim{
         // Obtain a function pointer to each function in cuda kernel file
 		cuFuncs = new TreeMap<String, CUfunction>();
 		for (int i =0;i<CUFileFuncNames.length; ++i) {
-			String key = CUFileFuncNames[i];
-			System.out.println("Registering Kernel Function Key : " + key);
+			String key = CUFileFuncNames[i];			
+			dispMessage("MPM_Abs_CUDASim : "+simName, "initOnceCUDASetup","\tRegistering Kernel Function Key : " + key, MsgCodes.info1);
 			CUfunction c = new CUfunction();			
 			cuModuleGetFunction(c, module, key);
 			cuFuncs.put(key,  c);
@@ -239,13 +237,13 @@ public abstract class base_MPMCudaSim{
 	 * @param _h cell size
 	 * @param _numParts # of material points to draw
 	 */
-	public final void setGridValsAndInit(int _gridCount, float _h, int _numParts, float _partMass) {
+	public final void setGridValsAndInit(int _gridCount, float _cellSize, int _numParts, float _partMass) {
 		//# of grid cells per side of cube
 		gridCount = _gridCount;
 		//# of particles
 		numParts = _numParts;
 		//cell size
-		cellSize = _h;	
+		cellSize = _cellSize;	
 		
 		particleMass = _partMass;		
 		maxSimBnds = (gridCount*cellSize)/2.0f;
@@ -386,11 +384,17 @@ public abstract class base_MPMCudaSim{
 		return posRes;
 	}//getRandPosInSphereAra
 	
-	//create a sphere with given center, with passed # of particles -0 returns ball radius
-	protected final float createSphere(TreeMap<String, ArrayList<Float[]>> partVals, int numParts, float[] initVel, float[] ctr) {
+	/**
+	 * create a sphere with given center, with passed # of particles -0 returns ball radius
+	 * @param partVals map holding all appropriate particle values
+	 * @param ballRad desired radius of sphere
+	 * @param numParts
+	 * @param initVel
+	 * @param ctr
+	 * @return
+	 */
+	protected final float createSphere(TreeMap<String, ArrayList<Float[]>> partVals, float ballRad, int numParts, float[] initVel, float[] ctr) {
     
-		//build sphere of particles - scale volume of sphere based on cuberoot of # of particles, with 1000 particles being baseline sphere - radius will be function of how many particles are built
-        float ballRad = (float) (3.0*Math.cbrt(numParts)/sclAmt);		
 		dispMessage("MPM_Abs_CUDASim : "+simName, "createSphere","Start creating a sphere with "+numParts+" particles in a sphere of radius " + ballRad +".", MsgCodes.info1);
 		 
 		Float[] minVals = partVals.get("minMaxVals").get(0);
@@ -411,34 +415,59 @@ public abstract class base_MPMCudaSim{
 		return ballRad;
 	}//createSphere
 
-	protected abstract TreeMap<String, ArrayList<Float[]>> buildPartLayout();		
+	/**
+	 * build initial layout for particles for this simulation
+	 * @param partVals initialized string-keyed map holding arrays of values
+	 * @return partVals array with sim-appropriate values
+	 */
+	protected abstract void buildPartLayoutMap(TreeMap<String, ArrayList<Float[]>> partVals);		
 	
-	private void cudaSetup() {//throws IOException {     
+	/**
+	 * initialize all particle values
+	 */
+	private TreeMap<String, ArrayList<Float[]>> initAllParticles() {
+		//Build the particle layout for this simulation
+        //create base particle layout
+        TreeMap<String, ArrayList<Float[]>> partVals = new TreeMap<String, ArrayList<Float[]>>();
+        partVals.put("pos",new ArrayList<Float[]>());
+        partVals.put("vel",new ArrayList<Float[]>());
+        partVals.put("minMaxVals",new ArrayList<Float[]>());
+        //initialize min and max values
+        partVals.get("minMaxVals").add(new Float[] {100000.0f,100000.0f,100000.0f});
+        partVals.get("minMaxVals").add(new Float[] {-100000.0f,-100000.0f,-100000.0f});      
+		
+		//determine sim-specific particle layouts
+        buildPartLayoutMap(partVals);
+        return partVals;
+	}//initAllParticles
+	
+	private void cudaSetup() {   
 		dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Start CUDA Init", MsgCodes.info1);
 		if (!getSimFlags(CUDADevInit)) {
             //init cuda device and kernel file if not done already - only do 1 time
-            initOnceCUDASetup();
+            initCUDAModuleSetup();
         }
-		//Build the particle layout for this simulation
-		TreeMap<String, ArrayList<Float[]>> partVals = buildPartLayout();
 		//total grid size       
         gridSize=gridCount*gridCount*gridCount;
-        
+        //initialize all particle values
+        TreeMap<String, ArrayList<Float[]>> partVals = initAllParticles();
+
         numParts = partVals.get("pos").size();
-        System.out.println("# of particles : " + numParts);
         numPartsFloatSz = numParts * Sizeof.FLOAT;
 
+        dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Total # of particles in simulation : " + numParts, MsgCodes.info1);
+
         //init ptrs to particle-based arrays - numparts and numPartsFloatSz need to be initialized here
-        initCUDAMemPtrs_Parts(partVals);
+        initCUDAMemPtrs_Parts(partVals);		
 
-        //init grid ptrs
-        float delT = getDeltaT();
-
+        //init grid ptrs        
         numGridFloatSz = gridSize * Sizeof.FLOAT;
         initCUDAMemPtrs_Grids();
         
+        float delT = getDeltaT();        
         numBlocksParticles=numParts/numCUDAThreads+1;
         numBlocksGrid=gridSize/numCUDAThreads+1;
+        
         kernelParams = new TreeMap<String, Pointer>();
         funcGridDimAndMemSize = new HashMap<String, int[]>();
         
@@ -547,6 +576,8 @@ public abstract class base_MPMCudaSim{
 	 */
 	private void launchKernel(String key) {
 		int[] kernelVal = funcGridDimAndMemSize.get(key);
+		//dispMessage("MPM_Abs_CUDASim : "+simName, "launchKernel","Launching kernel : " + cuFuncs.get(key) + " with kernelVal[0] : " +kernelVal[0] + " kernelVal[1] : " + kernelVal[1]+" kernelParams.get(key) : "+  kernelParams.get(key) + " key : "+key , MsgCodes.info1);
+		
         cuLaunchKernel(cuFuncs.get(key), 
         		kernelVal[0], 1, 1,           // Grid dimension 
                 numCUDAThreads, 1, 1,  // Block dimension
@@ -604,8 +635,7 @@ public abstract class base_MPMCudaSim{
     }
 
 
-	//call whenever setting/resetting simulation world - no changes to particle count/grid dimensions, just resetting to initial state
-	//does not rebuild thread worker list, just re-executes existing thread workers
+
 	public final void resetSim(boolean freeCuda) {
 		if(freeCuda) {
 			//reset active ptrs
@@ -628,6 +658,7 @@ public abstract class base_MPMCudaSim{
 		//sim start time - time from when sim object was first instanced
 		simStartTime = getCurTime();	
 		dispMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Start resetting sim", MsgCodes.info1);
+		
 		setSimFlags(CUDADevInit,false);
 		setSimFlags(simIsBuiltIDX, false);
 		

@@ -3,3 +3,11 @@
 *.jpg
 /bin/
 .settings
+
+src/Cuda/
+
+newLibs/
+
+cuda8/
+
+java.policy.applet

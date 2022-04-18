@@ -9,6 +9,7 @@ import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.base_UpdateFromUIData;
 import base_UI_Objects.windowUI.base.myDispWindow;
 import base_UI_Objects.windowUI.drawnObjs.myDrawnSmplTraj;
+import base_Utils_Objects.io.MsgCodes;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
 
@@ -18,7 +19,7 @@ public class MPM_SimWindow extends myDispWindow {
 	//TODO support multiple sim worlds possibly, with different configurations
 	public base_MPMCudaSim currSim;
 	//grid variables
-	private int numGridCells = base_MPMCudaSim.numGridCellsDefault;
+	private int numGridCellsPerDim = base_MPMCudaSim.numGridCellsDefault;
 	private float cellSize = base_MPMCudaSim.cellSizeDefault;
 	private int numParts = base_MPMCudaSim.numPartsUI_Init;
 	private float particleMass = cellSize *cellSize *cellSize * 50; 
@@ -109,7 +110,7 @@ public class MPM_SimWindow extends myDispWindow {
 //		//init simulation construct here
 		//init simulation construct here
 		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation now.");
-		currSim = new MPM_Cuda2Balls(pa,numGridCells, cellSize,numParts, particleMass);		
+		currSim = new MPM_Cuda2Balls(pa,numGridCellsPerDim, cellSize,numParts, particleMass);		
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		setPrivFlags(showParticles, true);
@@ -190,7 +191,7 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpUIObjArray.put(gIDX_numParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*numParts, "# of Particles", new boolean[]{true, false, true}});//number of particles
 		tmpUIObjArray.put(gIDX_partMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*particleMass, "Particle Mass", new boolean[]{false, false, true}});//particle mass
 		tmpUIObjArray.put(gIDX_gridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*cellSize, "Grid Cell Size", new boolean[]{false, false, true}});//grid cell size
-		tmpUIObjArray.put(gIDX_gridCount, new Object[] {new double[]{50, 300, 1}, 1.0*numGridCells,  "Grid Cell Count Per Side", new boolean[]{true, false, true}}); //# of grid cells per side
+		tmpUIObjArray.put(gIDX_gridCount, new Object[] {new double[]{50, 300, 1}, 1.0*numGridCellsPerDim,  "Grid Cell Count Per Side", new boolean[]{true, false, true}}); //# of grid cells per side
 		tmpUIObjArray.put(gIDX_initYoungMod, new Object[] {new double[]{1000.0f, 100000.0f, 100.0f}, 1.0*myMaterial.base_initYoungMod, "Young's Modulus", new boolean[]{false, false, true}});//gIDX_initYoungMod init 4.8e4f, 
 		tmpUIObjArray.put(gIDX_poissonRatio, new Object[] {new double[]{.01f, 1.0f, .01f}, 1.0*myMaterial.base_poissonRatio, "Poisson Ratio", new boolean[]{false, false, true}});//gIDX_poissonRatio init 0.2f,  
 		tmpUIObjArray.put(gIDX_hardeningCoeff , new Object[] {new double[]{1.0f, 100.0f, 1.0f}, 1.0*myMaterial.base_hardeningCoeff, "Hardening Coefficient", new boolean[]{false, false, true}});//gIDX_hardeningCoeff init 15.0f, 
@@ -212,19 +213,19 @@ public class MPM_SimWindow extends myDispWindow {
 				break;} 	
 			case gIDX_numParticles				:{
 				numParts = (int)val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts, particleMass);
+				currSim.setGridValsAndInit(numGridCellsPerDim,  cellSize, numParts, particleMass);
 				break;}
 			case gIDX_partMass 					:{
 				particleMass = val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts, particleMass);
+				currSim.setGridValsAndInit(numGridCellsPerDim,  cellSize, numParts, particleMass);
 				break;}
 			case gIDX_gridCellSize				:{
 				cellSize = val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts, particleMass);
+				currSim.setGridValsAndInit(numGridCellsPerDim,  cellSize, numParts, particleMass);
 				break;}
 			case gIDX_gridCount					:{
-				numGridCells = (int)val;
-				currSim.setGridValsAndInit(numGridCells,  cellSize, numParts, particleMass);				
+				numGridCellsPerDim = (int)val;
+				currSim.setGridValsAndInit(numGridCellsPerDim,  cellSize, numParts, particleMass);				
 				break;}
 			case gIDX_initYoungMod 				:{
 				currSim.mat.setYoungModulus(val);
@@ -373,10 +374,41 @@ public class MPM_SimWindow extends myDispWindow {
 
 	@Override
 	public void handleSideMenuMseOvrDispSel(int btn, boolean val) {}
-
 	@Override
-	public void handleSideMenuDebugSel(int btn, int val) {	}
+	public final void handleSideMenuDebugSelEnable(int btn) {
+		msgObj.dispMessage(className, "handleSideMenuDebugSelEnable","Click Debug functionality on in " + name + " : btn : " + btn, MsgCodes.info4);
+		switch (btn) {
+			case 0: {				break;			}
+			case 1: {				break;			}
+			case 2: {				break;			}
+			case 3: {				break;			}
+			case 4: {				break;			}
+			case 5: {				break;			}
+			default: {
+				msgObj.dispMessage(className, "handleSideMenuDebugSelEnable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
+				break;
+			}
+		}
+		msgObj.dispMessage(className, "handleSideMenuDebugSelEnable", "End Debug functionality on selection.",MsgCodes.info4);
+	}
 	
+	@Override
+	public final void handleSideMenuDebugSelDisable(int btn) {
+		msgObj.dispMessage(className, "handleSideMenuDebugSelDisable","Click Debug functionality off in " + name + " : btn : " + btn, MsgCodes.info4);
+		switch (btn) {
+			case 0: {				break;			}
+			case 1: {				break;			}
+			case 2: {				break;			}
+			case 3: {				break;			}
+			case 4: {				break;			}
+			case 5: {				break;			}
+		default: {
+			msgObj.dispMessage(className, "handleSideMenuDebugSelDisable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
+			break;
+			}
+		}
+		msgObj.dispMessage(className, "handleSideMenuDebugSelDisable", "End Debug functionality off selection.",MsgCodes.info4);
+	}
 	
 	@Override
 	protected String[] getSaveFileDirNamesPriv() {
