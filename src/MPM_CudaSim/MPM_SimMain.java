@@ -49,7 +49,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	protected int setAppWindowDimRestrictions() {	return 1;}	
 	
 	//instance-specific setup code
-	protected void setup_indiv() {
+	protected void setup_Indiv() {
 		//modify default grid dims to be 1500x1500x1500
 		setDesired3DGridDims(1500);
 
@@ -176,6 +176,13 @@ public class MPM_SimMain extends GUI_AppManager {
 		}
 	}//handleShowWin
 
+	/**
+	 * Individual extending Application Manager post-drawMe functions
+	 * @param modAmtMillis
+	 * @param is3DDraw
+	 */
+	@Override
+	protected void drawMePost_Indiv(float modAmtMillis, boolean is3DDraw) {}
 
 	//////////////////////////////////////////
 	/// graphics and base functionality utilities and variables
