@@ -67,7 +67,7 @@ public class MPM_SimMain extends GUI_AppManager {
 		setMainFlagToShow_showRtSideMenu(true);
 	}
 	@Override
-	protected void initVisOnce_Indiv() {
+	protected void initAllDispWindows() {
 		//((my_procApplet)pa).strokeCap(PConstants.SQUARE);
 		showInfo = true;
 		
