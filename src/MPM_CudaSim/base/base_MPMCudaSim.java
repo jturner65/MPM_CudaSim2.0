@@ -11,11 +11,10 @@ import java.util.concurrent.*;
 
 import MPM_CudaSim.myMaterial;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
-import base_Utils_Objects.io.ConsoleCLR;
-import base_Utils_Objects.io.MsgCodes;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
+import base_UI_Objects.windowUI.base.myDispWindow;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
@@ -26,6 +25,8 @@ public abstract class base_MPMCudaSim{
 	public static IRenderInterface pa;
 	//name of instancing sim
 	public final String simName;
+	//owning window
+	protected myDispWindow win;
 	
 	//cuda kernel file name
 	private String ptxFileName = "MPM_CUDA_Sim_New.ptx";	
@@ -136,8 +137,8 @@ public abstract class base_MPMCudaSim{
 	
 	//grid count per side - center grid always in display; grid cell dim per side
 	//@SuppressWarnings("unchecked")
-	public base_MPMCudaSim(IRenderInterface _pa,String _simName, int _gridCount, float _h, int _numParts, float _density) {		
-		pa=_pa;simName = _simName;	
+	public base_MPMCudaSim(IRenderInterface _pa,myDispWindow _win, String _simName, int _gridCount, float _h, int _numParts, float _density) {		
+		pa=_pa;win=_win;simName = _simName;		
 		
 		part_mass = new CUdeviceptr();   		part_vol = new CUdeviceptr();   
 		grid_mass = new CUdeviceptr();    
@@ -207,7 +208,7 @@ public abstract class base_MPMCudaSim{
 		cuFuncs = new TreeMap<String, CUfunction>();
 		for (int i =0;i<CUFileFuncNames.length; ++i) {
 			String key = CUFileFuncNames[i];			
-			dispMessage("MPM_Abs_CUDASim : "+simName, "initOnceCUDASetup","\tRegistering Kernel Function Key : " + key, MsgCodes.info1);
+			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "initOnceCUDASetup","\tRegistering Kernel Function Key : " + key);
 			CUfunction c = new CUfunction();			
 			cuModuleGetFunction(c, module, key);
 			cuFuncs.put(key,  c);
@@ -395,7 +396,7 @@ public abstract class base_MPMCudaSim{
 	 */
 	protected final float createSphere(TreeMap<String, ArrayList<Float[]>> partVals, float ballRad, int numParts, float[] initVel, float[] ctr) {
     
-		dispMessage("MPM_Abs_CUDASim : "+simName, "createSphere","Start creating a sphere with "+numParts+" particles in a sphere of radius " + ballRad +".", MsgCodes.info1);
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "createSphere","Start creating a sphere with "+numParts+" particles in a sphere of radius " + ballRad +".");
 		 
 		Float[] minVals = partVals.get("minMaxVals").get(0);
 		Float[] maxVals = partVals.get("minMaxVals").get(1); 
@@ -410,7 +411,7 @@ public abstract class base_MPMCudaSim{
 			//init vel
 			partVals.get("vel").add(new Float[] {initVel[0],initVel[1],initVel[2]});
         }
-		dispMessage("MPM_Abs_CUDASim : "+simName, "createSphere","Finished creating a sphere with "+numParts+" particles.", MsgCodes.info1);
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "createSphere","Finished creating a sphere with "+numParts+" particles.");
 		
 		return ballRad;
 	}//createSphere
@@ -442,7 +443,7 @@ public abstract class base_MPMCudaSim{
 	}//initAllParticles
 	
 	private void cudaSetup() {   
-		dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Start CUDA Init", MsgCodes.info1);
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Start CUDA Init");
 		if (!getSimFlags(CUDADevInit)) {
             //init cuda device and kernel file if not done already - only do 1 time
             initCUDAModuleSetup();
@@ -455,7 +456,7 @@ public abstract class base_MPMCudaSim{
         numParts = partVals.get("pos").size();
         numPartsFloatSz = numParts * Sizeof.FLOAT;
 
-        dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Total # of particles in simulation : " + numParts, MsgCodes.info1);
+        win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Total # of particles in simulation : " + numParts);
 
         //init ptrs to particle-based arrays - numparts and numPartsFloatSz need to be initialized here
         initCUDAMemPtrs_Parts(partVals);		
@@ -561,12 +562,12 @@ public abstract class base_MPMCudaSim{
         		));   
         funcGridDimAndMemSize.put("partCollAndUpdPos", new int[] {numBlocksParticles, 0});        
    
-        dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished CUDA Init | Launch first MPM Pass.", MsgCodes.info1);
+        win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished CUDA Init | Launch first MPM Pass.");
 	 	//launch init functions
         for (int j=0;j<initStepFuncKeys.length;++j) {        	launchKernel(initStepFuncKeys[j]);	}
     	setSimFlags(gridIsBuiltIDX, true);
     	setSimFlags(simIsBuiltIDX, true);
-    	dispMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished first MPM Pass.", MsgCodes.info1);
+    	win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished first MPM Pass.");
 	}//cudaSetup
 	
 	/**
@@ -657,7 +658,7 @@ public abstract class base_MPMCudaSim{
 		}
 		//sim start time - time from when sim object was first instanced
 		simStartTime = getCurTime();	
-		dispMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Start resetting sim", MsgCodes.info1);
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Start resetting sim");
 		
 		setSimFlags(CUDADevInit,false);
 		setSimFlags(simIsBuiltIDX, false);
@@ -665,7 +666,7 @@ public abstract class base_MPMCudaSim{
 		cudaSetup();
 
 		setSimFlags(simIsBuiltIDX, true);
-		dispMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Finished resetting sim", MsgCodes.info1);
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Finished resetting sim");
 	}//initOnce
 
 
@@ -747,9 +748,9 @@ public abstract class base_MPMCudaSim{
 	public static float getDeltaT() {return base_MPMCudaSim.deltaT;}
 	public void setDeltaT(float _delT) {base_MPMCudaSim.deltaT = _delT;}
 
-	public void showTimeMsgSimStart(String _str) {dispMessage("MPM_Abs_CUDASim : "+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - simStartTime), MsgCodes.info1);}
+	public void showTimeMsgSimStart(String _str) {win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - simStartTime));}
 	//display message and time now
-	public void showTimeMsgNow(String _str, long stTime) {	dispMessage("MPM_Abs_CUDASim : "+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - stTime)+" ms", MsgCodes.info1);}
+	public void showTimeMsgNow(String _str, long stTime) {	win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - stTime)+" ms");}
 	
 	/////////////////////////////
 	// utility : time stamp; display messages; state flags
@@ -770,54 +771,6 @@ public abstract class base_MPMCudaSim{
 		return res;
 	}//getTimeStrFromPassedMillis	
 	
-	///////////////////////////
-	// start message display functionality
-	
-	private String buildClrStr(ConsoleCLR bk, ConsoleCLR clr, String str) {return bk.toString() + clr.toString() + str + ConsoleCLR.RESET.toString();	}
-	private String _processMsgCode(String src, MsgCodes useCode) {
-		if (!supportsANSITerm) {return src;}
-		switch(useCode) {//add background + letter color for messages
-			//info messages
-			case info1 : {		return  buildClrStr(ConsoleCLR.BLACK_BACKGROUND, ConsoleCLR.WHITE, src);}				//basic informational printout
-			case info2 : {		return  buildClrStr(ConsoleCLR.BLACK_BACKGROUND, ConsoleCLR.CYAN, src);}
-			case info3 : {		return  buildClrStr(ConsoleCLR.BLACK_BACKGROUND, ConsoleCLR.YELLOW, src);}				//informational output from external source
-			case info4 : {		return  buildClrStr(ConsoleCLR.BLACK_BACKGROUND, ConsoleCLR.GREEN, src);}
-			case info5 : {		return  buildClrStr(ConsoleCLR.BLACK_BACKGROUND, ConsoleCLR.CYAN_BOLD, src);}			//beginning or ending of processing
-			//warning messages                                                 , 
-			case warning1 : {	return  buildClrStr(ConsoleCLR.WHITE_BACKGROUND, ConsoleCLR.BLACK_BOLD, src);}
-			case warning2 : {	return  buildClrStr(ConsoleCLR.WHITE_BACKGROUND, ConsoleCLR.BLUE_BOLD, src);}			//warning info re: ui does not exist
-			case warning3 : {	return  buildClrStr(ConsoleCLR.WHITE_BACKGROUND, ConsoleCLR.BLACK_UNDERLINED, src);}
-			case warning4 : {	return  buildClrStr(ConsoleCLR.WHITE_BACKGROUND, ConsoleCLR.BLUE_UNDERLINED, src);}		//info message about unexpected behavior
-			case warning5 : {	return  buildClrStr(ConsoleCLR.WHITE_BACKGROUND, ConsoleCLR.BLUE_BRIGHT, src);}
-			//error messages                                                   , 
-			case error1 : {		return  buildClrStr(ConsoleCLR.BLACK_BACKGROUND, ConsoleCLR.RED_UNDERLINED, src);}		//try/catch error
-			case error2 : {		return  buildClrStr(ConsoleCLR.BLACK_BACKGROUND, ConsoleCLR.RED_BOLD, src);}			//code-based error
-			case error3 : {		return  buildClrStr(ConsoleCLR.RED_BACKGROUND_BRIGHT, ConsoleCLR.BLACK_BOLD, src);}		//file load error
-			case error4 : {		return  buildClrStr(ConsoleCLR.WHITE_BACKGROUND_BRIGHT, ConsoleCLR.RED_BRIGHT, src);}	//error message thrown by external process
-			case error5 : {		return  buildClrStr(ConsoleCLR.BLACK_BACKGROUND, ConsoleCLR.RED_BOLD_BRIGHT, src);}
-		}
-		return src;
-	}//_processMsgCode	
-
-	public void dispMessageAra(String[] _sAra, String _callingClass, String _callingMethod, int _perLine, MsgCodes useCode) {dispMessageAra( _sAra,  _callingClass, _callingMethod, _perLine,  useCode, true);}
-	//show array of strings, either just to console or to applet window
-	public void dispMessageAra(String[] _sAra, String _callingClass, String _callingMethod, int _perLine, MsgCodes useCode, boolean onlyConsole) {
-		String callingClassPrfx = getTimeStrFromProcStart() +"|" + _callingClass;		 
-		for(int i=0;i<_sAra.length; i+=_perLine){
-			String s = "";
-			for(int j=0; j<_perLine; ++j){	
-				if((i+j >= _sAra.length)) {continue;}
-				s+= _sAra[i+j]+ "\t";}
-			_dispMessage_base(callingClassPrfx,_callingMethod,s, useCode,onlyConsole);
-		}
-	}//dispMessageAra
-
-	public void dispMessage(String srcClass, String srcMethod, String msgText, MsgCodes useCode){_dispMessage_base(getTimeStrFromProcStart() +"|" + srcClass,srcMethod,msgText, useCode,true);	}	
-	public void dispMessage(String srcClass, String srcMethod, String msgText, MsgCodes useCode, boolean onlyConsole) {_dispMessage_base(getTimeStrFromProcStart() +"|" + srcClass,srcMethod,msgText, useCode,onlyConsole);	}	
-	private void _dispMessage_base(String srcClass, String srcMethod, String msgText, MsgCodes useCode, boolean onlyConsole) {		
-		String msg = _processMsgCode(srcClass + "::" + srcMethod + " : " + msgText, useCode);
-		if((onlyConsole) || (pa == null)) {		System.out.println(msg);	} else {		pa.outStr2Scr(msg);	}
-	}//dispMessage
 	
 	///////////////////////////
 	// end message display functionality

@@ -2,7 +2,6 @@ package MPM_CudaSim;
 
 
 import base_UI_Objects.GUI_AppManager;
-import base_UI_Objects.my_procApplet;
 import base_UI_Objects.windowUI.base.myDispWindow;
 
 /**
@@ -35,7 +34,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	//needs main to run project - do not modify this code in any way
 	public static void main(String[] passedArgs) {		
 		MPM_SimMain me = new MPM_SimMain();
-	    my_procApplet._invokedMain(me, passedArgs);
+	    MPM_SimMain.invokeProcessingMain(me, passedArgs);
 	}//main	
 	
 	/**
@@ -56,7 +55,7 @@ public class MPM_SimMain extends GUI_AppManager {
 		setBkgrnd();
 	}	
 	@Override
-	public void setBkgrnd(){((my_procApplet)pa).background(bground[0],bground[1],bground[2],bground[3]);}//setBkgrnd
+	public void setBkgrnd(){pa.setRenderBackground(bground[0],bground[1],bground[2],bground[3]);}//setBkgrnd
 
 	@Override
 	protected void initMainFlags_Indiv() {

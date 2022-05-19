@@ -110,7 +110,7 @@ public class MPM_SimWindow extends myDispWindow {
 //		//init simulation construct here
 		//init simulation construct here
 		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation now.");
-		currSim = new MPM_Cuda2Balls(pa,numGridCellsPerDim, cellSize,numParts, particleMass);		
+		currSim = new MPM_Cuda2Balls(pa, this, numGridCellsPerDim, cellSize,numParts, particleMass);		
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		setPrivFlags(showParticles, true);
