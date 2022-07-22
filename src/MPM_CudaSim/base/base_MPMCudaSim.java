@@ -816,7 +816,7 @@ public abstract class base_MPMCudaSim{
 		
 		if(showPointVel) {
 			float mult = .01f;
-			float minMag = MyMathUtils.eps_f/mult;
+			float minMag = MyMathUtils.EPS_F/mult;
 			for(int i=0;i<=numParts-pincr;i+=pincr) {					
 				if(		(Math.abs(h_part_vel[0][i]) > minMag) || 
 						(Math.abs(h_part_vel[1][i]) > minMag) || 
@@ -880,7 +880,7 @@ public abstract class base_MPMCudaSim{
 	}
 	
 	private void _drawGridVec(float mult, int[] clr, float[] xVal, float[] yVal, float[] zVal) {
-		float minMag = MyMathUtils.eps_f/mult;
+		float minMag = MyMathUtils.EPS_F/mult;
 		pa.pushMatState();	
 		pa.setStroke(clr,20);
 		pa.translate(minSimBnds,minSimBnds,minSimBnds);
@@ -898,7 +898,7 @@ public abstract class base_MPMCudaSim{
 	}
 	
 	private void _drawGridScalar(float mult, int[] clr, float[] xVal) {
-		float minMag = MyMathUtils.eps_f/(.01f * mult);
+		float minMag = MyMathUtils.EPS_F/(.01f * mult);
 		pa.pushMatState();	
 		pa.setSphereDetail(4);
 		pa.setStroke(clr,20);
