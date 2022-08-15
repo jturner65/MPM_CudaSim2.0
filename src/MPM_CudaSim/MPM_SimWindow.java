@@ -109,6 +109,7 @@ public class MPM_SimWindow extends myDispWindow {
 		
 //		//init simulation construct here
 		//init simulation construct here
+		msgObj.dispInfoMessage("MPM_SimWindow","initMe","ALERT : MUST USE PROCESSING CORE.JAR FROM AFTER VERSION 3.1.1");
 		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation now.");
 		currSim = new MPM_Cuda2Balls(pa, this, numGridCellsPerDim, cellSize,numParts, particleMass);		
 		//initialize simulation here to simple world sim

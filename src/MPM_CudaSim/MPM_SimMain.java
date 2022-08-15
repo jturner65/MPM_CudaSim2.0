@@ -67,7 +67,6 @@ public class MPM_SimMain extends GUI_AppManager {
 	}
 	@Override
 	protected void initAllDispWindows() {
-		//((my_procApplet)pa).strokeCap(PConstants.SQUARE);
 		showInfo = true;
 		
 		//includes 1 for menu window (never < 1) - always have same # of visFlags as myDispWindows
