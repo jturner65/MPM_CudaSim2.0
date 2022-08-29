@@ -45,8 +45,6 @@ public class MPM_SimWindow extends myDispWindow {
 	
 	/////////
 	//custom debug/function ui button names -empty will do nothing
-	public String[] menuDbgBtnNames = new String[] {};//must have literals for every button or this is ignored
-	public String[] menuFuncBtnNames = new String[] {"Func 1", "Func 2", "Func 3", "Func 4", "Func 5"};//must have literals for every button or ignored
 	public String[][] menuBtnNames = new String[][] {	//each must have literals for every button defined in side bar menu, or ignored
 		{"Func 00", "Func 01", "Func 02"},				//row 1
 		{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 2
@@ -115,8 +113,6 @@ public class MPM_SimWindow extends myDispWindow {
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		setPrivFlags(showParticles, true);
-		
-		AppMgr.setAllMenuBtnNames(menuBtnNames);	
 
 	}//initMe	
 

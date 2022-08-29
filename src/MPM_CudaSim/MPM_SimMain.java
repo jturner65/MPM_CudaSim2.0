@@ -79,9 +79,16 @@ public class MPM_SimMain extends GUI_AppManager {
 		buildInitMenuWin(showUIMenu);
 		//menu bar init
 		int wIdx = dispMenuIDX,fIdx=showUIMenu;
-		dispWinFrames[wIdx] = this.buildSideBarMenu(wIdx, fIdx, new String[]{"Functions 1","Functions 2","Functions 3","Functions 4"}, new int[] {3,4,4,4}, 5, false, false);
-				
-		//new mySideBarMenu(this, winTitles[wIdx], fIdx, winFillClrs[wIdx], winStrkClrs[wIdx], winRectDimOpen[wIdx], winRectDimClose[wIdx], winDescr[wIdx]);	
+		String[] menuBtnTitles =  new String[]{"Functions 1","Functions 2","Functions 3","Functions 4"};
+		String[][] menuBtnNames = new String[][] {	//each must have literals for every button defined in side bar menu, or ignored
+			{"Func 00", "Func 01", "Func 02"},				//row 1
+			{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 2
+			{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 3
+			{"Func 20", "Func 21", "Func 22", "Func 23"},	//row 4		
+		};
+		String[] dbgBtnNames = new String[] {"Func 30", "Func 31", "Func 32", "Func 33","Func 34"};
+		dispWinFrames[wIdx] = buildSideBarMenu(wIdx, fIdx,menuBtnTitles, menuBtnNames, dbgBtnNames, false, false);
+
 		//instanced window dimensions when open and closed - only showing 1 open at a time
 		float[] _dimOpen  =  new float[]{menuWidth, 0, pa.getWidth()-menuWidth, pa.getHeight()}, 
 				_dimClosed  =  new float[]{menuWidth, 0, hideWinWidth, pa.getHeight()};	
