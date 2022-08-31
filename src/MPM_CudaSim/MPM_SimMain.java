@@ -36,6 +36,10 @@ public class MPM_SimMain extends GUI_AppManager {
 		MPM_SimMain me = new MPM_SimMain();
 	    MPM_SimMain.invokeProcessingMain(me, passedArgs);
 	}//main	
+
+	@Override
+	protected void setRuntimeArgsVals(String[] _passedArgs) {
+	}
 	
 	/**
 	 * whether or not we want to restrict window size on widescreen monitors
