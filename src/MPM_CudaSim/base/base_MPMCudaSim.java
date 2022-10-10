@@ -7,8 +7,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 
-//import org.jblas.FloatMatrix;
-
 import MPM_CudaSim.myMaterial;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
@@ -68,7 +66,10 @@ public abstract class base_MPMCudaSim{
 	public myMaterial mat;	
 	
 	//friction coefficients of colliders
-	public static float wallFric = 1.0f, collFric = 1.0f;
+	public static float wallFric = 1.0f;
+	public static float collFric = 1.0f;
+	//iterations per frame
+	public static int simStepsPerFrame = 2;
 
 	//flags relevant to simulator execution
 	protected int[] simFlags;	
@@ -87,15 +88,12 @@ public abstract class base_MPMCudaSim{
 		CUDADevInit				= 11;			//if 1 time cuda device and kernel file init is complete
 	protected static final int numSimFlags = 12;
 
-	//iterations per frame
-	public static int simStepsPerFrame = 2;
-
 	//time of current process start, from initial construction of mapmgr - TODO use this to monitor specific process time elapsed.  set to 0 at beginning of a particular process, then measure time elapsed in process
 	protected long simStartTime;
 	//time mapMgr built, in millis - used as offset for instant to provide smaller values for timestamp
 	protected final long expMgrBuiltTime;	
 	//constants for collider calcs
-	protected static float cyl_da = (float) (Math.PI/18.0f), TWO_PI = (float) (2.0 * Math.PI);	
+	protected static float cyl_da = (float) (Math.PI/18.0f);	
 	
 	protected TreeMap<String, Pointer> kernelParams;
 	protected TreeMap<String, CUfunction> cuFuncs;
@@ -218,11 +216,11 @@ public abstract class base_MPMCudaSim{
 	}//loadModuleAndSetFuncPtrs
 	
 	//returns a color value (0.0f -> 255.0f) in appropriate location in span of min to max
-	private Float getClrVal(Float val, Float min, Float max) {
-		Float denom = (max-min);
-		if(denom ==0) return 255.0f;
-		return 55.0f + 200.0f * (val - min)/denom;	
-	}
+//	private Float getClrVal(Float val, Float min, Float max) {
+//		Float denom = (max-min);
+//		if(denom ==0) return 255.0f;
+//		return 55.0f + 200.0f * (val - min)/denom;	
+//	}
 	
 	private int getClrValInt(Float val, Float min, Float max) {
 		Float denom = (max-min);
@@ -771,7 +769,7 @@ public abstract class base_MPMCudaSim{
 		return res;
 	}//getTimeStrFromPassedMillis	
 	
-	
+
 	///////////////////////////
 	// end message display functionality
 
@@ -936,7 +934,7 @@ public abstract class base_MPMCudaSim{
 		ArrayList<myPointf>[] res = new ArrayList[2];
 		for(int idx =0;idx<res.length;++idx) {res[idx]=new ArrayList<myPointf>();}
 		float rcA, rsA;
-		for(float a=0; a<=TWO_PI+cyl_da; a+=cyl_da) {
+		for(float a=0; a<=MyMathUtils.TWO_PI_F+cyl_da; a+=cyl_da) {
 			rcA = (float) (r*Math.cos(a)); 
 			rsA = (float) (r*Math.sin(a));
 			res[0].add(Pf(P,rcA,I,rsA,J,0.0,V)); 

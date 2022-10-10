@@ -106,7 +106,7 @@ public class MPM_SimMain extends GUI_AppManager {
 
 		wIdx = dispMPMWinIDX; fIdx= showMPMwin;
 		setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
-		dispWinFrames[wIdx] = new MPM_SimWindow(pa, this, winTitles[wIdx], fIdx, winFillClrs[wIdx], winStrkClrs[wIdx], winRectDimOpen[wIdx], winRectDimClose[wIdx], winDescr[wIdx]);
+		dispWinFrames[wIdx] = new MPM_SimWindow(pa, this, wIdx, fIdx);
 		
 		//specify windows that cannot be shown simultaneously here
 		initXORWins(new int[]{showMPMwin},new int[]{dispMPMWinIDX});

@@ -70,8 +70,8 @@ public class MPM_SimWindow extends myDispWindow {
 
 	public static final int numPrivFlags = 12;
 		
-	public MPM_SimWindow(IRenderInterface _p, GUI_AppManager _AppMgr, String _n, int _flagIdx, int[] fc, int[] sc, float[] rd, float[] rdClosed, String _winTxt) {
-		super(_p, _AppMgr, _n, _flagIdx, fc, sc, rd, rdClosed, _winTxt);
+	public MPM_SimWindow(IRenderInterface _p, GUI_AppManager _AppMgr, int _winIdx, int _flagIdx) {
+		super(_p, _AppMgr, _winIdx, _flagIdx);
 		super.initThisWin(false);
 	}//DancingBallWin
 	
@@ -248,11 +248,11 @@ public class MPM_SimWindow extends myDispWindow {
 				currSim.mat.setAlpha(val);
 				break;} 		
 			case gIDX_wallFricCoeff 				:{
-				currSim.wallFric = val;
+				base_MPMCudaSim.wallFric = val;
 				reinitSim();
 				break;} 
 			case gIDX_collFricCoeff 				:{
-				currSim.collFric = val;
+				base_MPMCudaSim.collFric = val;
 				reinitSim();
 				break;} 
 			case gIDX_simStepsPerFrame 			:{
@@ -279,7 +279,6 @@ public class MPM_SimWindow extends myDispWindow {
 		pa.translate(camVals[0],camVals[1],(float)dz); 
 	    setCamOrient();	
 	}//setCameraIndiv
-
 	
 	@Override
 	//modAmtMillis is time passed per frame in milliseconds
@@ -293,8 +292,7 @@ public class MPM_SimWindow extends myDispWindow {
 		}
 		
 		return done;	
-	}//simMe
-		
+	}//simMe		
 	
 	@Override
 	//animTimeMod is in seconds.
@@ -305,8 +303,7 @@ public class MPM_SimWindow extends myDispWindow {
 		//TODO draw simulation results here
 		currSim.drawMe(animTimeMod);
 	}//drawMe	
-	
-	
+		
 	//draw custom 2d constructs below interactive component of menu
 	@Override
 	public void drawCustMenuObjs(){
@@ -365,7 +362,6 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	protected void showMe() {}
 
-
 	@Override
 	protected final void launchMenuBtnHndlr(int funcRow, int btn) {	}
 
@@ -408,50 +404,25 @@ public class MPM_SimWindow extends myDispWindow {
 	}
 	
 	@Override
-	protected String[] getSaveFileDirNamesPriv() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	protected String[] getSaveFileDirNamesPriv() {		return null;	}
 	@Override
-	protected myPoint getMsePtAs3DPt(myPoint mseLoc) {
-		// TODO Auto-generated method stub
-		return new myPoint(mseLoc.x,mseLoc.y,0);
-	}
-
+	protected myPoint getMsePtAs3DPt(myPoint mseLoc) {		return new myPoint(mseLoc.x,mseLoc.y,0);	}
 	@Override
-	protected void setVisScreenDimsPriv() {
-		// TODO Auto-generated method stub
-		
-	}
-
+	protected void setVisScreenDimsPriv() {	}
 	@Override
-	protected void setCustMenuBtnNames() {
-		AppMgr.setAllMenuBtnNames(menuBtnNames);	
-	}
-
+	protected void setCustMenuBtnNames() {		AppMgr.setAllMenuBtnNames(menuBtnNames);		}
 	@Override
-	public void hndlFileLoad(File file, String[] vals, int[] stIdx) {
-		// TODO Auto-generated method stub
-		
-	}
-
+	public void hndlFileLoad(File file, String[] vals, int[] stIdx) {	}
 	@Override
 	public ArrayList<String> hndlFileSave(File file) {		return null;	}
-
 	@Override
 	protected void drawOnScreenStuffPriv(float modAmtMillis) {	}
-
 	@Override
 	protected void drawRightSideInfoBarPriv(float modAmtMillis) {	}
-
 	@Override
 	protected base_UpdateFromUIData buildUIDataUpdateObject() {		return null;	}
-
 	@Override
-	protected void buildUIUpdateStruct_Indiv(TreeMap<Integer, Integer> intValues, TreeMap<Integer, Float> floatValues,TreeMap<Integer, Boolean> boolValues) {
-	}
-
+	protected void buildUIUpdateStruct_Indiv(TreeMap<Integer, Integer> intValues, TreeMap<Integer, Float> floatValues,TreeMap<Integer, Boolean> boolValues) {}
 
 }//DESSimWindow
 
