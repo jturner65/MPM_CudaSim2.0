@@ -14,24 +14,13 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 	
 	public MPM_Cuda2Balls(IRenderInterface _pa, myDispWindow _win, int _gridCount, float _h, int _numParts, float _density) {
 		super(_pa,_win,"2 Big Snowballs",_gridCount, _h,_numParts, _density);
-	}
-	
+	}	
 	
 	//build particle layout for cuda sim - use multiples of h as radius
 	@Override
 	protected void buildPartLayoutMap(TreeMap<String, ArrayList<Float[]>> partVals) {	
-
         int numPartsPerSphere = numParts/2;
-        //float ctrOfGrid = (minSimBnds + maxSimBnds)/2.0f, diff = maxSimBnds - minSimBnds; 
-        //float qtrDiff = .25f*diff, halfDiff = 2*qtrDiff;
-       
-		//Float[] minVals = partVals.get("minMaxVals").get(0);
-		//Float[] maxVals = partVals.get("minMaxVals").get(1);       
-		//float hSq = h*h;
-		//scale amt is width divided by # of grid cells and size of each cell
-		//float scaledRad = 150.0f/this.sclAmt;		//was .25
-		//float sphereRad = scaledRad/h;
-		//float sphereSqRad = sphereRad*sphereRad;
+
 		float offScl = 600.0f/this.sclAmt;
 
         float xVel = -1.0f*initVel, 
@@ -45,20 +34,12 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 
 		//int incr = 1;
 		//lower ball
-        //buildSphere(partVals,new float[] {xOff, yOff, zOff}, new float [] {xVel, yVel, zVel}, incr, sphereSqRad, minVals, maxVals);
 		float sphereRad = createSphere(partVals, ballRad, numPartsPerSphere, new float [] {xVel, yVel, zVel}, sphere1_Ctr);
         float[] sphere2_Ctr = new float[] {-.1f*sphereRad *offScl, .5f*offScl, .4f*sphereRad*offScl};
 				
-		//find min and max values for 1st built sphere
-//		for(int i=0;i<3;++i) {
-//			float rad = (maxVals[i] - minVals[i]) * .5f;
-//			System.out.println("First built sphere idx "+i+" max : " + maxVals[i]+" and min : " + minVals[i] + " -> unscaled radius : " + rad + " Scaled (apparent) radius : "+ (rad*this.sclAmt));
-//		}
 		xVel *= -1;
-        //yVel *= -1;
 		zVel = .5f*-initVel;
         //upper ball        
-        //buildSphere(partVals,new float[] {xOff, yOff, zOff}, new float [] {xVel, yVel, zVel}, incr, sphereSqRad, minVals, maxVals);
 		createSphere(partVals, ballRad, numPartsPerSphere, new float [] {xVel, yVel, zVel}, sphere2_Ctr);
 
          //end create particle layout	
@@ -66,7 +47,7 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 
 	
 	@Override
-	//draw scene-specific collider, if it existss
+	//draw scene-specific collider, if it exists
 	protected void drawCollider(float animTimeMod) {}
 	
 	//sim method to show execution time for each step

@@ -17,8 +17,11 @@ import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
 
-//abstract class describing a simulation world.  called by sim window to executed simulation and to render results
-//instancing classes can hold different configurations/initialization setups
+/**
+ * abstract class describing a simulation world. Called by sim window to 
+ * execute simulation and render results. Instancing classes can hold 
+ * different configurations/initialization setups
+ */
 public abstract class base_MPMCudaSim{	
 	public static IRenderInterface pa;
 	//name of instancing sim
@@ -28,8 +31,7 @@ public abstract class base_MPMCudaSim{
 	
 	//cuda kernel file name
 	private String ptxFileName = "MPM_CUDA_Sim_New.ptx";	
-	//vs c++ compiler location
-	//private final static String VSCppCompLoc = "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\x86_amd64\\";
+
 	//these values are just to set initial values for simulation
 	public static int numGridCellsDefault = 200;
 	public static float cellSizeDefault = .10f;

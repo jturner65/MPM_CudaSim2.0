@@ -9,6 +9,7 @@ import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.base_UpdateFromUIData;
 import base_UI_Objects.windowUI.base.myDispWindow;
 import base_UI_Objects.windowUI.drawnObjs.myDrawnSmplTraj;
+import base_UI_Objects.windowUI.uiObjs.GUIObj_Type;
 import base_Utils_Objects.io.messaging.MsgCodes;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
@@ -183,21 +184,26 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	protected void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){	
 		
-		tmpUIObjArray.put(gIDX_timeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*base_MPMCudaSim.getDeltaT(),  "Sim Time Step", new boolean[]{false, false, true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
-		tmpUIObjArray.put(gIDX_simStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*base_MPMCudaSim.simStepsPerFrame, "Sim Steps per Drawn Frame",  new boolean[]{true, false, true}});//gIDX_simStepsPerFrame  init 5
-		tmpUIObjArray.put(gIDX_numParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*numParts, "# of Particles", new boolean[]{true, false, true}});//number of particles
-		tmpUIObjArray.put(gIDX_partMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*particleMass, "Particle Mass", new boolean[]{false, false, true}});//particle mass
-		tmpUIObjArray.put(gIDX_gridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*cellSize, "Grid Cell Size", new boolean[]{false, false, true}});//grid cell size
-		tmpUIObjArray.put(gIDX_gridCount, new Object[] {new double[]{50, 300, 1}, 1.0*numGridCellsPerDim,  "Grid Cell Count Per Side", new boolean[]{true, false, true}}); //# of grid cells per side
-		tmpUIObjArray.put(gIDX_initYoungMod, new Object[] {new double[]{1000.0f, 100000.0f, 100.0f}, 1.0*myMaterial.base_initYoungMod, "Young's Modulus", new boolean[]{false, false, true}});//gIDX_initYoungMod init 4.8e4f, 
-		tmpUIObjArray.put(gIDX_poissonRatio, new Object[] {new double[]{.01f, 1.0f, .01f}, 1.0*myMaterial.base_poissonRatio, "Poisson Ratio", new boolean[]{false, false, true}});//gIDX_poissonRatio init 0.2f,  
-		tmpUIObjArray.put(gIDX_hardeningCoeff , new Object[] {new double[]{1.0f, 100.0f, 1.0f}, 1.0*myMaterial.base_hardeningCoeff, "Hardening Coefficient", new boolean[]{false, false, true}});//gIDX_hardeningCoeff init 15.0f, 
-		tmpUIObjArray.put(gIDX_criticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*myMaterial.base_criticalCompression, "Critical Compression", new boolean[]{false, false, true}});//gIDX_criticalCompression  init .019f, 
-		tmpUIObjArray.put(gIDX_criticalStretch , new Object[] {new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*myMaterial.base_criticalStretch, "Critical Stretch",  new boolean[]{false, false, true}});//gIDX_criticalStretch init .0075f, 
-		tmpUIObjArray.put(gIDX_alphaPicFlip, new Object[] {new double[]{0.0f, 1.0f, 0.01f}, 1.0*myMaterial.base_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", new boolean[]{false, false, true}});//gIDX_alphaPicFlip init 0.95f, 
-		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.wallFric, "Wall Friction Coefficient",  new boolean[]{false, false, true}});//gIDX_wallfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_collFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.collFric, "Collider Friction Coefficient", new boolean[]{false, false, true}});//gIDX_collfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_timeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*base_MPMCudaSim.getDeltaT(),  "Sim Time Step", GUIObj_Type.FloatVal, new boolean[]{true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
+		tmpUIObjArray.put(gIDX_simStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*base_MPMCudaSim.simStepsPerFrame, "Sim Steps per Drawn Frame", GUIObj_Type.IntVal, new boolean[]{true}});//gIDX_simStepsPerFrame  init 5
+		tmpUIObjArray.put(gIDX_numParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*numParts, "# of Particles", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
+		tmpUIObjArray.put(gIDX_partMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*particleMass, "Particle Mass", GUIObj_Type.FloatVal, new boolean[]{true}});//particle mass
+		tmpUIObjArray.put(gIDX_gridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*cellSize, "Grid Cell Size", GUIObj_Type.FloatVal, new boolean[]{true}});//grid cell size
+		tmpUIObjArray.put(gIDX_gridCount, new Object[] {new double[]{50, 300, 1}, 1.0*numGridCellsPerDim,  "Grid Cell Count Per Side", GUIObj_Type.IntVal, new boolean[]{true}}); //# of grid cells per side
+		tmpUIObjArray.put(gIDX_initYoungMod, new Object[] {new double[]{1000.0f, 100000.0f, 100.0f}, 1.0*myMaterial.base_initYoungMod, "Young's Modulus", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_initYoungMod init 4.8e4f, 
+		tmpUIObjArray.put(gIDX_poissonRatio, new Object[] {new double[]{.01f, 1.0f, .01f}, 1.0*myMaterial.base_poissonRatio, "Poisson Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_poissonRatio init 0.2f,  
+		tmpUIObjArray.put(gIDX_hardeningCoeff , new Object[] {new double[]{1.0f, 100.0f, 1.0f}, 1.0*myMaterial.base_hardeningCoeff, "Hardening Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_hardeningCoeff init 15.0f, 
+		tmpUIObjArray.put(gIDX_criticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*myMaterial.base_criticalCompression, "Critical Compression", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_criticalCompression  init .019f, 
+		tmpUIObjArray.put(gIDX_criticalStretch , new Object[] {new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*myMaterial.base_criticalStretch, "Critical Stretch", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_criticalStretch init .0075f, 
+		tmpUIObjArray.put(gIDX_alphaPicFlip, new Object[] {new double[]{0.0f, 1.0f, 0.01f}, 1.0*myMaterial.base_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_alphaPicFlip init 0.95f, 
+		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.wallFric, "Wall Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_wallfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_collFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.collFric, "Collider Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_collfricCoeffinit 1.0f  
 	}//setupGUIObjsAras
+
+	@Override
+	protected base_UpdateFromUIData buildUIDataUpdateObject() {		return null;	}
+
+	
 	
 	@Override
 	protected void setUIWinVals(int UIidx) {
@@ -262,6 +268,12 @@ public class MPM_SimWindow extends myDispWindow {
 			}
 		}
 	}
+	
+	@Override
+	protected void buildUIUpdateStruct_Indiv(TreeMap<Integer, Integer> intValues, TreeMap<Integer, Float> floatValues,TreeMap<Integer, Boolean> boolValues) {
+		
+	}
+
 
 	
 	@Override
@@ -419,10 +431,6 @@ public class MPM_SimWindow extends myDispWindow {
 	protected void drawOnScreenStuffPriv(float modAmtMillis) {	}
 	@Override
 	protected void drawRightSideInfoBarPriv(float modAmtMillis) {	}
-	@Override
-	protected base_UpdateFromUIData buildUIDataUpdateObject() {		return null;	}
-	@Override
-	protected void buildUIUpdateStruct_Indiv(TreeMap<Integer, Integer> intValues, TreeMap<Integer, Float> floatValues,TreeMap<Integer, Boolean> boolValues) {}
 
 }//DESSimWindow
 
