@@ -199,11 +199,19 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.wallFric, "Wall Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_wallfricCoeffinit 1.0f  
 		tmpUIObjArray.put(gIDX_collFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.collFric, "Collider Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_collfricCoeffinit 1.0f  
 	}//setupGUIObjsAras
-
+	/**
+	 * This function would provide an instance of the override class for base_UpdateFromUIData, which would
+	 * be used to communicate changes in UI settings directly to the value consumers.
+	 */
 	@Override
-	protected base_UpdateFromUIData buildUIDataUpdateObject() {		return null;	}
-
-	
+	protected base_UpdateFromUIData buildUIDataUpdateObject() {
+		return null;
+	}
+	/**
+	 * This function is called on ui value update, to pass new ui values on to window-owned consumers
+	 */
+	@Override
+	protected final void updateCalcObjUIVals() {}
 	
 	@Override
 	protected void setUIWinVals(int UIidx) {
