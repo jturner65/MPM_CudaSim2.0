@@ -7,12 +7,12 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 
+import MPM_CudaSim.MPM_SimWindow;
 import MPM_CudaSim.myMaterial;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
-import base_UI_Objects.windowUI.base.myDispWindow;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
@@ -27,7 +27,7 @@ public abstract class base_MPMCudaSim{
 	//name of instancing sim
 	public final String simName;
 	//owning window
-	protected myDispWindow win;
+	protected MPM_SimWindow win;
 	
 	//cuda kernel file name
 	private String ptxFileName = "MPM_CUDA_Sim_New.ptx";	
@@ -121,7 +121,6 @@ public abstract class base_MPMCudaSim{
 	protected float[] h_grid_mass; 
     
     //colors based on initial location
-    //float[][] h_part_clr;
     protected int[][] h_part_clr_int;
     
     protected CUcontext pctx;
@@ -137,7 +136,7 @@ public abstract class base_MPMCudaSim{
 	
 	//grid count per side - center grid always in display; grid cell dim per side
 	//@SuppressWarnings("unchecked")
-	public base_MPMCudaSim(IRenderInterface _pa,myDispWindow _win, String _simName, int _gridCount, float _h, int _numParts, float _density) {		
+	public base_MPMCudaSim(IRenderInterface _pa,MPM_SimWindow _win, String _simName, int _gridCount, float _h, int _numParts, float _density) {		
 		pa=_pa;win=_win;simName = _simName;		
 		
 		part_mass = new CUdeviceptr();   		part_vol = new CUdeviceptr();   
@@ -253,12 +252,8 @@ public abstract class base_MPMCudaSim{
 		//scale amount to fill 1500 x 1500 x 1500 visualization cube
 		sclAmt = 1500.0f/(gridCount * cellSize);
 
-		//notify gridbuilder that we have a new grid
-		//gridThdMgr.setNewSimVals();
 		setSimFlags(gridIsBuiltIDX, false);
-		//partThdMgr.setNewSimVals();
 		setSimFlags(simIsBuiltIDX, false);
-		//build grid - upon completion the gridbuilder will call resetSim to build particles
 		resetSim(true);
 	}//setGridValsAndInit
 
@@ -635,8 +630,6 @@ public abstract class base_MPMCudaSim{
         return bytes.toByteArray();
     }
 
-
-
 	public final void resetSim(boolean freeCuda) {
 		if(freeCuda) {
 			//reset active ptrs
@@ -658,11 +651,15 @@ public abstract class base_MPMCudaSim{
 		}
 		//sim start time - time from when sim object was first instanced
 		simStartTime = getCurTime();	
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Start resetting sim");
 		
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Start resetting sim");
+		// Only send original UI values to this sim if it has finished being constructed
+//		if ((resetAllVals) && (win.currSim != null)) {
+//			win.resetUIVals(false);
+//		}
 		setSimFlags(CUDADevInit,false);
 		setSimFlags(simIsBuiltIDX, false);
-		
+		//rebuild cuda kernel configurations
 		cudaSetup();
 
 		setSimFlags(simIsBuiltIDX, true);
@@ -721,7 +718,6 @@ public abstract class base_MPMCudaSim{
  		if((getSimFlags(showParticles)) || getSimFlags(showParticleVelArrows)) {
 			//copy from device data to host particle position arrays
  			for(int i=0;i<h_part_pos.length;++i) {			cuMemcpyDtoH(Pointer.to(h_part_pos[i]),part_pos[i], numPartsFloatSz);			}
-//		
  		} 		
 		
  		if(getSimFlags(showParticleVelArrows)) {
@@ -738,9 +734,9 @@ public abstract class base_MPMCudaSim{
 		if(getSimFlags(showGridMass)) {
 			cuMemcpyDtoH(Pointer.to(h_grid_mass),grid_mass, numGridFloatSz);	
 		}
-		//Pointer.to(grid_newvel_x),Pointer.to(grid_newvel_y),Pointer.to(grid_newvel_z)
+
 		return false;
-	}//simMe}
+	}//simMe
 	
 	//sim method to show execution time for each step
 	public abstract boolean simMeDebug(float modAmtMillis);	//simMeDebug	
@@ -787,58 +783,53 @@ public abstract class base_MPMCudaSim{
 			pa.setStrokeWt(2.0f/sclAmt);
 			pa.scale(sclAmt);	
 			
+			//TODO control via UI - draw ever pincr points in point array
+			int pincr = 1;
 			//draw material points
-			if(getSimFlags(showParticles)){drawPoints(true,getSimFlags(showParticleVelArrows));}
-			else if(getSimFlags(showParticleVelArrows)){drawPoints(false,true);}
+			if(getSimFlags(showParticles)){	
+				pa.pushMatState();
+				pa.drawPointCloudWithColors(numParts, pincr, h_part_clr_int, h_part_pos[0], h_part_pos[1], h_part_pos[2]);
+				pa.popMatState();
+			} 
+			
+			if(getSimFlags(showParticleVelArrows)){
+				drawPointVel(pincr);
+			}
 			
 			//draw colliders, if exist
 			drawCollider(animTimeMod);
 			
 			//if desired, draw grid
-			if(getSimFlags(showGrid)) {							drawGrid(true, getSimFlags(showGridVelArrows),getSimFlags(showGridAccelArrows));	}
-			else if (getSimFlags(showGridVelArrows)) {			drawGrid(false, true,getSimFlags(showGridAccelArrows));	}
-			else if (getSimFlags(showGridAccelArrows)){			drawGrid(false, false,true);	}
-			
-			if(getSimFlags(showGridMass)) {
-				float mult = 0.1f;
-				_drawGridScalar(mult, gridMassClr, h_grid_mass);
-				
-			}
+			if(getSimFlags(showGrid)) {	drawGrid();}
+			//TODO control via UI - scale size of vectors
+			float mult = .01f;
+			if (getSimFlags(showGridVelArrows)) {	_drawGridVec(mult, gridVecClr, h_grid_vel[0], h_grid_vel[1], h_grid_vel[2]);}
+			if (getSimFlags(showGridAccelArrows)){	_drawGridVec(mult, gridAccelClr, h_grid_accel[0], h_grid_accel[1], h_grid_accel[2]);}
+			if(getSimFlags(showGridMass)) {			_drawGridScalar(mult, gridMassClr, h_grid_mass);}
 		pa.popMatState();
 	}//drawMe
 	
-	private void drawPoints(boolean showPoints, boolean showPointVel) {
+	private void drawPointVel(int pincr) {
 		pa.pushMatState();
-		//draw the points
-		int pincr = 1;
-		//draw all points as a shape object
-		if(showPoints) {pa.drawPointCloudWithColors(numParts, pincr, h_part_clr_int, h_part_pos[0], h_part_pos[1], h_part_pos[2]);}
-		
-		if(showPointVel) {
-			float mult = .01f;
-			float minMag = MyMathUtils.EPS_F/mult;
-			for(int i=0;i<=numParts-pincr;i+=pincr) {					
-				if(		(Math.abs(h_part_vel[0][i]) > minMag) || 
-						(Math.abs(h_part_vel[1][i]) > minMag) || 
-						(Math.abs(h_part_vel[2][i]) > minMag)) {
-					pa.pushMatState();
-					pa.setStroke(h_part_clr_int[i], 100);
-					pa.translate(h_part_pos[0][i], h_part_pos[1][i], h_part_pos[2][i]);
-					//((my_procApplet)pa).stroke(h_part_clr_int[i][0], h_part_clr_int[i][1], h_part_clr_int[i][2]);
-					pa.drawLine(0,0,0, mult*h_part_vel[0][i],mult*h_part_vel[1][i],mult*h_part_vel[2][i]);
-					//((my_procApplet)pa).vertex(h_part_pos_x[i], h_part_pos_y[i], h_part_pos_z[i]);
-					pa.popMatState();
-				}
-			}			
-		}
+		float mult = .01f;
+		float minMag = MyMathUtils.EPS_F/mult;
+		for(int i=0;i<=numParts-pincr;i+=pincr) {					
+			if(		(Math.abs(h_part_vel[0][i]) > minMag) || 
+					(Math.abs(h_part_vel[1][i]) > minMag) || 
+					(Math.abs(h_part_vel[2][i]) > minMag)) {
+				pa.pushMatState();
+				pa.setStroke(h_part_clr_int[i], 100);
+				pa.translate(h_part_pos[0][i], h_part_pos[1][i], h_part_pos[2][i]);
+				pa.drawLine(0,0,0, mult*h_part_vel[0][i],mult*h_part_vel[1][i],mult*h_part_vel[2][i]);
+				pa.popMatState();
+			}
+		}			
 		pa.popMatState();
-	}
+	}//drawPointVel
 
-	private void drawGrid(boolean showGrid, boolean showGridVel, boolean showGridForce) {
+	private void drawGrid() {
 		int incr = 10;
 		pa.pushMatState();		
-		if(showGrid) {	
-			pa.pushMatState();	
 			pa.setStroke(0,0,0,20);
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
 			//shows every "incr" gridcells
@@ -846,12 +837,12 @@ public abstract class base_MPMCudaSim{
 				float iLoc = i*cellSize;
 				for(int j=0;j<=gridCount;j+=incr) {
 					myVectorf startPos=new myVectorf(iLoc,j*cellSize,0.0f);
-					myVectorf endPos=new myVectorf(iLoc,j*cellSize,gridDim);
+					myVectorf endPos=new myVectorf(iLoc, startPos.y,gridDim);
 					pa.drawLine(startPos,endPos);
 				}
 				for(int k=0;k<=gridCount;k+=incr) {
 					myVectorf startPos=new myVectorf(iLoc,0.0f, k*cellSize);
-					myVectorf endPos=new myVectorf(iLoc,gridDim,k*cellSize);
+					myVectorf endPos=new myVectorf(iLoc,gridDim,startPos.z);
 					pa.drawLine(startPos,endPos);
 				}
 			}
@@ -859,25 +850,12 @@ public abstract class base_MPMCudaSim{
 				float jLoc = j*cellSize;
 				for(int k=0;k<=gridCount;k+=incr) {
 					myVectorf startPos=new myVectorf(0.0f,jLoc,k*cellSize);
-					myVectorf endPos=new myVectorf(gridDim,jLoc,k*cellSize);
+					myVectorf endPos=new myVectorf(gridDim,jLoc,startPos.z);
 					pa.drawLine(startPos,endPos);
 				}
 			}
-			pa.popMatState();
-		}
-		if(showGridVel) {
-			float mult = .01f;
-			_drawGridVec(mult, gridVecClr, h_grid_vel[0], h_grid_vel[1], h_grid_vel[2]);
-		}
-		
-		if(showGridForce) {
-			float mult = .01f;
-			_drawGridVec(mult, gridAccelClr, h_grid_accel[0], h_grid_accel[1], h_grid_accel[2]);
-		}
-		
-		pa.popMatState();
-		
-	}
+		pa.popMatState();		
+	}//drawGrid()
 	
 	private void _drawGridVec(float mult, int[] clr, float[] xVal, float[] yVal, float[] zVal) {
 		float minMag = MyMathUtils.EPS_F/mult;
@@ -906,7 +884,6 @@ public abstract class base_MPMCudaSim{
 		for (int i=0; i<gridSize;++i) {			
 			if(		(Math.abs(xVal[i]) > minMag)) {
 				pa.pushMatState();	
-				//pa.translate(h_grid_pos_x[i], h_grid_pos_y[i], h_grid_pos_z[i]);
 				pa.translate(h_grid_pos[0][i], h_grid_pos[1][i], h_grid_pos[2][i]);
 				pa.drawSphere(xVal[i]*mult);
 				pa.popMatState();

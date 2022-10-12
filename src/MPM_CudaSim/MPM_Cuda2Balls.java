@@ -5,14 +5,13 @@ import java.util.TreeMap;
 
 import MPM_CudaSim.base.base_MPMCudaSim;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
-import base_UI_Objects.windowUI.base.myDispWindow;
 
 //instance of sim world with 2 big snow boulders slamming into each other 
 public class MPM_Cuda2Balls extends base_MPMCudaSim {
 	//scale w/timestep
 	private static float initVel = 30.0f;
 	
-	public MPM_Cuda2Balls(IRenderInterface _pa, myDispWindow _win, int _gridCount, float _h, int _numParts, float _density) {
+	public MPM_Cuda2Balls(IRenderInterface _pa, MPM_SimWindow _win, int _gridCount, float _h, int _numParts, float _density) {
 		super(_pa,_win,"2 Big Snowballs",_gridCount, _h,_numParts, _density);
 	}	
 	

@@ -268,14 +268,7 @@ public class MPM_SimWindow extends myDispWindow {
 			}
 		}
 	}
-	
-	@Override
-	protected void buildUIUpdateStruct_Indiv(TreeMap<Integer, Integer> intValues, TreeMap<Integer, Float> floatValues,TreeMap<Integer, Boolean> boolValues) {
 		
-	}
-
-
-	
 	@Override
 	public void initDrwnTrajIndiv(){}
 	
