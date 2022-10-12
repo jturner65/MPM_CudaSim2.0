@@ -1,18 +1,21 @@
-package MPM_CudaSim;
+package MPM_CudaSim.ui;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.TreeMap;
 
-import MPM_CudaSim.base.base_MPMCudaSim;
+import MPM_CudaSim.material.myMaterial;
+import MPM_CudaSim.sim.MPM_Cuda2Balls;
+import MPM_CudaSim.sim.base.base_MPMCudaSim;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
+import base_Math_Objects.vectorObjs.doubles.myPoint;
+import base_Math_Objects.vectorObjs.doubles.myVector;
 import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.base_UpdateFromUIData;
 import base_UI_Objects.windowUI.base.myDispWindow;
 import base_UI_Objects.windowUI.drawnObjs.myDrawnSmplTraj;
 import base_UI_Objects.windowUI.uiObjs.GUIObj_Type;
 import base_Utils_Objects.io.messaging.MsgCodes;
-import base_Math_Objects.vectorObjs.doubles.myPoint;
-import base_Math_Objects.vectorObjs.doubles.myVector;
 
 public class MPM_SimWindow extends myDispWindow {
 

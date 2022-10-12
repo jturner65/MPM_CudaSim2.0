@@ -1,4 +1,4 @@
-package MPM_CudaSim;
+package MPM_CudaSim.material;
 
 //class for the material that the simulation consists of
 public class myMaterial {

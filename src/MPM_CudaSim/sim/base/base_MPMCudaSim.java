@@ -1,4 +1,4 @@
-package MPM_CudaSim.base;
+package MPM_CudaSim.sim.base;
 
 import static jcuda.driver.JCudaDriver.*;
 
@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 
-import MPM_CudaSim.MPM_SimWindow;
-import MPM_CudaSim.myMaterial;
+import MPM_CudaSim.material.myMaterial;
+import MPM_CudaSim.ui.MPM_SimWindow;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;

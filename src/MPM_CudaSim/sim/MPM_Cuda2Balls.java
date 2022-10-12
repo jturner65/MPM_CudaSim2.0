@@ -1,9 +1,10 @@
-package MPM_CudaSim;
+package MPM_CudaSim.sim;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-import MPM_CudaSim.base.base_MPMCudaSim;
+import MPM_CudaSim.sim.base.base_MPMCudaSim;
+import MPM_CudaSim.ui.MPM_SimWindow;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 
 //instance of sim world with 2 big snow boulders slamming into each other 
