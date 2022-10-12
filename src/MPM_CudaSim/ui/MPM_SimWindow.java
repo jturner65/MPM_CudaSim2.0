@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import MPM_CudaSim.material.myMaterial;
 import MPM_CudaSim.sim.MPM_Cuda2Balls;
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
+import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
@@ -85,7 +86,7 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpBtnNamesArray.add(new Object[]{"Visualization Debug",    "Enable Debug",       debugAnimIDX});          
 		tmpBtnNamesArray.add(new Object[]{"Resetting Simulation",   "Reset Simulation",   resetSimIDX});           
 		tmpBtnNamesArray.add(new Object[]{"Showing Collider",       "Show Collider",      showCollider});          
-		tmpBtnNamesArray.add(new Object[]{"Showing Particles",   "Show Particles",  showParticles});  
+		tmpBtnNamesArray.add(new Object[]{"Showing Particles",      "Show Particles",     showParticles});  
 		tmpBtnNamesArray.add(new Object[]{"Showing Particle Vel",   "Show Particle Vel",  showParticleVelArrows});  
 		tmpBtnNamesArray.add(new Object[]{"Showing Grid",           "Show Grid",          showGrid});           
 		tmpBtnNamesArray.add(new Object[]{"Showing Grid Vel",       "Show Grid Vel",      showGridVelArrows});     
@@ -111,7 +112,6 @@ public class MPM_SimWindow extends myDispWindow {
 		
 //		//init simulation construct here
 		//init simulation construct here
-		msgObj.dispInfoMessage("MPM_SimWindow","initMe","ALERT : MUST USE PROCESSING CORE.JAR FROM AFTER VERSION 3.1.1");
 		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation now.");
 		currSim = new MPM_Cuda2Balls(pa, this, numGridCellsPerDim, cellSize,numParts, particleMass);		
 		//initialize simulation here to simple world sim
@@ -208,7 +208,7 @@ public class MPM_SimWindow extends myDispWindow {
 	 */
 	@Override
 	protected base_UpdateFromUIData buildUIDataUpdateObject() {
-		return null;
+		return new MPM_SimUpdateFromUIData(this);
 	}
 	/**
 	 * This function is called on ui value update, to pass new ui values on to window-owned consumers

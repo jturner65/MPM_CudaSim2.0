@@ -9,6 +9,7 @@ import java.util.concurrent.*;
 
 import MPM_CudaSim.material.myMaterial;
 import MPM_CudaSim.ui.MPM_SimWindow;
+import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
@@ -30,7 +31,12 @@ public abstract class base_MPMCudaSim{
 	protected MPM_SimWindow win;
 	
 	//cuda kernel file name
-	private String ptxFileName = "MPM_CUDA_Sim_New.ptx";	
+	private String ptxFileName = "MPM_CUDA_Sim_New.ptx";
+	
+	/**
+	 * current ui values describing variables used in the simulation
+	 */
+	public MPM_SimUpdateFromUIData currUIVals;	
 
 	//these values are just to set initial values for simulation
 	public static int numGridCellsDefault = 200;
@@ -178,6 +184,12 @@ public abstract class base_MPMCudaSim{
 		setGridValsAndInit(_gridCount, _h, _numParts, _density);
 		//resetSim(false);
 	}//MPM_ABS_Sim
+	
+	public final void updateMapMorphVals_FromUI(MPM_SimUpdateFromUIData upd) {
+		//TODO Check if values need to be reset
+		currUIVals.setAllVals(upd);//can't use the same mapUpdFromUIData everywhere because we compare differences
+	}
+	
 	//run 1 time to load kernel and assign function pointers to functions
 	private void initCUDAModuleSetup() {
 		// Enable exceptions and omit all subsequent error checks

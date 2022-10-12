@@ -7,7 +7,7 @@ public class myMaterial {
 	
 
 	//initial values of material quantities
-	public static float	
+	public static final float	
 		base_initYoungMod 			 = 1.4e5f,
 		base_poissonRatio 			 = 0.2f,
 		base_hardeningCoeff 		 = 15.0f, 
