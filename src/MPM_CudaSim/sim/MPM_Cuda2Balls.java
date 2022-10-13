@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
 import MPM_CudaSim.ui.MPM_SimWindow;
+import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 
 //instance of sim world with 2 big snow boulders slamming into each other 
@@ -12,14 +13,18 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 	//scale w/timestep
 	private static float initVel = 30.0f;
 	
-	public MPM_Cuda2Balls(IRenderInterface _pa, MPM_SimWindow _win, int _gridCount, float _h, int _numParts, float _density) {
-		super(_pa,_win,"2 Big Snowballs",_gridCount, _h,_numParts, _density);
+	public MPM_Cuda2Balls(IRenderInterface _pa, MPM_SimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
+		super(_pa,_win,"2 Big Snowballs", _currUIVals);
 	}	
 	
-	//build particle layout for cuda sim - use multiples of h as radius
+	/**
+	 * build particle layout for cuda sim - use multiples of h as radius
+	 * @param partVals [OUT] map of particle locs, initial velocities and min/max vals being constructed
+	 * @param numPartsRequested desired # of particles. May be off a bit from final value - ALWAYS USE SIZE OF PARTVALS FOR COUNT
+	 */
 	@Override
-	protected void buildPartLayoutMap(TreeMap<String, ArrayList<Float[]>> partVals) {	
-        int numPartsPerSphere = numParts/2;
+	protected void buildPartLayoutMap(TreeMap<String, ArrayList<Float[]>> partVals, int numPartsRequested) {	
+        int numPartsPerSphere = numPartsRequested/2;
 
 		float offScl = 600.0f/this.sclAmt;
 
@@ -30,7 +35,7 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
         float[] sphere1_Ctr = new float[] {.4f  *offScl, .5f*offScl, .4f *offScl};
 		
 		//build sphere of particles - scale volume of sphere based on cuberoot of # of particles, with 1000 particles being baseline sphere - radius will be function of how many particles are built
-        float ballRad = (float) (3.0*Math.cbrt(numParts)/sclAmt);		
+        float ballRad = (float) (3.0*Math.cbrt(numPartsRequested)/sclAmt);		
 
 		//int incr = 1;
 		//lower ball

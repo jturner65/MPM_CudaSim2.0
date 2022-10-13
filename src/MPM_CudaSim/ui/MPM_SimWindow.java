@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-import MPM_CudaSim.material.myMaterial;
 import MPM_CudaSim.sim.MPM_Cuda2Balls;
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
 import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
@@ -12,8 +11,8 @@ import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
 import base_UI_Objects.GUI_AppManager;
-import base_UI_Objects.windowUI.base.base_UpdateFromUIData;
 import base_UI_Objects.windowUI.base.myDispWindow;
+import base_UI_Objects.windowUI.baseUI.base_UpdateFromUIData;
 import base_UI_Objects.windowUI.drawnObjs.myDrawnSmplTraj;
 import base_UI_Objects.windowUI.uiObjs.GUIObj_Type;
 import base_Utils_Objects.io.messaging.MsgCodes;
@@ -23,32 +22,52 @@ public class MPM_SimWindow extends myDispWindow {
 	//simulator world within which simulation executes
 	//TODO support multiple sim worlds possibly, with different configurations
 	public base_MPMCudaSim currSim;
-	//grid variables
-	private int numGridCellsPerDim = base_MPMCudaSim.numGridCellsDefault;
-	private float cellSize = base_MPMCudaSim.cellSizeDefault;
-	private int numParts = base_MPMCudaSim.numPartsUI_Init;
-	private float particleMass = cellSize *cellSize *cellSize * 50; 
+		
+	//////////////////////////////////
+	//initial values of simulation variables
+	protected final float initDeltaT = 4e-4f;
+	protected final int initNumGridCellsPerDim = 200;
+	protected final int initSimStepsPerFrame = 2;
+	protected final float initCellSize = .10f;
+	protected final int initNumParts = 100000;
+	//snow density varies from 50 to ~800
+	//powdery snow is about 100
+	//wet firm compacted snow is about 600
+	protected final float initParticleDensity = 50.0f;
 	
-	//motion
-	///////////
+	protected final float initParticleMass = initCellSize *initCellSize *initCellSize * initParticleDensity; 
+	protected final float initWallFric = 1.0f;
+	protected final float initColFric = 1.0f;
+	
+	//initial values of material quantities
+	protected final float	
+		init_initYoungMod 			 = 1.4e5f,
+		init_poissonRatio 			 = 0.2f,
+		init_hardeningCoeff 		 = 15.0f, 
+		init_criticalCompression 	 = 0.010f, 
+		init_criticalStretch 		 = 0.0025f, 
+		init_alphaPicFlip 			 = 0.95f;
+	
+	
+	//////////////////////////////////////
 	//ui vals
 	public final static int
-		gIDX_timeStep		 		= 0,
-		gIDX_simStepsPerFrame		= 1,
-		gIDX_numParticles			= 2,
-		gIDX_partMass				= 3,
-		gIDX_gridCellSize			= 4,
-		gIDX_gridCount				= 5,
-		gIDX_initYoungMod 			= 6,
-		gIDX_poissonRatio 			= 7,
-		gIDX_hardeningCoeff 		= 8,
-		gIDX_criticalCompression 	= 9,
-		gIDX_criticalStretch 		= 10,
-		gIDX_alphaPicFlip 			= 11,
+		gIDX_TimeStep		 		= 0,		
+		gIDX_SimStepsPerFrame		= 1,
+		gIDX_NumParticles			= 2,
+		gIDX_PartMass				= 3,
+		gIDX_GridCellSize			= 4,
+		gIDX_GridCount				= 5,
+		gIDX_InitYoungMod 			= 6,
+		gIDX_PoissonRatio 			= 7,
+		gIDX_HardeningCoeff 		= 8,
+		gIDX_CriticalCompression 	= 9,
+		gIDX_CriticalStretch 		= 10,
+		gIDX_AlphaPicFlip 			= 11,
 		gIDX_wallFricCoeff 			= 12,
-		gIDX_collFricCoeff			= 13;
+		gIDX_CollFricCoeff			= 13;
 	
-	/////////
+	//////////////////////////////////////
 	//custom debug/function ui button names -empty will do nothing
 	public String[][] menuBtnNames = new String[][] {	//each must have literals for every button defined in side bar menu, or ignored
 		{"Func 00", "Func 01", "Func 02"},				//row 1
@@ -58,6 +77,7 @@ public class MPM_SimWindow extends myDispWindow {
 		{"Func 30", "Func 31", "Func 32", "Func 33","Func 34"}	//dbg
 	};
 	
+	//////////////////////////////////////
 	//private child-class flags - window specific
 	public static final int 
 		debugAnimIDX 			= 0,			//debug
@@ -107,13 +127,11 @@ public class MPM_SimWindow extends myDispWindow {
 		setFlags(useCustCam, true);
 		// capable of using right side menu
 		setFlags(drawRightSideMenu, true);
-		//called once
-		//initPrivFlags(numPrivFlags);
 		
-//		//init simulation construct here
 		//init simulation construct here
 		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation now.");
-		currSim = new MPM_Cuda2Balls(pa, this, numGridCellsPerDim, cellSize,numParts, particleMass);		
+		//build sim(s) here
+		currSim = new MPM_Cuda2Balls(pa, this, (MPM_SimUpdateFromUIData) uiUpdateData);		
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		setPrivFlags(showParticles, true);
@@ -128,7 +146,7 @@ public class MPM_SimWindow extends myDispWindow {
 
 	//call this to initialize or reinitialize simulation (on reset)
 	protected void reinitSim() {
-		AppMgr.setSimIsRunning( false);		
+		AppMgr.setSimIsRunning(false);		
 		currSim.resetSim(true);
 	}
 		
@@ -140,9 +158,9 @@ public class MPM_SimWindow extends myDispWindow {
 		if(val == curVal){return;}
 		int flIDX = idx/32, mask = 1<<(idx%32);
 		privFlags[flIDX] = (val ?  privFlags[flIDX] | mask : privFlags[flIDX] & ~mask);
+
 		switch(idx){
 			case debugAnimIDX 			: {
-				//TODO set debug state for simulation here
 				break;}
 			case resetSimIDX			: {
 				if(val) {
@@ -150,8 +168,7 @@ public class MPM_SimWindow extends myDispWindow {
 					addPrivBtnToClear(resetSimIDX);
 				}
 				break;}						
-			case resetReqIDX			: {//simulation reset not forced, but required for good results
-				
+			case resetReqIDX			: {//simulation reset not forced, but required for good results				
 				break;}	
 			case showCollider			: {//show collider
 				currSim.setSimFlags(base_MPMCudaSim.showCollider, val);
@@ -185,22 +202,21 @@ public class MPM_SimWindow extends myDispWindow {
 		
 	//initialize structure to hold modifiable menu regions
 	@Override
-	protected void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){	
-		
-		tmpUIObjArray.put(gIDX_timeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*base_MPMCudaSim.getDeltaT(),  "Sim Time Step", GUIObj_Type.FloatVal, new boolean[]{true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
-		tmpUIObjArray.put(gIDX_simStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*base_MPMCudaSim.simStepsPerFrame, "Sim Steps per Drawn Frame", GUIObj_Type.IntVal, new boolean[]{true}});//gIDX_simStepsPerFrame  init 5
-		tmpUIObjArray.put(gIDX_numParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*numParts, "# of Particles", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
-		tmpUIObjArray.put(gIDX_partMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*particleMass, "Particle Mass", GUIObj_Type.FloatVal, new boolean[]{true}});//particle mass
-		tmpUIObjArray.put(gIDX_gridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*cellSize, "Grid Cell Size", GUIObj_Type.FloatVal, new boolean[]{true}});//grid cell size
-		tmpUIObjArray.put(gIDX_gridCount, new Object[] {new double[]{50, 300, 1}, 1.0*numGridCellsPerDim,  "Grid Cell Count Per Side", GUIObj_Type.IntVal, new boolean[]{true}}); //# of grid cells per side
-		tmpUIObjArray.put(gIDX_initYoungMod, new Object[] {new double[]{1000.0f, 100000.0f, 100.0f}, 1.0*myMaterial.base_initYoungMod, "Young's Modulus", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_initYoungMod init 4.8e4f, 
-		tmpUIObjArray.put(gIDX_poissonRatio, new Object[] {new double[]{.01f, 1.0f, .01f}, 1.0*myMaterial.base_poissonRatio, "Poisson Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_poissonRatio init 0.2f,  
-		tmpUIObjArray.put(gIDX_hardeningCoeff , new Object[] {new double[]{1.0f, 100.0f, 1.0f}, 1.0*myMaterial.base_hardeningCoeff, "Hardening Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_hardeningCoeff init 15.0f, 
-		tmpUIObjArray.put(gIDX_criticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*myMaterial.base_criticalCompression, "Critical Compression", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_criticalCompression  init .019f, 
-		tmpUIObjArray.put(gIDX_criticalStretch , new Object[] {new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*myMaterial.base_criticalStretch, "Critical Stretch", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_criticalStretch init .0075f, 
-		tmpUIObjArray.put(gIDX_alphaPicFlip, new Object[] {new double[]{0.0f, 1.0f, 0.01f}, 1.0*myMaterial.base_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_alphaPicFlip init 0.95f, 
-		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.wallFric, "Wall Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_wallfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_collFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*base_MPMCudaSim.collFric, "Collider Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_collfricCoeffinit 1.0f  
+	protected void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){		
+		tmpUIObjArray.put(gIDX_TimeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step", GUIObj_Type.FloatVal, new boolean[]{true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
+		tmpUIObjArray.put(gIDX_SimStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame", GUIObj_Type.IntVal, new boolean[]{true}});//gIDX_simStepsPerFrame  init 5
+		tmpUIObjArray.put(gIDX_NumParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*initNumParts, "# of Particles", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
+		tmpUIObjArray.put(gIDX_PartMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass", GUIObj_Type.FloatVal, new boolean[]{true}});//particle mass
+		tmpUIObjArray.put(gIDX_GridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*initCellSize, "Grid Cell Size", GUIObj_Type.FloatVal, new boolean[]{true}});//grid cell size
+		tmpUIObjArray.put(gIDX_GridCount, new Object[] {new double[]{50, 300, 1}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side", GUIObj_Type.IntVal, new boolean[]{true}}); //# of grid cells per side
+		tmpUIObjArray.put(gIDX_InitYoungMod, new Object[] {new double[]{1000.0f, 100000.0f, 100.0f}, 1.0*init_initYoungMod, "Young's Modulus", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_InitYoungMod init 4.8e4f, 
+		tmpUIObjArray.put(gIDX_PoissonRatio, new Object[] {new double[]{.01f, 1.0f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_PoissonRatio init 0.2f,  
+		tmpUIObjArray.put(gIDX_HardeningCoeff , new Object[] {new double[]{1.0f, 100.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_HardeningCoeff init 15.0f, 
+		tmpUIObjArray.put(gIDX_CriticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CriticalCompression  init .019f, 
+		tmpUIObjArray.put(gIDX_CriticalStretch , new Object[] {new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CriticalStretch init .0075f, 
+		tmpUIObjArray.put(gIDX_AlphaPicFlip, new Object[] {new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_AlphaPicFlip init 0.95f, 
+		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_wallfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_CollFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CollfricCoeffinit 1.0f  
 	}//setupGUIObjsAras
 	/**
 	 * This function would provide an instance of the override class for base_UpdateFromUIData, which would
@@ -214,71 +230,63 @@ public class MPM_SimWindow extends myDispWindow {
 	 * This function is called on ui value update, to pass new ui values on to window-owned consumers
 	 */
 	@Override
-	protected final void updateCalcObjUIVals() {}
+	protected final void updateCalcObjUIVals() {
+		//TODO
+		msgObj.dispConsoleErrorMessage("MPM_SimWindow", "updateCalcObjUIVals", "Called to update.");
+		currSim.updateSimVals_FromUI((MPM_SimUpdateFromUIData) uiUpdateData);
+		//reinitSim();
+	}//updateCalcObjUIVals
 	
 	@Override
 	protected void setUIWinVals(int UIidx) {
 		float val = (float)guiObjs[UIidx].getVal();
-		if(val != uiVals[UIidx]){//if value has changed...
-			uiVals[UIidx] = val;
-			switch(UIidx){		
-			case gIDX_timeStep 			:{
-				currSim.setDeltaT(val);
+		int ival = (int) val;
+		switch(UIidx){		
+			case gIDX_TimeStep 			:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;} 	
-			case gIDX_numParticles				:{
-				numParts = (int)val;
-				currSim.setGridValsAndInit(numGridCellsPerDim,  cellSize, numParts, particleMass);
+			case gIDX_NumParticles				:{
+				if(checkAndSetIntVal(UIidx, ival)) {updateCalcObjUIVals(); }
 				break;}
-			case gIDX_partMass 					:{
-				particleMass = val;
-				currSim.setGridValsAndInit(numGridCellsPerDim,  cellSize, numParts, particleMass);
+			case gIDX_PartMass 					:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;}
-			case gIDX_gridCellSize				:{
-				cellSize = val;
-				currSim.setGridValsAndInit(numGridCellsPerDim,  cellSize, numParts, particleMass);
+			case gIDX_GridCellSize				:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;}
-			case gIDX_gridCount					:{
-				numGridCellsPerDim = (int)val;
-				currSim.setGridValsAndInit(numGridCellsPerDim,  cellSize, numParts, particleMass);				
+			case gIDX_GridCount					:{
+				if(checkAndSetIntVal(UIidx, ival)) {updateCalcObjUIVals(); }				
 				break;}
-			case gIDX_initYoungMod 				:{
-				currSim.mat.setYoungModulus(val);
-				reinitSim();
+			case gIDX_InitYoungMod 				:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;} 		
-			case gIDX_poissonRatio 				:{
-				currSim.mat.setPoissonRatio(val);
-				reinitSim();
+			case gIDX_PoissonRatio 				:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;} 		
-			case gIDX_hardeningCoeff 			:{
-				currSim.mat.setHC(val);
-				reinitSim();
+			case gIDX_HardeningCoeff 			:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;} 	
-			case gIDX_criticalCompression 		:{
-				currSim.mat.setCC(val);
-				reinitSim();
+			case gIDX_CriticalCompression 		:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;}
-			case gIDX_criticalStretch 			:{
-				currSim.mat.setCS(val);
-				reinitSim();
+			case gIDX_CriticalStretch 			:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;} 	
-			case gIDX_alphaPicFlip 				:{
-				currSim.mat.setAlpha(val);
+			case gIDX_AlphaPicFlip 				:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;} 		
 			case gIDX_wallFricCoeff 				:{
-				base_MPMCudaSim.wallFric = val;
-				reinitSim();
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;} 
-			case gIDX_collFricCoeff 				:{
-				base_MPMCudaSim.collFric = val;
-				reinitSim();
+			case gIDX_CollFricCoeff 				:{
+				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
 				break;} 
-			case gIDX_simStepsPerFrame 			:{
-				base_MPMCudaSim.simStepsPerFrame = (int)val;
+			case gIDX_SimStepsPerFrame 			:{
+				if(checkAndSetIntVal(UIidx, ival)) {updateCalcObjUIVals(); }
 				break;}
 			default : {break;}
-			}
-		}
-	}
+			}		
+	}//setUIWinVals
 		
 	@Override
 	public void initDrwnTrajIndiv(){}
