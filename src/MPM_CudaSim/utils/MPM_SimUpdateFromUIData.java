@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import MPM_CudaSim.ui.MPM_SimWindow;
-import base_UI_Objects.windowUI.baseUI.base_UpdateFromUIData;
+import base_UI_Objects.windowUI.uiData.UIDataUpdater;
 
-public class MPM_SimUpdateFromUIData extends base_UpdateFromUIData {
+public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	
 	protected int[] IntIDXsToCompare = new int[] {MPM_SimWindow.gIDX_NumParticles, MPM_SimWindow.gIDX_GridCount};
 	protected int[] FloatIDXsToCompare = new int[] {

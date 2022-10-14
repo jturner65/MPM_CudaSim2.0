@@ -12,8 +12,8 @@ import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
 import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.myDispWindow;
-import base_UI_Objects.windowUI.baseUI.base_UpdateFromUIData;
 import base_UI_Objects.windowUI.drawnObjs.myDrawnSmplTraj;
+import base_UI_Objects.windowUI.uiData.UIDataUpdater;
 import base_UI_Objects.windowUI.uiObjs.GUIObj_Type;
 import base_Utils_Objects.io.messaging.MsgCodes;
 
@@ -129,7 +129,7 @@ public class MPM_SimWindow extends myDispWindow {
 		setFlags(drawRightSideMenu, true);
 		
 		//init simulation construct here
-		msgObj.dispInfoMessage("MPM_SimWindow","initMe","Start building simulation now.");
+		msgObj.dispInfoMessage(className,"initMe","Start building simulation now.");
 		//build sim(s) here
 		currSim = new MPM_Cuda2Balls(pa, this, (MPM_SimUpdateFromUIData) uiUpdateData);		
 		//initialize simulation here to simple world sim
@@ -158,7 +158,6 @@ public class MPM_SimWindow extends myDispWindow {
 		if(val == curVal){return;}
 		int flIDX = idx/32, mask = 1<<(idx%32);
 		privFlags[flIDX] = (val ?  privFlags[flIDX] | mask : privFlags[flIDX] & ~mask);
-
 		switch(idx){
 			case debugAnimIDX 			: {
 				break;}
@@ -223,7 +222,7 @@ public class MPM_SimWindow extends myDispWindow {
 	 * be used to communicate changes in UI settings directly to the value consumers.
 	 */
 	@Override
-	protected base_UpdateFromUIData buildUIDataUpdateObject() {
+	protected UIDataUpdater buildUIDataUpdateObject() {
 		return new MPM_SimUpdateFromUIData(this);
 	}
 	/**
@@ -231,63 +230,60 @@ public class MPM_SimWindow extends myDispWindow {
 	 */
 	@Override
 	protected final void updateCalcObjUIVals() {
-		//TODO
-		msgObj.dispConsoleErrorMessage("MPM_SimWindow", "updateCalcObjUIVals", "Called to update.");
+		msgObj.dispConsoleErrorMessage(className, "updateCalcObjUIVals", "Called to update.");
 		currSim.updateSimVals_FromUI((MPM_SimUpdateFromUIData) uiUpdateData);
 		//reinitSim();
 	}//updateCalcObjUIVals
-	
+
+	/**
+	 * Called if int-handling guiObjs[UIidx] (int or list) has new data which updated UI adapter. 
+	 * Intended to support custom per-object handling by owning window.
+	 * Only called if data changed!
+	 * @param UIidx Index of gui obj with new data
+	 * @param ival integer value of new data
+	 * @param oldVal integer value of old data in UIUpdater
+	 */
 	@Override
-	protected void setUIWinVals(int UIidx) {
-		float val = (float)guiObjs[UIidx].getVal();
-		int ival = (int) val;
+	protected final void setUI_IntValsCustom(int UIidx, int ival, int oldVal) {
 		switch(UIidx){		
-			case gIDX_TimeStep 			:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;} 	
-			case gIDX_NumParticles				:{
-				if(checkAndSetIntVal(UIidx, ival)) {updateCalcObjUIVals(); }
+			case gIDX_NumParticles			:{break;}
+			case gIDX_GridCount				:{break;}
+			case gIDX_SimStepsPerFrame 		:{break;}
+			default : {
+				msgObj.dispWarningMessage(className, "setUI_IntValsCustom", "No int-defined gui object mapped to idx :"+UIidx);
 				break;}
-			case gIDX_PartMass 					:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
+		}				
+	}//setUI_IntValsCustom
+
+	/**
+	 * Called if float-handling guiObjs[UIidx] has new data which updated UI adapter.  
+	 * Intended to support custom per-object handling by owning window.
+	 * Only called if data changed!
+	 * @param UIidx Index of gui obj with new data
+	 * @param val float value of new data
+	 * @param oldVal float value of old data in UIUpdater
+	 */
+	@Override
+	protected final void setUI_FloatValsCustom(int UIidx, float val, float oldVal) {
+		switch(UIidx){		
+			case gIDX_TimeStep 				:{break;}
+			case gIDX_PartMass 				:{break;}
+			case gIDX_GridCellSize			:{break;}
+			case gIDX_InitYoungMod 			:{break;}
+			case gIDX_PoissonRatio 			:{break;}
+			case gIDX_HardeningCoeff 		:{break;}
+			case gIDX_CriticalCompression 	:{break;}
+			case gIDX_CriticalStretch 		:{break;}
+			case gIDX_AlphaPicFlip 			:{break;}
+			case gIDX_wallFricCoeff 		:{break;}
+			case gIDX_CollFricCoeff 		:{break;}
+			default : {
+				msgObj.dispWarningMessage(className, "setUI_FloatValsCustom", "No float-defined gui object mapped to idx :"+UIidx);
 				break;}
-			case gIDX_GridCellSize				:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;}
-			case gIDX_GridCount					:{
-				if(checkAndSetIntVal(UIidx, ival)) {updateCalcObjUIVals(); }				
-				break;}
-			case gIDX_InitYoungMod 				:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;} 		
-			case gIDX_PoissonRatio 				:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;} 		
-			case gIDX_HardeningCoeff 			:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;} 	
-			case gIDX_CriticalCompression 		:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;}
-			case gIDX_CriticalStretch 			:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;} 	
-			case gIDX_AlphaPicFlip 				:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;} 		
-			case gIDX_wallFricCoeff 				:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;} 
-			case gIDX_CollFricCoeff 				:{
-				if(checkAndSetFloatVal(UIidx, val)) {updateCalcObjUIVals(); }
-				break;} 
-			case gIDX_SimStepsPerFrame 			:{
-				if(checkAndSetIntVal(UIidx, ival)) {updateCalcObjUIVals(); }
-				break;}
-			default : {break;}
-			}		
-	}//setUIWinVals
-		
+		}				
+	}//setUI_FloatValsCustom	
+	
+	
 	@Override
 	public void initDrwnTrajIndiv(){}
 	
@@ -343,7 +339,7 @@ public class MPM_SimWindow extends myDispWindow {
 	protected void closeMe() {}	
 	@Override
 	//stopping simulation
-	protected void stopMe() {	msgObj.dispInfoMessage("MPM_SimWindow","stopMe","Simulation Finished");	}	
+	protected void stopMe() {	msgObj.dispInfoMessage(className,"stopMe","Simulation Finished");	}	
 	
 	@Override
 	public void processTrajIndiv(myDrawnSmplTraj drawnNoteTraj){	}
@@ -434,7 +430,7 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	protected void setVisScreenDimsPriv() {	}
 	@Override
-	protected void setCustMenuBtnNames() {		AppMgr.setAllMenuBtnNames(menuBtnNames);		}
+	protected void setCustMenuBtnLabels() {		AppMgr.setAllMenuBtnNames(menuBtnNames);		}
 	@Override
 	public void hndlFileLoad(File file, String[] vals, int[] stIdx) {	}
 	@Override

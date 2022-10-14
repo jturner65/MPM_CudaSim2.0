@@ -127,7 +127,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	protected void initProgram_Indiv() {}
 
 	@Override
-	public String[] getMouseOverSelBtnNames() {
+	public String[] getMouseOverSelBtnLabels() {
 		// TODO Auto-generated method stub
 		return new String[0];
 	}
