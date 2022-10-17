@@ -28,6 +28,7 @@ public class MPM_SimWindow extends myDispWindow {
 	protected final float initDeltaT = 4e-4f;
 	protected final int initNumGridCellsPerDim = 200;
 	protected final int initSimStepsPerFrame = 5;
+	protected final int initNumBalls = 2;
 	protected final float initCellSize = .10f;
 	protected final int initNumParts = 100000;
 	//snow density varies from 50 to ~800
@@ -55,17 +56,18 @@ public class MPM_SimWindow extends myDispWindow {
 		gIDX_TimeStep		 		= 0,		
 		gIDX_SimStepsPerFrame		= 1,
 		gIDX_NumParticles			= 2,
-		gIDX_PartMass				= 3,
-		gIDX_GridCellSize			= 4,
-		gIDX_GridCount				= 5,
-		gIDX_InitYoungMod 			= 6,
-		gIDX_PoissonRatio 			= 7,
-		gIDX_HardeningCoeff 		= 8,
-		gIDX_CriticalCompression 	= 9,
-		gIDX_CriticalStretch 		= 10,
-		gIDX_AlphaPicFlip 			= 11,
-		gIDX_wallFricCoeff 			= 12,
-		gIDX_CollFricCoeff			= 13;
+		gIDX_NumSnowballs 			= 3,
+		gIDX_PartMass				= 4,
+		gIDX_GridCellSize			= 5,
+		gIDX_GridCount				= 6,
+		gIDX_InitYoungMod 			= 7,
+		gIDX_PoissonRatio 			= 8,
+		gIDX_HardeningCoeff 		= 9,
+		gIDX_CriticalCompression 	= 10,
+		gIDX_CriticalStretch 		= 11,
+		gIDX_AlphaPicFlip 			= 12,
+		gIDX_wallFricCoeff 			= 13,
+		gIDX_CollFricCoeff			= 14;
 	
 	//////////////////////////////////////
 	//custom debug/function ui button names -empty will do nothing
@@ -147,7 +149,7 @@ public class MPM_SimWindow extends myDispWindow {
 	//call this to initialize or reinitialize simulation (on reset)
 	protected void reinitSim() {
 		AppMgr.setSimIsRunning(false);		
-		currSim.resetSim(true);
+		currSim.resetSim();
 	}
 		
 	@Override
@@ -205,10 +207,11 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpUIObjArray.put(gIDX_TimeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step", GUIObj_Type.FloatVal, new boolean[]{true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
 		tmpUIObjArray.put(gIDX_SimStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame", GUIObj_Type.IntVal, new boolean[]{true}});//gIDX_simStepsPerFrame  init 5
 		tmpUIObjArray.put(gIDX_NumParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*initNumParts, "# of Particles", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
+		tmpUIObjArray.put(gIDX_NumSnowballs, new Object[] {new double[]{2, 10, 1}, 1.0*initNumBalls, "# of Snowballs", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
 		tmpUIObjArray.put(gIDX_PartMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass", GUIObj_Type.FloatVal, new boolean[]{true}});//particle mass
 		tmpUIObjArray.put(gIDX_GridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*initCellSize, "Grid Cell Size", GUIObj_Type.FloatVal, new boolean[]{true}});//grid cell size
 		tmpUIObjArray.put(gIDX_GridCount, new Object[] {new double[]{50, 300, 1}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side", GUIObj_Type.IntVal, new boolean[]{true}}); //# of grid cells per side
-		tmpUIObjArray.put(gIDX_InitYoungMod, new Object[] {new double[]{1000.0f, 100000.0f, 100.0f}, 1.0*init_initYoungMod, "Young's Modulus", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_InitYoungMod init 4.8e4f, 
+		tmpUIObjArray.put(gIDX_InitYoungMod, new Object[] {new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Young's Modulus", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_InitYoungMod init 4.8e4f, 
 		tmpUIObjArray.put(gIDX_PoissonRatio, new Object[] {new double[]{.01f, 1.0f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_PoissonRatio init 0.2f,  
 		tmpUIObjArray.put(gIDX_HardeningCoeff , new Object[] {new double[]{1.0f, 100.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_HardeningCoeff init 15.0f, 
 		tmpUIObjArray.put(gIDX_CriticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CriticalCompression  init .019f, 
@@ -246,6 +249,7 @@ public class MPM_SimWindow extends myDispWindow {
 	protected final void setUI_IntValsCustom(int UIidx, int ival, int oldVal) {
 		switch(UIidx){		
 			case gIDX_NumParticles			:{break;}
+			case gIDX_NumSnowballs			:{break;}
 			case gIDX_GridCount				:{break;}
 			case gIDX_SimStepsPerFrame 		:{break;}
 			default : {

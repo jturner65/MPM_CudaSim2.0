@@ -32,6 +32,7 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	 */
 	public int getSimStepsPerFrame() {return intValues.get(MPM_SimWindow.gIDX_SimStepsPerFrame);}
 	public int getNumParticles() {return intValues.get(MPM_SimWindow.gIDX_NumParticles);}
+	public int getNumSnowballs() {return intValues.get(MPM_SimWindow.gIDX_NumSnowballs);}
 	public int getGridCellsPerSide() {return intValues.get(MPM_SimWindow.gIDX_GridCount);}
 	
 	/**
@@ -80,6 +81,7 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 			res+="Int Values: (" +intValues.size() +")\n";
 			res+="\tSim Steps per Frame : "+getSimStepsPerFrame() +"\n";
 			res+="\tNum Particles : "+getNumParticles() +"\n";
+			res+="\tNum Snowballs : "+getNumSnowballs() +"\n";
 			res+="\tNum Grid Cells Per Side : "+getGridCellsPerSide() +"\n";	
 		} else {		res+="No Integer values present/being tracked";}
 		
