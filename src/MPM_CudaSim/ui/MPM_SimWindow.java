@@ -27,7 +27,7 @@ public class MPM_SimWindow extends myDispWindow {
 	//initial values of simulation variables
 	protected final float initDeltaT = 4e-4f;
 	protected final int initNumGridCellsPerDim = 200;
-	protected final int initSimStepsPerFrame = 2;
+	protected final int initSimStepsPerFrame = 5;
 	protected final float initCellSize = .10f;
 	protected final int initNumParts = 100000;
 	//snow density varies from 50 to ~800
@@ -232,7 +232,6 @@ public class MPM_SimWindow extends myDispWindow {
 	protected final void updateCalcObjUIVals() {
 		msgObj.dispConsoleErrorMessage(className, "updateCalcObjUIVals", "Called to update.");
 		currSim.updateSimVals_FromUI((MPM_SimUpdateFromUIData) uiUpdateData);
-		//reinitSim();
 	}//updateCalcObjUIVals
 
 	/**

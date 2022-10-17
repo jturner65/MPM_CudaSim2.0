@@ -14,6 +14,7 @@ import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
+import base_UI_Objects.windowUI.base.myDispWindow;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
@@ -166,7 +167,8 @@ public abstract class base_MPMCudaSim{
 	public final void updateSimVals_FromUI(MPM_SimUpdateFromUIData upd) {
 		//If we should rebuild/reset sim or not.If not, values will be 
 		//applied locally but not sent to cuda kernel
-		boolean rebuildSim = upd.shouldSimBeReset(currUIVals);
+		boolean rebuildSim = shouldSimBeRebuilt(upd);
+		
 		//copy UI data to local var 
 		currUIVals.setAllVals(upd);
 		
@@ -186,23 +188,51 @@ public abstract class base_MPMCudaSim{
 		// wall friction
 		wallFric = currUIVals.getWallFricCoeff();
 		// non-wall collider friction
+		//TODO not yet supported
 		collFric = currUIVals.getCollFricCoeff();
 		
 		//update material to match ui values
 		mat.updateMatVals_FromUI(currUIVals);				
 		
-		// calculated values dependent on UI vals
+		// calculated values dependent on UI values
 		maxSimBnds = (gridCount*cellSize)/2.0f;
 		minSimBnds = -maxSimBnds;
 		gridDim = maxSimBnds - minSimBnds;		
 		//scale amount to fill 1500 x 1500 x 1500 visualization cube
-		sclAmt = 1500.0f/(gridCount * cellSize);
+		sclAmt = myDispWindow.AppMgr.gridDimX/(gridCount * cellSize);
+		//win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "updateSimVals_FromUI", "Scale Amt : "+sclAmt+" | win gridDimX : "+ myDispWindow.AppMgr.gridDimX);
 		if (rebuildSim) {
 			setSimFlags(simIsBuiltIDX, false);		
 			//UI changes forced reset of the simulator
+			//stop simulation and reset
+			myDispWindow.AppMgr.setSimIsRunning(false);	
 			resetSim(true);
 		}
 	}//updateMapMorphVals_FromUI
+	
+	private boolean shouldSimBeRebuilt(MPM_SimUpdateFromUIData upd) {
+		HashMap<Integer,Integer> IntIdxsToIgnore = new HashMap<Integer,Integer>();
+		HashMap<Integer,Integer> FloatIdxsToIgnore = new HashMap<Integer,Integer>();
+		HashMap<Integer,Integer> BoolIdxsToIgnore = new HashMap<Integer,Integer>();
+		//specify idxs of UI elements that should not force a sim rebuild across all simulations
+		//i.e. values not sent to cuda kernel
+		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_SimStepsPerFrame, MPM_SimWindow.gIDX_SimStepsPerFrame);
+		//add idxs that should be ignored for specific simulations
+		setUIIdxsToIgnorePerSim(IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
+		
+		return upd.shouldSimBeReset(currUIVals, IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
+	}
+	
+	/**
+	 * Specify simulation-specific IDXs of UI components to ignore changes of when determining 
+	 * whether or not to rebuild simulation based on UI changes
+	 * @param IntIdxsToIgnore [Out] IDXs to Integer UI components to ignore changes
+	 * @param FloatIdxsToIgnore [Out] IDXs to  UI components to ignore changes
+	 * @param BoolIdxsToIgnore [Out] IDXs to Integer UI components to ignore changes
+	 */
+	protected abstract void setUIIdxsToIgnorePerSim(HashMap<Integer,Integer> IntIdxsToIgnore, 
+			HashMap<Integer,Integer> FloatIdxsToIgnore, 
+			HashMap<Integer,Integer> BoolIdxsToIgnore);
 	
 	/**
 	 * run 1 time to load kernel and assign function pointers to functions
@@ -413,20 +443,23 @@ public abstract class base_MPMCudaSim{
 	 */
 	protected final float createSphere(TreeMap<String, ArrayList<Float[]>> partVals, float ballRad, int numParts, float[] initVel, float[] ctr) {
     
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "createSphere","Start creating a sphere with "+numParts+" particles in a sphere of radius " + ballRad +".");
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "createSphere",
+				"Start creating a sphere with "+numParts+" particles in a sphere of radius " + ballRad +" centered at [" +ctr[0] +"," +ctr[1] +"," +ctr[2] + "].");
 		 
 		Float[] minVals = partVals.get("minMaxVals").get(0);
 		Float[] maxVals = partVals.get("minMaxVals").get(1); 
-		
+		ArrayList<Float[]> posMap = partVals.get("pos");
+		ArrayList<Float[]> velMap = partVals.get("vel");
 		for (int i=0;i<numParts;++i) {
-			Float[] posVals = getRandPosInSphereAra(ballRad, ctr);        				
+			Float[] posVals = getRandPosInSphereAra(ballRad, ctr);  
+			
 			for (int v = 0; v < 3; ++v) {
-				minVals[v] = (posVals[v] < minVals[v] ?posVals[v] : minVals[v] );
-				maxVals[v] = (posVals[v] > maxVals[v] ?posVals[v] : maxVals[v] );
+				if (posVals[v] < minVals[v]) {					minVals[v] = posVals[v];				} 
+				else if (posVals[v] > maxVals[v]) {				maxVals[v] = posVals[v];				}	
 			}
-			partVals.get("pos").add(posVals);
+			posMap.add(posVals);
 			//init vel
-			partVals.get("vel").add(new Float[] {initVel[0],initVel[1],initVel[2]});
+			velMap.add(new Float[] {initVel[0],initVel[1],initVel[2]});
         }
 		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "createSphere","Finished creating a sphere with "+numParts+" particles.");
 		

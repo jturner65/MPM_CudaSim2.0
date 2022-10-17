@@ -66,29 +66,11 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	 * Whether or not modifications to UI values that the sim relies on occur, in which case the sim should be reset 
 	 * @return
 	 */
-	public boolean shouldSimBeReset(MPM_SimUpdateFromUIData _otr) {
-		HashMap<Integer,Integer> IntIdxsToIgnore = new HashMap<Integer,Integer>();
-		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_SimStepsPerFrame, MPM_SimWindow.gIDX_SimStepsPerFrame);
-		return haveValuesChanged(_otr,IntIdxsToIgnore, new HashMap<Integer,Integer>(),new HashMap<Integer,Integer>());
-	}
-	
-	/**
-	 * Rebuild simulation if any simulator-dependent variables have changed. These are variables that are sent to the cuda kernel
-	 * @param _otr
-	 * @return
-	 */
-	public boolean shouldSimBeRebuilt(MPM_SimUpdateFromUIData _otr) {
-		for(int idx : IntIDXsToCompare) {
-			if(intValues.get(idx) != _otr.intValues.get(idx)) {return true;}
-		}
-		for(int idx : FloatIDXsToCompare) {
-			if(floatValues.get(idx) != _otr.floatValues.get(idx)) {return true;}
-		}
-		for(int idx : BoolIDXsToCompare) {
-			if(boolValues.get(idx) != _otr.boolValues.get(idx)) {return true;}
-		}			
-			
-		return false;
+	public boolean shouldSimBeReset(MPM_SimUpdateFromUIData _otr, 
+			HashMap<Integer,Integer> IntIdxsToIgnore, 
+			HashMap<Integer,Integer> ListIdxsToIgnore, 
+			HashMap<Integer,Integer> FloatIdxsToIgnore) {
+		return haveValuesChanged(_otr,IntIdxsToIgnore, ListIdxsToIgnore, FloatIdxsToIgnore);
 	}
 	
 	@Override

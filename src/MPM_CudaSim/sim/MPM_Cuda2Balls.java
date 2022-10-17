@@ -1,6 +1,7 @@
 package MPM_CudaSim.sim;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.TreeMap;
 
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
@@ -16,6 +17,18 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 	public MPM_Cuda2Balls(IRenderInterface _pa, MPM_SimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa,_win,"2 Big Snowballs", _currUIVals);
 	}	
+
+	/**
+	 * Specify simulation-specific IDXs of UI components to ignore changes of when determining 
+	 * whether or not to rebuild simulation based on UI changes
+	 * @param IntIdxsToIgnore [Out] IDXs to Integer UI components to ignore changes
+	 * @param FloatIdxsToIgnore [Out] IDXs to  UI components to ignore changes
+	 * @param BoolIdxsToIgnore [Out] IDXs to Integer UI components to ignore changes
+	 */
+	@Override
+	protected void setUIIdxsToIgnorePerSim(HashMap<Integer, Integer> IntIdxsToIgnore,
+			HashMap<Integer, Integer> FloatIdxsToIgnore, HashMap<Integer, Integer> BoolIdxsToIgnore) {
+	}//setUIIdxsToIgnorePerSim
 	
 	/**
 	 * build particle layout for cuda sim - use multiples of h as radius
