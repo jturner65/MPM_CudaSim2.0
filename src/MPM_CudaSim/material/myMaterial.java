@@ -29,15 +29,35 @@ public class myMaterial {
 		recalcParams();
 	}//updateMatVals_FromUI
 	
-	
-	//private to govern recalculation when youngmod and poisson ratio change via UI input
-	
-	// Return ptrs to values for kernel params
+	/**
+	 * Return ptr to lambda0 value (precalced from Young's modulus and Poisson ration) for kernel params
+	 * @return
+	 */
 	public float[] getLambda0Ptr() {return new float[] {lambda0};}
+	/**
+	 * Return ptr to Mu0 value (precalced from Young's modulus and Poisson ration) for kernel params
+	 * @return
+	 */
 	public float[] getMu0Ptr() {return new float[] {mu0};}	
+	/**
+	 * Return ptr to Hardening Coefficient value for kernel params
+	 * @return
+	 */
 	public float[] getHardeningCoeffPtr() {return new float[] {hardeningCoeff};}     
+	/**
+	 * Return ptr to Critical Compression value for kernel params
+	 * @return
+	 */
 	public float[] getCriticalCompressionPtr() {return new float[] {criticalCompression};}  
+	/**
+	 * Return ptr to Critical Stretch value for kernel params
+	 * @return
+	 */
 	public float[] getCriticalStretchPtr() {return new float[] {criticalStretch};} 
+	/**
+	 * Return ptr to Alpha PICFLIP value for kernel params
+	 * @return
+	 */
 	public float[] getAlphaPicFlipPtr() {return new float[] {alphaPicFlip};}      
 	
 	
