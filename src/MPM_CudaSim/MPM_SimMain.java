@@ -12,7 +12,9 @@ import base_UI_Objects.windowUI.base.myDispWindow;
 public class MPM_SimMain extends GUI_AppManager {
 	
 	public String prjNmLong = "MPM Simulation CUDA 2.0", prjNmShrt = "MPM_SnowSim_cuda_2.0";
-	public String authorString = "John Turner";
+	
+	//use sphere background for this program
+	private boolean useSphereBKGnd = true;
 
 	private final int
 		showUIMenu = 0,
@@ -55,11 +57,16 @@ public class MPM_SimMain extends GUI_AppManager {
 	protected void setup_Indiv() {
 		//modify default grid dims to be 1500x1500x1500
 		setDesired3DGridDims(1500);
-
-		setBkgrnd();
+		//TODO move to window to set up specific background for each different "scene" type
+		//PImage bgrndTex = loadImage("bkgrndTex.jpg");
+		//PImage bgrndTex = loadImage("sky_1.jpg");
+		if(useSphereBKGnd) {			pa.loadBkgndSphere("bkgrndTex.jpg");	} else {		setBkgrnd();	}
 	}	
 	@Override
-	public void setBkgrnd(){pa.setRenderBackground(bground[0],bground[1],bground[2],bground[3]);}//setBkgrnd
+	public void setBkgrnd(){
+		//TODO move to myDispWindow	
+		if(useSphereBKGnd) { pa.setBkgndSphere();	} else {pa.setRenderBackground(bground[0],bground[1],bground[2],bground[3]);		}
+	}//setBkgrnd
 
 	@Override
 	protected void initMainFlags_Indiv() {
@@ -217,6 +224,8 @@ public class MPM_SimMain extends GUI_AppManager {
 	public int[] getClr_Custom(int colorVal, int alpha) {	return new int[] {255,255,255,alpha};}
 
 	@Override
-	protected void setSmoothing() {		pa.setSmoothing(4);		}
+	protected void setSmoothing() {
+		pa.setSmoothing(0);		
+	}
 
 }//class MPM_SimMain

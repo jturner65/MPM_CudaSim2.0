@@ -18,7 +18,7 @@
 	<classpathentry kind="lib" path="JCudaLibs/jcublas-natives-0.9.2.jar"/>
 	<classpathentry kind="lib" path="JCudaLibs/jcuda-0.9.2-javadoc.jar"/>
 	<classpathentry kind="lib" path="JCudaLibs/jcuda-0.9.2-sources.jar"/>
-	<classpathentry kind="lib" path="JCudaLibs/jcuda-0.9.2.jar"/>
+	<classpathentry kind="lib" path="JCudaLibs/jcuda-0.9.2.jar" sourcepath="JCudaLibs/jcuda-0.9.2-sources.jar"/>
 	<classpathentry kind="lib" path="JCudaLibs/jcuda-common-0.9.2-javadoc.jar"/>
 	<classpathentry kind="lib" path="JCudaLibs/jcuda-common-0.9.2-sources.jar"/>
 	<classpathentry kind="lib" path="JCudaLibs/jcuda-common-0.9.2.jar"/>
