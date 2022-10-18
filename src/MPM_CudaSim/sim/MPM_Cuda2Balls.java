@@ -31,12 +31,19 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 			HashMap<Integer, Integer> FloatIdxsToIgnore, HashMap<Integer, Integer> BoolIdxsToIgnore) {
 	}//setUIIdxsToIgnorePerSim
 	
+	@Override
+	protected void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {		
+	}//updateSimVals_FromUI_Indiv
+	
+	/**
+	 * First instance of sim should be set to specified layout; subsequent instances are randomly synthesized
+	 */
+	static private boolean doRand = false;	
 	/**
 	 * build particle layout for cuda sim - use multiples of h as radius
 	 * @param partVals [OUT] map of particle locs, initial velocities and min/max vals being constructed
 	 * @param numPartsRequested desired # of particles. May be off a bit from final value - ALWAYS USE SIZE OF PARTVALS FOR COUNT
 	 */
-	static private boolean doRand = false;
 	@Override
 	protected void buildPartLayoutMap(TreeMap<String, ArrayList<float[]>> partVals, int numPartsRequested) {	
 		
@@ -73,16 +80,17 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 				sphere_Ctrs[i] = getRandSphereCenter(maxDim);
 			}
 	        
+	        //Find centralized location between spheres, to use as mutual target
 	        myVectorf ctrTarget = new myVectorf();
 	        for (myVectorf vec : sphere_Ctrs) {
 	        	ctrTarget._add(vec);
 	        }
-	        //absolute target - vary individual target by radius amt to give glancing blows
+	        //absolute target - vary individual target by random radius amt to give glancing blows
 	        ctrTarget._div(sphere_Ctrs.length);
 	        
 	        float[] ctrTargetAra = ctrTarget.asArray(); 
 	        float largestVelMag = -1.0f;
-	        float tarRad = sphereRad*1.25f;
+	        float tarRad = sphereRad*1.75f;
 	        for (int i=0;i<sphere_Ctrs.length;++i) {
 	        	//pick a custom target for the ball to point at for glancing blow potential
 	        	float[] custCtrTarget = getRandPosInSphereAra(tarRad, ctrTargetAra);
@@ -99,25 +107,17 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 
 		int numPartsPerSphere = numPartsRequested/numSpheres; 
 		int numPartsLeftOver =  numPartsRequested % numSpheres; 
-        for (int i=0;i<sphere_Ctrs.length-1;++i) {
+		//use up extra particles, 1 per ball
+        for (int i=0;i<numPartsLeftOver;++i) {
+        	createSphere(partVals, sphereRad, numPartsPerSphere+1, sphere_Vels[i], sphere_Ctrs[i].asArray());
+        }
+        for (int i=numPartsLeftOver;i<sphere_Ctrs.length;++i) {
         	createSphere(partVals, sphereRad, numPartsPerSphere, sphere_Vels[i], sphere_Ctrs[i].asArray());
         }
-        int i = sphere_Ctrs.length-1;
-        createSphere(partVals, sphereRad, numPartsPerSphere + numPartsLeftOver, sphere_Vels[i], sphere_Ctrs[i].asArray());
-//        //lower ball
-//        //createSphere(partVals, sphereRad, numPartsPerSphere, new float [] {xVel, yVel, zVel}, sphere1_Ctr);
-//        createSphere(partVals, sphereRad, numPartsPerSphere, sphere1_Vel, sphere1_Ctr.asArray());
-//		
-//
-//        //upper ball        
-//		//createSphere(partVals, sphereRad, numPartsPerSphere, new float [] {xVel, yVel, zVel}, sphere2_Ctr);
-//		createSphere(partVals, sphereRad, numPartsPerSphere, sphere2_Vel, sphere2_Ctr.asArray());
-
-         //end create particle layout	
+        
+        //end create particle layout	
 	}//buildPartLayout
 
-	
-	
 	
 	@Override
 	//draw scene-specific collider, if it exists
@@ -128,4 +128,5 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 		//TODO any debugging that might be supportable here
 		return false;
 	}//simMeDebug
+
 }//class MPM_Cuda2Balls

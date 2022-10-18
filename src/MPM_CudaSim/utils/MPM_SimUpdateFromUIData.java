@@ -69,10 +69,23 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	 */
 	public boolean shouldSimBeReset(MPM_SimUpdateFromUIData _otr, 
 			HashMap<Integer,Integer> IntIdxsToIgnore, 
-			HashMap<Integer,Integer> ListIdxsToIgnore, 
-			HashMap<Integer,Integer> FloatIdxsToIgnore) {
-		return haveValuesChanged(_otr,IntIdxsToIgnore, ListIdxsToIgnore, FloatIdxsToIgnore);
+			HashMap<Integer,Integer> FloatIdxsToIgnore, 
+			HashMap<Integer,Integer> BoolIdxsToCheck) {
+		return haveValuesChangedExceptPassed(_otr,IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToCheck);
 	}
+	
+	/**
+	 * 
+	 * @param _otr
+	 * @return
+	 */
+	public boolean shouldPartsBeReplaced(MPM_SimUpdateFromUIData _otr, 
+			HashMap<Integer,Integer> IntIdxsToCheck, 
+			HashMap<Integer,Integer> FloatIdxsToCheck, 
+			HashMap<Integer,Integer> BoolIdxsToCheck){
+		return havePassedValuesChanged(_otr,IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck);
+	}
+	
 	
 	@Override
 	public String toString() {

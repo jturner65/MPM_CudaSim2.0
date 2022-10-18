@@ -171,34 +171,41 @@ public abstract class base_MPMCudaSim{
 		//applied locally but not sent to cuda kernel
 		boolean rebuildSim = shouldSimBeRebuilt(upd);
 		
-		//copy UI data to local var 
-		currUIVals.setAllVals(upd);
-		
 		//# of grid cells per side of cube
-		gridCount = currUIVals.getGridCellsPerSide();
+		gridCount = upd.getGridCellsPerSide();
 		//# of particles requested to have in simulator
-		numPartsRequested = currUIVals.getNumParticles();
+		numPartsRequested = upd.getNumParticles();
 		//# of snowballs to make
-		numSnowballs = currUIVals.getNumSnowballs();
+		numSnowballs = upd.getNumSnowballs();
 		//# of simulation steps to perform between renders
-		simStepsPerFrame = currUIVals.getSimStepsPerFrame();
+		simStepsPerFrame = upd.getSimStepsPerFrame();
 
 		//time step
-		deltaT = currUIVals.getTimeStep();
+		deltaT = upd.getTimeStep();
 		//particle mass to use
-		particleMass = currUIVals.getPartMass();			
+		float newMass = upd.getPartMass();
+		//TODO specify that mass has changed - should not require entire sim being rebuilt
+		particleMass = newMass;			
 		//cell size
-		cellSize = currUIVals.getGridCellSize();	
+		cellSize = upd.getGridCellSize();	
 		// wall friction
-		wallFric = currUIVals.getWallFricCoeff();
+		wallFric = upd.getWallFricCoeff();
 		// non-wall collider friction
 		//TODO not yet supported
-		collFric = currUIVals.getCollFricCoeff();
+		collFric = upd.getCollFricCoeff();
 		
 		//update material to match ui values
-		mat.updateMatVals_FromUI(currUIVals);				
+		mat.updateMatVals_FromUI(upd);				
 		
-		// calculated values dependent on UI values
+		//update instancing sim values
+		updateSimVals_FromUI_Indiv(upd);
+		
+		
+		//copy UI data to local var - copy to local last so that values that have changed can be observed
+		currUIVals.setAllVals(upd);
+		
+		
+		// calculated derived values dependent on UI values
 		maxSimBnds = (gridCount*cellSize)/2.0f;
 		minSimBnds = -maxSimBnds;
 		gridDim = maxSimBnds - minSimBnds;		
@@ -212,8 +219,19 @@ public abstract class base_MPMCudaSim{
 			myDispWindow.AppMgr.setSimIsRunning(false);	
 			resetSim();
 		}
-	}//updateMapMorphVals_FromUI
+	}//updateSimVals_FromUI
 	
+	/**
+	 * Update instancing class variables based on potential UI changes
+	 * @param upd
+	 */
+	protected abstract void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd);
+	
+	/**
+	 * Determines whether sim should be rebuilt (re-assign particles and reconstruct kernels) due to UI input   
+	 * @param upd new UI Updater
+	 * @return true if any values in upd are different than current values, excluding values at passed idxs.
+	 */
 	private boolean shouldSimBeRebuilt(MPM_SimUpdateFromUIData upd) {
 		HashMap<Integer,Integer> IntIdxsToIgnore = new HashMap<Integer,Integer>();
 		HashMap<Integer,Integer> FloatIdxsToIgnore = new HashMap<Integer,Integer>();
@@ -225,7 +243,9 @@ public abstract class base_MPMCudaSim{
 		setUIIdxsToIgnorePerSim(IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
 		
 		return upd.shouldSimBeReset(currUIVals, IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
-	}
+	}//shouldSimBeRebuilt
+	
+	
 	
 	/**
 	 * Specify simulation-specific IDXs of UI components to ignore changes of when determining 
@@ -244,14 +264,15 @@ public abstract class base_MPMCudaSim{
 	private void initCUDAModuleSetup() {
 		// Enable exceptions and omit all subsequent error checks
         JCudaDriver.setExceptionsEnabled(true); 
-        //Initialize the driver and create a context for the first device. (device 0
-        //build maps that hold values for cuda grid dim and shared mem size
         
+        // Initialize the driver and create a context for the first device. (device 0)
+        // build maps that hold values for cuda grid dim and shared mem size        
         cuInit(0);
         pctx = new CUcontext();
         dev = new CUdevice();
         cuDeviceGet(dev, 0);
         cuCtxCreate(pctx, 0, dev);
+        
 		// Load the ptx file.
 		module = new CUmodule();
 //		System.out.println("Working Directory = " +  System.getProperty("user.dir"));
@@ -326,7 +347,7 @@ public abstract class base_MPMCudaSim{
         }
         //Allocate memory for particle-related cuda pointers
         cuMemAlloc(part_mass, numPartsFloatSz);  
-        cuMemcpyHtoD(part_mass, 	Pointer.to(h_part_mass), numPartsFloatSz);
+        cuMemcpyHtoD(part_mass, Pointer.to(h_part_mass), numPartsFloatSz);
         cuMemAlloc(part_vol, numPartsFloatSz); 
         cuMemsetD32(part_vol, 0, numPartsActual);	//part_vol is a calculated quantity
 
@@ -437,6 +458,12 @@ public abstract class base_MPMCudaSim{
 		return posRes;
 	}//getRandPosInSphereAra
 	
+	/**
+	 * Get a random location within +/- bound to place sphere. bound should 
+	 * take into account desired sphere's radius, so as to not breach collider box.
+	 * @param bound furthest +/- value per axis to locate center of sphere.
+	 * @return a 3D center coord
+	 */
 	protected myVectorf getRandSphereCenter(float bound) {
 		myVectorf ctr = new myVectorf(
 				ThreadLocalRandom.current().nextDouble(-1,1), 
@@ -461,7 +488,8 @@ public abstract class base_MPMCudaSim{
 		ArrayList<float[]> posMap = partVals.get("pos");
 		ArrayList<float[]> velMap = partVals.get("vel");
 		for (int i=0;i<numParts;++i) {
-			float[] posVals = getRandPosInSphereAra(ballRad, ctr);  			
+			float[] posVals = getRandPosInSphereAra(ballRad, ctr); 
+			//find min/max values for all sphere particles
 			for (int v = 0; v < 3; ++v) {
 				if (posVals[v] < minVals[v]) {					minVals[v] = posVals[v];				} 
 				else if (posVals[v] > maxVals[v]) {				maxVals[v] = posVals[v];				}	
@@ -499,6 +527,7 @@ public abstract class base_MPMCudaSim{
 		
 		//determine sim-specific particle layouts
         buildPartLayoutMap(partVals, numPartsRequested);
+         
        
         return partVals;
 	}//initAllParticles
@@ -528,14 +557,7 @@ public abstract class base_MPMCudaSim{
 	}
 	
 	private void cudaSetup() {   
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Start CUDA Init");
-		if (!getSimFlags(CUDADevInit)) {
-            //init cuda device and kernel file if not done already - only do 1 time
-            initCUDAModuleSetup();
-        }
-		//Build all simulattion values
-		buildSimVals();
-        
+    
         //Re initialize maps of parameters and functions
         kernelParams = new TreeMap<String, Pointer>();
         funcGridDimAndMemSize = new HashMap<String, int[]>();	
@@ -733,6 +755,14 @@ public abstract class base_MPMCudaSim{
 		setSimFlags(simIsBuiltIDX, false);
 		
 		
+		if (!getSimFlags(CUDADevInit)) {
+            //init cuda device and kernel file if not done already - only do 1 time
+			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","CUDA Module load/init");
+            initCUDAModuleSetup();
+        }
+		//Build all simulation values
+		buildSimVals();
+		
 		//rebuild cuda kernel configurations
 		cudaSetup();
 
@@ -861,7 +891,7 @@ public abstract class base_MPMCudaSim{
 			drawCollider(animTimeMod);
 			
 			//if desired, draw grid
-			if(getSimFlags(showGrid)) {	drawGrid();}
+			if(getSimFlags(showGrid)) {	_drawGrid();}
 			//TODO control via UI - scale size of vectors
 			float mult = .01f;
 			if (getSimFlags(showGridVelArrows)) {	_drawGridVec(mult, gridVecClr, h_grid_vel[0], h_grid_vel[1], h_grid_vel[2]);}
@@ -888,7 +918,7 @@ public abstract class base_MPMCudaSim{
 		pa.popMatState();
 	}//drawPointVel
 
-	private void drawGrid() {
+	private void _drawGrid() {
 		int incr = 10;
 		pa.pushMatState();		
 			pa.setStroke(0,0,0,20);
@@ -916,8 +946,8 @@ public abstract class base_MPMCudaSim{
 				}
 			}
 		pa.popMatState();		
-	}//drawGrid()
-	
+	}//_drawGrid()
+
 	private void _drawGridVec(float mult, int[] clr, float[] xVal, float[] yVal, float[] zVal) {
 		float minMag = MyMathUtils.EPS_F/mult;
 		pa.pushMatState();	
