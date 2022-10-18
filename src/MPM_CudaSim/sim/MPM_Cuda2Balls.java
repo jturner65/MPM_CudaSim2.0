@@ -13,7 +13,7 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
 //instance of sim world with 2 big snow boulders slamming into each other 
 public class MPM_Cuda2Balls extends base_MPMCudaSim {
 	//scale w/timestep
-	private static float initVel = 25.0f;
+	private static float initVel = 30.0f;
 	
 	public MPM_Cuda2Balls(IRenderInterface _pa, MPM_SimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa,_win,"Snowball Slam!", _currUIVals);
@@ -97,10 +97,13 @@ public class MPM_Cuda2Balls extends base_MPMCudaSim {
 	        }   
         }
 
-		int numPartsPerSphere = numPartsRequested/numSpheres;        
-        for (int i=0;i<sphere_Ctrs.length;++i) {
+		int numPartsPerSphere = numPartsRequested/numSpheres; 
+		int numPartsLeftOver =  numPartsRequested % numSpheres; 
+        for (int i=0;i<sphere_Ctrs.length-1;++i) {
         	createSphere(partVals, sphereRad, numPartsPerSphere, sphere_Vels[i], sphere_Ctrs[i].asArray());
         }
+        int i = sphere_Ctrs.length-1;
+        createSphere(partVals, sphereRad, numPartsPerSphere + numPartsLeftOver, sphere_Vels[i], sphere_Ctrs[i].asArray());
 //        //lower ball
 //        //createSphere(partVals, sphereRad, numPartsPerSphere, new float [] {xVel, yVel, zVel}, sphere1_Ctr);
 //        createSphere(partVals, sphereRad, numPartsPerSphere, sphere1_Vel, sphere1_Ctr.asArray());
