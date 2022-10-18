@@ -242,7 +242,7 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpUIObjArray.put(gIDX_GridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*initCellSize, "Grid Cell Size", GUIObj_Type.FloatVal, new boolean[]{true}});//grid cell size
 		tmpUIObjArray.put(gIDX_GridCount, new Object[] {new double[]{50, 300, 1}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side", GUIObj_Type.IntVal, new boolean[]{true}}); //# of grid cells per side
 		tmpUIObjArray.put(gIDX_InitYoungMod, new Object[] {new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Young's Modulus", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_InitYoungMod init 4.8e4f, 
-		tmpUIObjArray.put(gIDX_PoissonRatio, new Object[] {new double[]{.01f, 1.0f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_PoissonRatio init 0.2f,  
+		tmpUIObjArray.put(gIDX_PoissonRatio, new Object[] {new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_PoissonRatio init 0.2f,  
 		tmpUIObjArray.put(gIDX_HardeningCoeff , new Object[] {new double[]{1.0f, 100.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_HardeningCoeff init 15.0f, 
 		tmpUIObjArray.put(gIDX_CriticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CriticalCompression  init .019f, 
 		tmpUIObjArray.put(gIDX_CriticalStretch , new Object[] {new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CriticalStretch init .0075f, 
@@ -265,7 +265,6 @@ public class MPM_SimWindow extends myDispWindow {
 	 */
 	@Override
 	protected final void updateCalcObjUIVals() {
-		msgObj.dispConsoleErrorMessage(className, "updateCalcObjUIVals", "Called to update.");
 		currSim.updateSimVals_FromUI((MPM_SimUpdateFromUIData) uiUpdateData);
 	}//updateCalcObjUIVals
 

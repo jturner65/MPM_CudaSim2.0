@@ -1,7 +1,6 @@
 package MPM_CudaSim.sim;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.TreeMap;
 
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
@@ -20,6 +19,7 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
 	 * Centers of currently built spheres
 	 */
 	private myVectorf[] sphere_Ctrs;
+	
 	/**
 	 * Initial Velocities of currently built spheres
 	 */
@@ -43,18 +43,6 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
 	public MPM_CudaBalls(IRenderInterface _pa, MPM_SimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa,_win,"Snowball Slam!", _currUIVals);
 	}	
-
-	/**
-	 * Specify simulation-specific IDXs of UI components to ignore changes of when determining 
-	 * whether or not to rebuild simulation based on UI changes
-	 * @param IntIdxsToIgnore [Out] IDXs to Integer UI components to ignore changes
-	 * @param FloatIdxsToIgnore [Out] IDXs to  UI components to ignore changes
-	 * @param BoolIdxsToIgnore [Out] IDXs to Integer UI components to ignore changes
-	 */
-	@Override
-	protected void setUIIdxsToIgnorePerSim(HashMap<Integer, Integer> IntIdxsToIgnore,
-			HashMap<Integer, Integer> FloatIdxsToIgnore, HashMap<Integer, Integer> BoolIdxsToIgnore) {
-	}//setUIIdxsToIgnorePerSim
 	
 	@Override
 	protected void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
@@ -130,26 +118,7 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
         }   
 		
 	}//buildSphereCtrsAndVels
-	/**
-	 * For when velocity scale changes, does not change locations.
-	 * @return
-	 */
-	private myVectorf[] buildScaledSphereVels() {
-		myVectorf[] scaledVels = new myVectorf[sphere_Vels.length];
-		float largestVelMag = -1.0f;
-		//find largest magnitude velocity vector
-		for (int i=0;i<sphere_Vels.length;++i) {
-        	if(largestVelMag < sphere_Vels[i].magn) {
-        		largestVelMag = sphere_Vels[i].magn;
-        	}			
-		}		
-        float scaleVal = initVel/largestVelMag;
-        for (int i=0;i<sphere_Vels.length;++i) {
-        	scaledVels[i] = myVectorf._mult(sphere_Vels[i],scaleVal);
-        } 			
-		return scaledVels;
-	}
-	
+
 	/**
 	 * Derives sample points around each sphere center. Also finds idxs in partVals map elements for each sphere
 	 * @param partVals
@@ -175,7 +144,18 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
 	 * @param partVals
 	 */
 	protected void setSphereInitVelocities(TreeMap<String, ArrayList<float[]>> partVals) {
-        myVectorf[] scaledVels = buildScaledSphereVels();
+		myVectorf[] scaledVels = new myVectorf[sphere_Vels.length];
+		float largestVelMag = -1.0f;
+		//find largest magnitude velocity vector
+		for (int i=0;i<sphere_Vels.length;++i) {
+        	if(largestVelMag < sphere_Vels[i].magn) {
+        		largestVelMag = sphere_Vels[i].magn;
+        	}			
+		}		
+        float scaleVal = initVel/largestVelMag;
+        for (int i=0;i<sphere_Vels.length;++i) {
+        	scaledVels[i] = myVectorf._mult(sphere_Vels[i],scaleVal);
+        } 			
         for (int i=0;i<idxsForSpheres.length;++i) {
         	setPartInitVelocities(partVals, idxsForSpheres[i][0],idxsForSpheres[i][1], scaledVels[i].asArray());
         }

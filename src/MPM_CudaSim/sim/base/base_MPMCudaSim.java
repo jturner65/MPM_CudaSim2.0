@@ -126,7 +126,7 @@ public abstract class base_MPMCudaSim{
     protected float [][] h_grid_pos, h_grid_vel, h_grid_accel;
     //local rep of grid scalars for rendering
 	protected float[] h_grid_mass;     
-    //colors based on initial location
+    //particle colors based on initial location
     protected int[][] h_part_clr_int;
     
     ////////////////////////////////////////////////////
@@ -213,8 +213,7 @@ public abstract class base_MPMCudaSim{
 		numParts = upd.getNumParticles();
 		//Initial velocity of spheres
 		initVel = upd.getInitVel();
-		
-		
+				
 		////////////////////////////
 		// Requires kernels to be remade but no changes to sim environment
 		// SimResetProcess.RemakeKernel
@@ -228,8 +227,7 @@ public abstract class base_MPMCudaSim{
 		collFric = upd.getCollFricCoeff();
 		// update materials to match ui values
 		mat.updateMatVals_FromUI(upd);				
-		
-		
+				
 		////////////////////////////
 		// Requires no special handling or sim modification
 		// SimResetProcess.DoNothing
@@ -320,40 +318,26 @@ public abstract class base_MPMCudaSim{
 	 */
 	protected abstract void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd);
 	
-	/**
-	 * Determines whether sim should be rebuilt (re-assign particles and reconstruct kernels) due to UI input   
-	 * @param upd new UI Updater
-	 * @return true if any values in upd are different than current values, excluding values at passed idxs.
-	 */
-	private boolean shouldSimBeRebuilt(MPM_SimUpdateFromUIData upd) {
-		HashMap<Integer,Integer> IntIdxsToIgnore = new HashMap<Integer,Integer>();
-		HashMap<Integer,Integer> FloatIdxsToIgnore = new HashMap<Integer,Integer>();
-		HashMap<Integer,Integer> BoolIdxsToIgnore = new HashMap<Integer,Integer>();
-		//specify idxs of UI elements that should not force a sim rebuild across all simulations
-		//i.e. values not sent to cuda kernel
-		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_SimStepsPerFrame, MPM_SimWindow.gIDX_SimStepsPerFrame);
-		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_DrawPointIncr, MPM_SimWindow.gIDX_DrawPointIncr);
-		FloatIdxsToIgnore.put(MPM_SimWindow.gIDX_DrawnValScale, MPM_SimWindow.gIDX_DrawnValScale);
-		FloatIdxsToIgnore.put(MPM_SimWindow.gIDX_InitVel, MPM_SimWindow.gIDX_InitVel);
-		//add idxs that should be ignored for specific simulations
-		setUIIdxsToIgnorePerSim(IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
-		
-		return upd.shouldSimBeReset(currUIVals, IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
-	}//shouldSimBeRebuilt
-	
-	
-	
-	/**
-	 * Specify simulation-specific IDXs of UI components to ignore changes of when determining 
-	 * whether or not to rebuild simulation based on UI changes
-	 * @param IntIdxsToIgnore [Out] IDXs to Integer UI components to ignore changes
-	 * @param FloatIdxsToIgnore [Out] IDXs to  UI components to ignore changes
-	 * @param BoolIdxsToIgnore [Out] IDXs to Integer UI components to ignore changes
-	 */
-	protected abstract void setUIIdxsToIgnorePerSim(HashMap<Integer,Integer> IntIdxsToIgnore, 
-			HashMap<Integer,Integer> FloatIdxsToIgnore, 
-			HashMap<Integer,Integer> BoolIdxsToIgnore);
-	
+//	/**
+//	 * Determines whether sim should be rebuilt (re-assign particles and reconstruct kernels) due to UI input   
+//	 * @param upd new UI Updater
+//	 * @return true if any values in upd are different than current values, excluding values at passed idxs.
+//	 */
+//	private boolean shouldSimBeRebuilt(MPM_SimUpdateFromUIData upd) {
+//		HashMap<Integer,Integer> IntIdxsToIgnore = new HashMap<Integer,Integer>();
+//		HashMap<Integer,Integer> FloatIdxsToIgnore = new HashMap<Integer,Integer>();
+//		HashMap<Integer,Integer> BoolIdxsToIgnore = new HashMap<Integer,Integer>();
+//		//specify idxs of UI elements that should not force a sim rebuild across all simulations
+//		//i.e. values not sent to cuda kernel
+//		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_SimStepsPerFrame, MPM_SimWindow.gIDX_SimStepsPerFrame);
+//		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_DrawPointIncr, MPM_SimWindow.gIDX_DrawPointIncr);
+//		FloatIdxsToIgnore.put(MPM_SimWindow.gIDX_DrawnValScale, MPM_SimWindow.gIDX_DrawnValScale);
+//		FloatIdxsToIgnore.put(MPM_SimWindow.gIDX_InitVel, MPM_SimWindow.gIDX_InitVel);
+//		//add idxs that should be ignored for specific simulations
+//		setUIIdxsToIgnorePerSim(IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
+//		
+//		return upd.shouldSimBeReset(currUIVals, IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
+//	}//shouldSimBeRebuilt
 	
 	/**
 	 * run 1 time to load kernel and assign function pointers to functions
@@ -1032,7 +1016,7 @@ public abstract class base_MPMCudaSim{
 	private final int gridIncr = 10;
 	private void _drawGrid() {
 		pa.pushMatState();		
-			pa.setStroke(0,0,0,20);
+			pa.setStroke(255,255,255,20);
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
 			//shows every "incr" gridcells
 			for (int i=0; i<=gridCount;i+=gridIncr) {
