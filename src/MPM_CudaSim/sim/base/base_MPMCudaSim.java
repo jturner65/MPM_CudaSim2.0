@@ -1011,8 +1011,7 @@ public abstract class base_MPMCudaSim{
 	
 	private void _drawPointVel(int pincr) {
 		pa.pushMatState();
-		float mult = .01f;
-		float minMag = MyMathUtils.EPS_F/mult;
+		float minMag = MyMathUtils.EPS_F/vecLengthScale;
 		for(int i=0;i<=h_part_vel[0].length-pincr;i+=pincr) {					
 			if(		(Math.abs(h_part_vel[0][i]) > minMag) || 
 					(Math.abs(h_part_vel[1][i]) > minMag) || 
@@ -1020,7 +1019,7 @@ public abstract class base_MPMCudaSim{
 				pa.pushMatState();
 				pa.setStroke(h_part_clr_int[i], 100);
 				pa.translate(h_part_pos[0][i], h_part_pos[1][i], h_part_pos[2][i]);
-				pa.drawLine(0,0,0, mult*h_part_vel[0][i],mult*h_part_vel[1][i],mult*h_part_vel[2][i]);
+				pa.drawLine(0,0,0, vecLengthScale*h_part_vel[0][i],vecLengthScale*h_part_vel[1][i],vecLengthScale*h_part_vel[2][i]);
 				pa.popMatState();
 			}
 		}			
