@@ -7,18 +7,6 @@ import MPM_CudaSim.ui.MPM_SimWindow;
 import base_UI_Objects.windowUI.uiData.UIDataUpdater;
 
 public class MPM_SimUpdateFromUIData extends UIDataUpdater {
-	
-	protected int[] IntIDXsToCompare = new int[] {MPM_SimWindow.gIDX_NumParticles, MPM_SimWindow.gIDX_GridCount};
-	protected int[] FloatIDXsToCompare = new int[] {
-			MPM_SimWindow.gIDX_TimeStep, MPM_SimWindow.gIDX_PartMass,
-			MPM_SimWindow.gIDX_GridCellSize, MPM_SimWindow.gIDX_wallFricCoeff,
-			MPM_SimWindow.gIDX_CollFricCoeff, MPM_SimWindow.gIDX_InitYoungMod,
-			MPM_SimWindow.gIDX_PoissonRatio, MPM_SimWindow.gIDX_HardeningCoeff,
-			MPM_SimWindow.gIDX_CriticalCompression, MPM_SimWindow.gIDX_CriticalStretch,
-			MPM_SimWindow.gIDX_AlphaPicFlip
-	};
-	
-	protected int[] BoolIDXsToCompare = new int[] {};
 
 	public MPM_SimUpdateFromUIData(MPM_SimWindow _win) {		super(_win);	}
 	public MPM_SimUpdateFromUIData(MPM_SimWindow _win, Map<Integer, Integer> _iVals, Map<Integer, Float> _fVals,
@@ -34,6 +22,7 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	public int getNumParticles() {return intValues.get(MPM_SimWindow.gIDX_NumParticles);}
 	public int getNumSnowballs() {return intValues.get(MPM_SimWindow.gIDX_NumSnowballs);}
 	public int getGridCellsPerSide() {return intValues.get(MPM_SimWindow.gIDX_GridCount);}
+	public int getDrawPtIncr() {return intValues.get(MPM_SimWindow.gIDX_DrawPointIncr);}
 	
 	/**
 	 * access app-specific floats
@@ -41,9 +30,12 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	//sim related
 	public float getTimeStep() {return floatValues.get(MPM_SimWindow.gIDX_TimeStep);}		 	          
 	public float getPartMass() {return floatValues.get(MPM_SimWindow.gIDX_PartMass);}          
+	public float getInitVel() {return floatValues.get(MPM_SimWindow.gIDX_InitVel);}
 	public float getGridCellSize() {return floatValues.get(MPM_SimWindow.gIDX_GridCellSize);}
 	public float getWallFricCoeff() {return floatValues.get(MPM_SimWindow.gIDX_wallFricCoeff);}		     
-	public float getCollFricCoeff() {return floatValues.get(MPM_SimWindow.gIDX_CollFricCoeff);}       
+	public float getCollFricCoeff() {return floatValues.get(MPM_SimWindow.gIDX_CollFricCoeff);} 
+	public float getDrawnVecScale() {return floatValues.get(MPM_SimWindow.gIDX_DrawnValScale);} 
+	
 
 	//material related
 	public float getInitYoungMod() {return floatValues.get(MPM_SimWindow.gIDX_InitYoungMod);} 			      
@@ -63,6 +55,17 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	 * Utilities
 	 */
 	
+	public boolean haveMaterialValsChanged(MPM_SimUpdateFromUIData _otr) {
+		HashMap<Integer,Integer> FloatIdxsToCheck = new HashMap<Integer,Integer>();		
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_InitYoungMod, MPM_SimWindow.gIDX_InitYoungMod);		 
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_PoissonRatio,MPM_SimWindow.gIDX_PoissonRatio); 			 
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_HardeningCoeff,MPM_SimWindow.gIDX_HardeningCoeff);		 
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_CriticalCompression,MPM_SimWindow.gIDX_CriticalCompression);
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_CriticalStretch,MPM_SimWindow.gIDX_CriticalStretch);    
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_AlphaPicFlip,MPM_SimWindow.gIDX_AlphaPicFlip);	   
+		return havePassedValuesChanged(_otr,new HashMap<Integer,Integer>(), FloatIdxsToCheck, new HashMap<Integer,Integer>());
+	}
+	
 	/**
 	 * Whether or not modifications to UI values that the sim relies on occur, in which case the sim should be reset 
 	 * @return
@@ -79,12 +82,13 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	 * @param _otr
 	 * @return
 	 */
-	public boolean shouldPartsBeReplaced(MPM_SimUpdateFromUIData _otr, 
+	public boolean checkPassedValuesChanged(MPM_SimUpdateFromUIData _otr, 
 			HashMap<Integer,Integer> IntIdxsToCheck, 
 			HashMap<Integer,Integer> FloatIdxsToCheck, 
 			HashMap<Integer,Integer> BoolIdxsToCheck){
 		return havePassedValuesChanged(_otr,IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck);
 	}
+	
 	
 	
 	@Override

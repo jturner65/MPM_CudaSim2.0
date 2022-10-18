@@ -4,7 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-import MPM_CudaSim.sim.MPM_Cuda2Balls;
+import MPM_CudaSim.sim.MPM_CudaBalls;
+import MPM_CudaSim.sim.SimResetProcess;
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
 import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
@@ -25,12 +26,17 @@ public class MPM_SimWindow extends myDispWindow {
 		
 	//////////////////////////////////
 	//initial values of simulation variables
-	protected final float initDeltaT = 4e-4f;
+	//ints
 	protected final int initNumGridCellsPerDim = 200;
 	protected final int initSimStepsPerFrame = 5;
 	protected final int initNumBalls = 2;
-	protected final float initCellSize = .10f;
 	protected final int initNumParts = 100000;
+	protected final int initDrawPtIncr = 1;
+	//floats
+	protected final float initDeltaT = 4e-4f;
+	protected final float initCellSize = .10f;
+	protected final float initVel = 30.0f;
+	
 	//snow density varies from 50 to ~800
 	//powdery snow is about 100
 	//wet firm compacted snow is about 600
@@ -39,6 +45,7 @@ public class MPM_SimWindow extends myDispWindow {
 	protected final float initParticleMass = initCellSize *initCellSize *initCellSize * initParticleDensity; 
 	protected final float initWallFric = 1.0f;
 	protected final float initColFric = 1.0f;
+	protected final float initDrawnVecScale = .01f;
 	
 	//initial values of material quantities
 	protected final float	
@@ -57,17 +64,22 @@ public class MPM_SimWindow extends myDispWindow {
 		gIDX_SimStepsPerFrame		= 1,
 		gIDX_NumParticles			= 2,
 		gIDX_NumSnowballs 			= 3,
-		gIDX_PartMass				= 4,
-		gIDX_GridCellSize			= 5,
-		gIDX_GridCount				= 6,
-		gIDX_InitYoungMod 			= 7,
-		gIDX_PoissonRatio 			= 8,
-		gIDX_HardeningCoeff 		= 9,
-		gIDX_CriticalCompression 	= 10,
-		gIDX_CriticalStretch 		= 11,
-		gIDX_AlphaPicFlip 			= 12,
-		gIDX_wallFricCoeff 			= 13,
-		gIDX_CollFricCoeff			= 14;
+		gIDX_InitVel				= 4,
+		gIDX_PartMass				= 5,
+		gIDX_GridCellSize			= 6,
+		gIDX_GridCount				= 7,
+		gIDX_InitYoungMod 			= 8,
+		gIDX_PoissonRatio 			= 9,
+		gIDX_HardeningCoeff 		= 10,
+		gIDX_CriticalCompression 	= 11,
+		gIDX_CriticalStretch 		= 12,
+		gIDX_AlphaPicFlip 			= 13,
+		gIDX_wallFricCoeff 			= 14,
+		gIDX_CollFricCoeff			= 15,
+		gIDX_DrawnValScale			= 16,
+		gIDX_DrawPointIncr			= 17;
+	
+	public final static int numGuiObjs = 18;
 	
 	//////////////////////////////////////
 	//custom debug/function ui button names -empty will do nothing
@@ -85,15 +97,16 @@ public class MPM_SimWindow extends myDispWindow {
 		debugAnimIDX 			= 0,			//debug
 		resetSimIDX				= 1,			//whether or not to reset sim	
 		resetReqIDX				= 2,			//reset of sim is required for best results
-		showCollider			= 3,			//show collider cylinder
-		showParticles			= 4,
-		showParticleVelArrows 	= 5,			//plot velocity arrows for each particle	
-		showGrid				= 6,  			//plot the computational grid
-		showGridVelArrows 		= 7,			//plot velocity arrows for each gridNode
-		showGridAccelArrows 	= 8,			//plot acceleration arrows for each gridNode
-		showGridMass  			= 9,			//plot variable sized spheres proportional to gridnode mass
-		showActiveNodes  		= 10,				//show the grid nodes influenced by each particle
-		showExecTime			= 11;			//show time of execution for each step in simulation
+		showLocColors			= 3,			//display particles by color of their initial location
+		showCollider			= 4,			//show collider cylinder
+		showParticles			= 5,
+		showParticleVelArrows 	= 6,			//plot velocity arrows for each particle	
+		showGrid				= 7,  			//plot the computational grid
+		showGridVelArrows 		= 8,			//plot velocity arrows for each gridNode
+		showGridAccelArrows 	= 9,			//plot acceleration arrows for each gridNode
+		showGridMass  			= 10,			//plot variable sized spheres proportional to gridnode mass
+		showActiveNodes  		= 11,				//show the grid nodes influenced by each particle
+		showExecTime			= 12;			//show time of execution for each step in simulation
 
 	public static final int numPrivFlags = 12;
 		
@@ -107,6 +120,7 @@ public class MPM_SimWindow extends myDispWindow {
 	public int initAllPrivBtns(ArrayList<Object[]> tmpBtnNamesArray){	
 		tmpBtnNamesArray.add(new Object[]{"Visualization Debug",    "Enable Debug",       debugAnimIDX});          
 		tmpBtnNamesArray.add(new Object[]{"Resetting Simulation",   "Reset Simulation",   resetSimIDX});           
+		tmpBtnNamesArray.add(new Object[]{"Showing Init Loc Clr",   "Show Init Loc Clr",  showLocColors});          
 		tmpBtnNamesArray.add(new Object[]{"Showing Collider",       "Show Collider",      showCollider});          
 		tmpBtnNamesArray.add(new Object[]{"Showing Particles",      "Show Particles",     showParticles});  
 		tmpBtnNamesArray.add(new Object[]{"Showing Particle Vel",   "Show Particle Vel",  showParticleVelArrows});  
@@ -133,23 +147,23 @@ public class MPM_SimWindow extends myDispWindow {
 		//init simulation construct here
 		msgObj.dispInfoMessage(className,"initMe","Start building simulation now.");
 		//build sim(s) here
-		currSim = new MPM_Cuda2Balls(pa, this, (MPM_SimUpdateFromUIData) uiUpdateData);		
+		currSim = new MPM_CudaBalls(pa, this, (MPM_SimUpdateFromUIData) uiUpdateData);		
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		setPrivFlags(showParticles, true);
+		setPrivFlags(showLocColors, true);
 
 	}//initMe	
 
 	@Override
 	protected int[] getFlagIDXsToInitToTrue() {
-		// TODO Auto-generated method stub
-		return null;//new int[] {showCollider, showParticles};
+		//Does not pass value to button handler, just sets value in flag array to true
+		return null;// new int[] {showLocColors, showParticles};
 	}
 
 	//call this to initialize or reinitialize simulation (on reset)
-	protected void reinitSim() {
-		AppMgr.setSimIsRunning(false);		
-		currSim.resetSim();
+	protected void reinitSim() {	
+		currSim.resetSim(SimResetProcess.RemakeKernel);
 	}
 		
 	@Override
@@ -171,6 +185,9 @@ public class MPM_SimWindow extends myDispWindow {
 				break;}						
 			case resetReqIDX			: {//simulation reset not forced, but required for good results				
 				break;}	
+			case showLocColors			: {
+				currSim.setSimFlags(base_MPMCudaSim.showLocColors, val);
+				break;}
 			case showCollider			: {//show collider
 				currSim.setSimFlags(base_MPMCudaSim.showCollider, val);
 				break;}
@@ -201,13 +218,26 @@ public class MPM_SimWindow extends myDispWindow {
 		}		
 	}//setPrivFlags	
 		
-	//initialize structure to hold modifiable menu regions
+	/**
+	 * Build all UI objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
+	 * @param tmpUIObjArray : map of object data, keyed by UI object idx, with array values being :                    
+	 *           the first element double array of min/max/mod values                                                   
+	 *           the 2nd element is starting value                                                                      
+	 *           the 3rd elem is label for object                                                                       
+	 *           the 4th element is object type (GUIObj_Type enum)
+	 *           the 5th element is boolean array of : (unspecified values default to false)
+	 *           	{value is sent to owning window, 
+	 *           	value is sent on any modifications (while being modified, not just on release), 
+	 *           	changes to value must be explicitly sent to consumer (are not automatically sent)}    
+	 * @param tmpListObjVals : map of list object possible selection values
+	 */
 	@Override
-	protected void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){		
+	protected final void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){		
 		tmpUIObjArray.put(gIDX_TimeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step", GUIObj_Type.FloatVal, new boolean[]{true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
 		tmpUIObjArray.put(gIDX_SimStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame", GUIObj_Type.IntVal, new boolean[]{true}});//gIDX_simStepsPerFrame  init 5
-		tmpUIObjArray.put(gIDX_NumParticles, new Object[] {new double[]{100, 1000000, 100}, 1.0*initNumParts, "# of Particles", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
-		tmpUIObjArray.put(gIDX_NumSnowballs, new Object[] {new double[]{2, 10, 1}, 1.0*initNumBalls, "# of Snowballs", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
+		tmpUIObjArray.put(gIDX_NumParticles, new Object[] {new double[]{1000, 1000000, 100}, 1.0*initNumParts, "# of Particles", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
+		tmpUIObjArray.put(gIDX_NumSnowballs, new Object[] {new double[]{2, 10, 1}, 1.0*initNumBalls, "# of Snowballs", GUIObj_Type.IntVal, new boolean[]{true}});//number of snowballs
+		tmpUIObjArray.put(gIDX_InitVel, new Object[] {new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed", GUIObj_Type.FloatVal, new boolean[]{true}});//initial speed of collisions
 		tmpUIObjArray.put(gIDX_PartMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass", GUIObj_Type.FloatVal, new boolean[]{true}});//particle mass
 		tmpUIObjArray.put(gIDX_GridCellSize, new Object[] {new double[]{.001, .1, .001}, 1.0*initCellSize, "Grid Cell Size", GUIObj_Type.FloatVal, new boolean[]{true}});//grid cell size
 		tmpUIObjArray.put(gIDX_GridCount, new Object[] {new double[]{50, 300, 1}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side", GUIObj_Type.IntVal, new boolean[]{true}}); //# of grid cells per side
@@ -219,6 +249,8 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpUIObjArray.put(gIDX_AlphaPicFlip, new Object[] {new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_AlphaPicFlip init 0.95f, 
 		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_wallfricCoeffinit 1.0f  
 		tmpUIObjArray.put(gIDX_CollFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CollfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_DrawnValScale, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CollfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_DrawPointIncr, new Object[] {new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point", GUIObj_Type.IntVal, new boolean[]{true}});//every x'th point to draw
 	}//setupGUIObjsAras
 	/**
 	 * This function would provide an instance of the override class for base_UpdateFromUIData, which would
@@ -252,6 +284,7 @@ public class MPM_SimWindow extends myDispWindow {
 			case gIDX_NumSnowballs			:{break;}
 			case gIDX_GridCount				:{break;}
 			case gIDX_SimStepsPerFrame 		:{break;}
+			case gIDX_DrawPointIncr			:{break;}
 			default : {
 				msgObj.dispWarningMessage(className, "setUI_IntValsCustom", "No int-defined gui object mapped to idx :"+UIidx);
 				break;}
@@ -270,6 +303,7 @@ public class MPM_SimWindow extends myDispWindow {
 	protected final void setUI_FloatValsCustom(int UIidx, float val, float oldVal) {
 		switch(UIidx){		
 			case gIDX_TimeStep 				:{break;}
+			case gIDX_InitVel				:{break;}
 			case gIDX_PartMass 				:{break;}
 			case gIDX_GridCellSize			:{break;}
 			case gIDX_InitYoungMod 			:{break;}
@@ -280,6 +314,7 @@ public class MPM_SimWindow extends myDispWindow {
 			case gIDX_AlphaPicFlip 			:{break;}
 			case gIDX_wallFricCoeff 		:{break;}
 			case gIDX_CollFricCoeff 		:{break;}
+			case gIDX_DrawnValScale			:{break;}
 			default : {
 				msgObj.dispWarningMessage(className, "setUI_FloatValsCustom", "No float-defined gui object mapped to idx :"+UIidx);
 				break;}
@@ -306,7 +341,6 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	//modAmtMillis is time passed per frame in milliseconds
 	protected boolean simMe(float modAmtMillis) {//run simulation
-		//pa.outStr2Scr("took : " + (pa.millis() - stVal) + " millis to simulate");
 		boolean done = false;
 		if (getPrivFlags(showExecTime)){
 			done = currSim.simMeDebug(modAmtMillis);
@@ -320,10 +354,6 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	//animTimeMod is in seconds.
 	protected void drawMe(float animTimeMod) {
-//		curMseLookVec = pa.c.getMse2DtoMse3DinWorld(pa.sceneCtrVals[pa.sceneIDX]);			//need to be here
-//		curMseLoc3D = pa.c.getMseLoc(pa.sceneCtrVals[pa.sceneIDX]);
-		
-		//TODO draw simulation results here
 		currSim.drawMe(animTimeMod);
 	}//drawMe	
 		

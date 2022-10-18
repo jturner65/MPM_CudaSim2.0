@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import MPM_CudaSim.material.myMaterial;
+import MPM_CudaSim.sim.SimResetProcess;
 import MPM_CudaSim.ui.MPM_SimWindow;
 import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
@@ -25,6 +26,7 @@ import jcuda.runtime.JCuda;
  * different configurations/initialization setups
  */
 public abstract class base_MPMCudaSim{	
+
 	public static IRenderInterface pa;
 	//name of instancing sim
 	public final String simName;
@@ -50,16 +52,17 @@ public abstract class base_MPMCudaSim{
 	public static final int
 		debugSimIDX 			= 0,
 		simIsBuiltIDX			= 1,			//simulation is finished being built
-		showCollider			= 2,			//display visual rep of collider object, if one exists
-		showParticles			= 3,			//display visual rep of material points
-		showParticleVelArrows 	= 4,			//plot velocity arrows for each particle	
-		showGrid				= 5,			//plot the computational grid
-		showGridVelArrows 		= 6,			//plot velocity arrows for each gridNode
-		showGridAccelArrows 	= 7,			//plot acceleration arrows for each gridNode
-		showGridMass  			= 8,			//plot variable sized spheres proportional to gridnode mass
-		showActiveNodes		  	= 9,			//show the grid nodes influenced by each particle
-		CUDADevInit				= 10;			//if 1 time cuda device and kernel file init is complete
-	protected static final int numSimFlags = 11;
+		showLocColors			= 2,			//display particles by color of their initial location
+		showCollider			= 3,			//display visual rep of collider object, if one exists
+		showParticles			= 4,			//display visual rep of material points
+		showParticleVelArrows 	= 5,			//plot velocity arrows for each particle	
+		showGrid				= 6,			//plot the computational grid
+		showGridVelArrows 		= 7,			//plot velocity arrows for each gridNode
+		showGridAccelArrows 	= 8,			//plot acceleration arrows for each gridNode
+		showGridMass  			= 9,			//plot variable sized spheres proportional to gridnode mass
+		showActiveNodes		  	= 10,			//show the grid nodes influenced by each particle
+		CUDADevInit				= 11;			//if 1 time cuda device and kernel file init is complete
+	protected static final int numSimFlags = 12;
 
 	//time of current process start, from initial construction of mapmgr - TODO use this to monitor specific process time elapsed.  set to 0 at beginning of a particular process, then measure time elapsed in process
 	protected long simStartTime;
@@ -73,9 +76,17 @@ public abstract class base_MPMCudaSim{
 	// This facilitates CUDA calcs and access to appropriately configured CUDA args
 	protected TreeMap<String, Pointer> kernelParams;
 	protected TreeMap<String, CUfunction> cuFuncs;
-	// Lists of functions to perform for algorithms - these are used to iterate through the maps of 
+	/**
+	 * Lists of names of kernel functions to perform for MPM algorithm.   
+	 */
 	protected String[] CUFileFuncNames = new String[] {"projectToGridandComputeForces","projectToGridInit", "computeVol", "updPartVelocities",  "compGridVelocities", "partCollAndUpdPos", "gridCollisions", "clearGrid", "updDeformationGradient" };
+	/**
+	 * These are the individual kernel functions to execute in order for initialization of simulation
+	 */
 	protected String[] initStepFuncKeys = new String[] {"clearGrid","projectToGridInit", "computeVol","compGridVelocities", "gridCollisions", "updDeformationGradient", "updPartVelocities", "partCollAndUpdPos"}; 
+	/**
+	 * These are the individual kernel functions to execute in order for each sim step
+	 */
 	protected String[] simStepFuncKeys = new String[] {"clearGrid", "projectToGridandComputeForces", "compGridVelocities", "gridCollisions", "updDeformationGradient", "updPartVelocities", "partCollAndUpdPos"}; 
    
 	protected HashMap<String, int[]> funcGridDimAndMemSize;
@@ -104,6 +115,9 @@ public abstract class base_MPMCudaSim{
 	//# of cuda threads
     protected final int numCUDAThreads=128;
     
+    //Raw initial particle values
+    TreeMap<String, ArrayList<float[]>> partVals;
+    
     ////////////////////////////////////////////////////
     //representations for rendering
     //local representation of particle vector quantities for rendering
@@ -118,19 +132,21 @@ public abstract class base_MPMCudaSim{
     ////////////////////////////////////////////////////
     //Sim instance variables, populated from currUIVals structure on creation/ui update
     
-	//# of particles requested to have in sim - actual number may vary from this depending on how sim is built
-	protected int numPartsRequested;
 	//# of snowballs - all particles evenly distrbuted amongst this many snowballs
 	protected int numSnowballs;
-	//# of particles actually created
-	private int numPartsActual;
-	//iterations per frame
+	//# of particles total in the sim
+	protected int numParts;
+	//sim iterations per frame
     protected int simStepsPerFrame;	
 	//# of cells per side - cube so same in all 3 dims; # of particles in sim
 	protected int gridCount;
-
+	//Fraction of points to draw (every x'th point will be drawn)
+	protected int drawPointIncr;
+	
 	//timestep of simulation - 
 	protected float deltaT;
+	//Initial particle velocities
+	protected float initVel;
 	//mass of particles
 	protected float particleMass;
 	//size of single dimension of grid cell
@@ -141,6 +157,8 @@ public abstract class base_MPMCudaSim{
     protected float wallFric;
     //TODO support this
     protected float collFric;
+	//Scaling value to scale drawn vectors
+	protected float vecLengthScale;
     	
 	//grid count per side - center grid always in display; grid cell dim per side
 	//@SuppressWarnings("unchecked")
@@ -158,6 +176,12 @@ public abstract class base_MPMCudaSim{
 		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
 		//setup flag array
 		initSimFlags();		
+		//redundant, but placed to specify that cuda kernel needs to be loaded
+		setSimFlags(CUDADevInit,false);
+		//Hold sim setup particle values
+		partVals = new TreeMap<String, ArrayList<float[]>>();
+		
+		
 		//set up grid and initialize sim with UI values and reset sim
 		updateSimVals_FromUI(_currUIVals);
 	}//MPM_ABS_Sim
@@ -167,59 +191,128 @@ public abstract class base_MPMCudaSim{
 	 * @param upd
 	 */
 	public final void updateSimVals_FromUI(MPM_SimUpdateFromUIData upd) {
-		//If we should rebuild/reset sim or not.If not, values will be 
-		//applied locally but not sent to cuda kernel
-		boolean rebuildSim = shouldSimBeRebuilt(upd);
+		
+		//Determine level of reset required
+		//Some UI changes should not require any changes to sim, others might require only remaking the kernels
+		SimResetProcess procToDo = checkValuesForChanges(upd);
+		///////////////////////
+		// Require complete rebuild
+		// SimResetProcess.RebuildSim
 		
 		//# of grid cells per side of cube
 		gridCount = upd.getGridCellsPerSide();
-		//# of particles requested to have in simulator
-		numPartsRequested = upd.getNumParticles();
 		//# of snowballs to make
 		numSnowballs = upd.getNumSnowballs();
-		//# of simulation steps to perform between renders
-		simStepsPerFrame = upd.getSimStepsPerFrame();
-
-		//time step
-		deltaT = upd.getTimeStep();
-		//particle mass to use
-		float newMass = upd.getPartMass();
-		//TODO specify that mass has changed - should not require entire sim being rebuilt
-		particleMass = newMass;			
 		//cell size
 		cellSize = upd.getGridCellSize();	
+		
+		////////////////////////////
+		// Require remaking objects, but can retain # of objects, centers and base velocities
+		// SimResetProcess.ResetSim
+		//# of particles requested to have in simulator
+		numParts = upd.getNumParticles();
+		//Initial velocity of spheres
+		initVel = upd.getInitVel();
+		
+		
+		////////////////////////////
+		// Requires kernels to be remade but no changes to sim environment
+		// SimResetProcess.RemakeKernel
+		//time step
+		deltaT = upd.getTimeStep();		
+		//particle mass to use
+		particleMass = upd.getPartMass();	
 		// wall friction
 		wallFric = upd.getWallFricCoeff();
-		// non-wall collider friction
-		//TODO not yet supported
+		// non-wall collider friction : TODO not yet supported
 		collFric = upd.getCollFricCoeff();
-		
-		//update material to match ui values
+		// update materials to match ui values
 		mat.updateMatVals_FromUI(upd);				
 		
-		//update instancing sim values
-		updateSimVals_FromUI_Indiv(upd);
 		
+		////////////////////////////
+		// Requires no special handling or sim modification
+		// SimResetProcess.DoNothing
+		//# of simulation steps to perform between renders
+		simStepsPerFrame = upd.getSimStepsPerFrame();
+		//every x'th point to draw - use higher values to draw fewer points
+		drawPointIncr = upd.getDrawPtIncr();
+		//drawn vector/scalar quantities scaling
+		vecLengthScale = upd.getDrawnVecScale();		
 		
-		//copy UI data to local var - copy to local last so that values that have changed can be observed
-		currUIVals.setAllVals(upd);
-		
-		
+		////////////////////////////
 		// calculated derived values dependent on UI values
 		maxSimBnds = (gridCount*cellSize)/2.0f;
 		minSimBnds = -maxSimBnds;
-		gridDim = maxSimBnds - minSimBnds;		
+		gridDim = maxSimBnds - minSimBnds;	
 		//scale amount to fill 1500 x 1500 x 1500 visualization cube
 		sclAmt = myDispWindow.AppMgr.gridDimX/(gridCount * cellSize);
-		//win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "updateSimVals_FromUI", "Scale Amt : "+sclAmt+" | win gridDimX : "+ myDispWindow.AppMgr.gridDimX);
-		if (rebuildSim) {
-			setSimFlags(simIsBuiltIDX, false);		
-			//UI changes forced reset of the simulator
-			//stop simulation and reset
-			myDispWindow.AppMgr.setSimIsRunning(false);	
-			resetSim();
-		}
+		//float size of particle arrays
+		numPartsFloatSz = numParts * Sizeof.FLOAT; 
+		//# cuda blocks for particle functions
+		numBlocksParticles = numParts/numCUDAThreads+1;
+		//total grid size       
+        ttlGridCount=gridCount*gridCount*gridCount;
+        //init grid ptrs        
+        numGridFloatSz = ttlGridCount * Sizeof.FLOAT;
+        //# cuda blocks for grid based functions			
+		numBlocksGrid = ttlGridCount/numCUDAThreads+1;			
+		
+		//update instancing sim values
+		updateSimVals_FromUI_Indiv(upd);
+				
+		//copy UI data to local var - copy to local last so that values that have changed can be observed
+		currUIVals.setAllVals(upd);
+		
+		//UI changes forced reset of the simulator
+		resetSim(procToDo);		
+		
 	}//updateSimVals_FromUI
+	
+	protected SimResetProcess checkValuesForChanges(MPM_SimUpdateFromUIData upd) {
+		HashMap<Integer,Integer> IntIdxsToCheck = new HashMap<Integer,Integer>();
+		HashMap<Integer,Integer> FloatIdxsToCheck = new HashMap<Integer,Integer>();
+		HashMap<Integer,Integer> BoolIdxsToCheck = new HashMap<Integer,Integer>();
+
+		IntIdxsToCheck.put(MPM_SimWindow.gIDX_GridCount, MPM_SimWindow.gIDX_GridCount);
+		IntIdxsToCheck.put(MPM_SimWindow.gIDX_NumSnowballs, MPM_SimWindow.gIDX_NumSnowballs);
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_GridCellSize, MPM_SimWindow.gIDX_GridCellSize);
+		
+		if(upd.checkPassedValuesChanged(currUIVals, IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck)) {
+			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RebuildSim");
+			return SimResetProcess.RebuildSim;
+		}
+		
+		IntIdxsToCheck.clear();
+		FloatIdxsToCheck.clear();
+
+		IntIdxsToCheck.put(MPM_SimWindow.gIDX_NumParticles, MPM_SimWindow.gIDX_NumParticles);
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_InitVel, MPM_SimWindow.gIDX_InitVel);		
+		if(upd.checkPassedValuesChanged(currUIVals, IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck)) {
+			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.ResetSim");
+			return SimResetProcess.ResetSim;
+		}
+		
+		
+		boolean matsHaveChanged = upd.haveMaterialValsChanged(currUIVals);
+		if(matsHaveChanged) {
+			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Materials have changed; Specifying SimResetProcess.RemakeKernel");
+			return SimResetProcess.RemakeKernel;			
+		}
+		IntIdxsToCheck.clear();
+		FloatIdxsToCheck.clear();
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_TimeStep, MPM_SimWindow.gIDX_TimeStep);		
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_PartMass, MPM_SimWindow.gIDX_PartMass);		
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_wallFricCoeff, MPM_SimWindow.gIDX_wallFricCoeff);		
+		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_CollFricCoeff, MPM_SimWindow.gIDX_CollFricCoeff);		
+		
+		if(upd.checkPassedValuesChanged(currUIVals, IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck)) {
+			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RemakeKernel");
+			return SimResetProcess.RemakeKernel;
+		}
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing");
+		return SimResetProcess.DoNothing;
+	}
 	
 	/**
 	 * Update instancing class variables based on potential UI changes
@@ -239,6 +332,9 @@ public abstract class base_MPMCudaSim{
 		//specify idxs of UI elements that should not force a sim rebuild across all simulations
 		//i.e. values not sent to cuda kernel
 		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_SimStepsPerFrame, MPM_SimWindow.gIDX_SimStepsPerFrame);
+		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_DrawPointIncr, MPM_SimWindow.gIDX_DrawPointIncr);
+		FloatIdxsToIgnore.put(MPM_SimWindow.gIDX_DrawnValScale, MPM_SimWindow.gIDX_DrawnValScale);
+		FloatIdxsToIgnore.put(MPM_SimWindow.gIDX_InitVel, MPM_SimWindow.gIDX_InitVel);
 		//add idxs that should be ignored for specific simulations
 		setUIIdxsToIgnorePerSim(IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
 		
@@ -257,6 +353,7 @@ public abstract class base_MPMCudaSim{
 	protected abstract void setUIIdxsToIgnorePerSim(HashMap<Integer,Integer> IntIdxsToIgnore, 
 			HashMap<Integer,Integer> FloatIdxsToIgnore, 
 			HashMap<Integer,Integer> BoolIdxsToIgnore);
+	
 	
 	/**
 	 * run 1 time to load kernel and assign function pointers to functions
@@ -284,13 +381,14 @@ public abstract class base_MPMCudaSim{
 //			System.out.println(e.getMessage());
 //		}
 		
+		//Load Cuda module from ptxFileName
 		cuModuleLoad(module, ptxFileName);    	
 		
-        // Obtain a function pointer to each function in cuda kernel file
+        //Obtain a function pointer to each function in cuda kernel file and save it in cuFuncs
 		cuFuncs = new TreeMap<String, CUfunction>();
 		for (int i =0;i<CUFileFuncNames.length; ++i) {
 			String key = CUFileFuncNames[i];			
-			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "initOnceCUDASetup","\tRegistering Kernel Function Key : " + key);
+			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "initOnceCUDASetup","\tRegistering Kernel Function Key : " + key);
 			CUfunction c = new CUfunction();			
 			cuModuleGetFunction(c, module, key);
 			cuFuncs.put(key,  c);
@@ -307,50 +405,44 @@ public abstract class base_MPMCudaSim{
 	
 	/**
 	 * allocate dev mem for all objects based on number of particles
-	 * @param partVals
-	 * @param numPartsActual
 	 */
-	private void initCUDAMemPtrs_Parts(TreeMap<String, ArrayList<float[]>> partVals, int numPartsActual) {
-        float h_part_mass[] = new float[numPartsActual];
-        float h_part_eye[] = new float[numPartsActual];
+	private void initCUDAMemPtrs_Parts() {
+        float h_part_mass[] = new float[numParts];
+        float h_part_eye[] = new float[numParts];
         //making class variables so can be rendered
         h_part_pos = new float[3][];
         h_part_vel = new float[3][];
         for(int i=0;i<h_part_pos.length;++i) {
-        	h_part_pos[i] = new float[numPartsActual];
-        	h_part_vel[i] = new float[numPartsActual];
+        	h_part_pos[i] = new float[numParts];
+        	h_part_vel[i] = new float[numParts];
         }
        
-        h_part_clr_int = new int[numPartsActual][3];
         
         float[] minVals = partVals.get("minMaxVals").get(0);
         float[] maxVals = partVals.get("minMaxVals").get(1);       
         float[] posAra, velAra;
         
-        
-        for(int i = 0; i < numPartsActual; ++i){
+        h_part_clr_int = new int[numParts][3];        
+        for(int i = 0; i < numParts; ++i){
         	h_part_mass[i] = particleMass;
         	posAra = partVals.get("pos").get(i);
-        	velAra = partVals.get("vel").get(i);
-        	
+        	velAra = partVals.get("vel").get(i);        	
         	for(int j=0;j<h_part_pos.length;++j) {
         		h_part_pos[j][i] = posAra[j];
         		h_part_vel[j][i] = velAra[j];
         	}
-        	int[] clrAra = new int[3];
-        	for(int j=0;j<clrAra.length;++j) {
-        		clrAra[j] = getClrValInt(h_part_pos[j][i],minVals[j],maxVals[j]);
+        	for(int j=0;j<h_part_clr_int[i].length;++j) {
+        		h_part_clr_int[i][j] = getClrValInt(h_part_pos[j][i],minVals[j],maxVals[j]);
         	}
-        	h_part_clr_int[i] = clrAra;
         	h_part_eye[i]=1.0f;
-
         }
+        
         //Allocate memory for particle-related cuda pointers
+        cuMemAlloc(part_vol, numPartsFloatSz); 
+        cuMemsetD32(part_vol, 0, numParts);	//part_vol is a calculated quantity
         cuMemAlloc(part_mass, numPartsFloatSz);  
         cuMemcpyHtoD(part_mass, Pointer.to(h_part_mass), numPartsFloatSz);
-        cuMemAlloc(part_vol, numPartsFloatSz); 
-        cuMemsetD32(part_vol, 0, numPartsActual);	//part_vol is a calculated quantity
-
+        
         for(int i=0;i<part_pos.length;++i) {
            	cuMemAlloc(part_pos[i], numPartsFloatSz); 
            	cuMemAlloc(part_vel[i], numPartsFloatSz);
@@ -361,19 +453,20 @@ public abstract class base_MPMCudaSim{
                 cuMemAlloc(part_fp[i][j], numPartsFloatSz); 
                 if(i==j) {
                     cuMemcpyHtoD(part_fe[i][j],	Pointer.to(h_part_eye), numPartsFloatSz);                    
-                    cuMemcpyHtoD(part_fp[i][j],	Pointer.to(h_part_eye), numPartsFloatSz);             	
+                    cuMemcpyHtoD(part_fp[i][j],	Pointer.to(h_part_eye), numPartsFloatSz);             	       	
                 } else {
-                    cuMemsetD32(part_fe[i][j], 0, numPartsActual);                    
-                    cuMemsetD32(part_fp[i][j], 0, numPartsActual);             	
+                    cuMemsetD32(part_fe[i][j], 0, numParts);                    
+                    cuMemsetD32(part_fp[i][j], 0, numParts);             	
                 }        	
             }    	        	
         }
+        
     }//initCUDAMemPtrs_Parts
 	
 	/**
 	 * allocate dev mem for all objects based on number of grid cells
 	 */
-	private void initCUDAMemPtrs_Grids(int ttlGridCount) {   		
+	private void initCUDAMemPtrs_Grids() {   		
 		h_grid_pos = new float[3][];
 		h_grid_vel = new float[3][];
 		h_grid_accel = new float[3][];
@@ -474,7 +567,7 @@ public abstract class base_MPMCudaSim{
 	}//getRandSphereCenter
 		
 	/**
-	 * create a sphere with given center, with passed # of particles -0 returns ball radius
+	 * create a sphere with given center, with passed # of particles -0 returns array of [start IDX,end IDX] within posVals array for this sphere
 	 * @param partVals map holding all appropriate particle values
 	 * @param ballRad desired radius of sphere
 	 * @param numParts
@@ -482,11 +575,12 @@ public abstract class base_MPMCudaSim{
 	 * @param ctr
 	 * @return
 	 */
-	protected final float createSphere(TreeMap<String, ArrayList<float[]>> partVals, float ballRad, int numParts, myVectorf initVel, float[] ctr) {   		 
+	protected final int[] createSphere(TreeMap<String, ArrayList<float[]>> partVals, float ballRad, int numParts, float[] ctr) {   		 
 		float[] minVals = partVals.get("minMaxVals").get(0);
 		float[] maxVals = partVals.get("minMaxVals").get(1); 
 		ArrayList<float[]> posMap = partVals.get("pos");
-		ArrayList<float[]> velMap = partVals.get("vel");
+		int[] returnIdxs = new int[2];
+		returnIdxs[0] = posMap.size();
 		for (int i=0;i<numParts;++i) {
 			float[] posVals = getRandPosInSphereAra(ballRad, ctr); 
 			//find min/max values for all sphere particles
@@ -495,75 +589,53 @@ public abstract class base_MPMCudaSim{
 				else if (posVals[v] > maxVals[v]) {				maxVals[v] = posVals[v];				}	
 			}
 			posMap.add(posVals);
-			//set init vel
-			velMap.add(initVel.asArray());
         }
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "createSphere",
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "createSphere",
 				"Created a sphere of radius " + ballRad + " with "+numParts+" particles, centered at [" +ctr[0] +"," +ctr[1] +"," +ctr[2] + "].");
-		
-		return ballRad;
+		returnIdxs[1] = posMap.size();
+		return returnIdxs;
 	}//createSphere
+	
+	protected final void setPartInitVelocities(TreeMap<String, ArrayList<float[]>> partVals, int stIdx, int endIdx, float[] initVel) {
+		ArrayList<float[]> velMap = partVals.get("vel");
+		for (int i=stIdx; i<endIdx;++i) {
+			velMap.add(initVel);
+		}
+	}//setPartInitVelocities
 
 	/**
 	 * build initial layout for particles for this simulation
 	 * @param partVals [OUT] map of particle locs, initial velocities and min/max vals being constructed
-	 * @param numPartsRequested desired # of particles. May be off a bit from final value - ALWAYS USE SIZE OF PARTVALS FOR COUNT
 	 */
-	protected abstract void buildPartLayoutMap(TreeMap<String, ArrayList<float[]>> partVals, int numPartsRequested);		
+	protected abstract void buildPartLayoutMap(TreeMap<String, ArrayList<float[]>> partVals);	
 	
 	/**
-	 * initialize all particle values held in treemap keyed by particle quantities
+	 * Reinitialize existing sim - will resynthesize sample points but will not rederive locations of sim objs.
+	 * @param partVals
 	 */
-	private TreeMap<String, ArrayList<float[]>> initAllParticles() {
-		//Build the particle layout for this simulation
-        //create base particle layout
-        TreeMap<String, ArrayList<float[]>> partVals = new TreeMap<String, ArrayList<float[]>>();
+	protected abstract void reinitSimObjects(TreeMap<String, ArrayList<float[]>> partVals);	
+	
+	/**
+	 * Reinitialize partVals map
+	 */
+	protected final void initPartValsMap() {
+		partVals.clear();
         partVals.put("pos",new ArrayList<float[]>());
         partVals.put("vel",new ArrayList<float[]>());
+        //Used to map colors of particles
         partVals.put("minMaxVals",new ArrayList<float[]>());
         //initialize min and max values
         partVals.get("minMaxVals").add(new float[] {100000.0f,100000.0f,100000.0f});
-        partVals.get("minMaxVals").add(new float[] {-100000.0f,-100000.0f,-100000.0f});      
-		
-		//determine sim-specific particle layouts
-        buildPartLayoutMap(partVals, numPartsRequested);
-         
-       
-        return partVals;
-	}//initAllParticles
-	
-	private void buildSimVals() {        
-        //initialize all particle values
-        TreeMap<String, ArrayList<float[]>> initPartVals = initAllParticles();       
-        
-        //# of particles may not be what is requested, depending on how particles are generated
-        numPartsActual = initPartVals.get("pos").size();
-        numPartsFloatSz = numPartsActual * Sizeof.FLOAT;    
-        
-        win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "buildSimVals","Total # of particles in simulation : " + numPartsActual);
-
-        //init ptrs to particle-based arrays - numparts and numPartsFloatSz need to be initialized by here
-        initCUDAMemPtrs_Parts(initPartVals, numPartsActual);		
-
-		//total grid size       
-        ttlGridCount=gridCount*gridCount*gridCount;
-
-        //init grid ptrs        
-        numGridFloatSz = ttlGridCount * Sizeof.FLOAT;
-        initCUDAMemPtrs_Grids(ttlGridCount);
-              
-        numBlocksParticles = numPartsActual/numCUDAThreads+1;
-        numBlocksGrid = ttlGridCount/numCUDAThreads+1;
+        partVals.get("minMaxVals").add(new float[] {-100000.0f,-100000.0f,-100000.0f}); 
 	}
 	
-	private void cudaSetup() {   
-    
+	private void cudaSetup() {    
         //Re initialize maps of parameters and functions
         kernelParams = new TreeMap<String, Pointer>();
-        funcGridDimAndMemSize = new HashMap<String, int[]>();	
-		
+        funcGridDimAndMemSize = new HashMap<String, int[]>();
+        
         kernelParams.put("projectToGridandComputeForces",Pointer.to(
-        		Pointer.to(new int[] {numPartsActual}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
+        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
         		Pointer.to(mat.getLambda0Ptr()), Pointer.to(mat.getMu0Ptr()), Pointer.to(mat.getHardeningCoeffPtr()),
         		Pointer.to(part_mass), Pointer.to(part_vol),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
@@ -583,21 +655,21 @@ public abstract class base_MPMCudaSim{
         funcGridDimAndMemSize.put("projectToGridandComputeForces", new int[] {numBlocksParticles*4, 0});
 		
         kernelParams.put("projectToGridInit", Pointer.to(
-				Pointer.to(new int[] {numPartsActual}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(part_mass),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(grid_mass)));
         funcGridDimAndMemSize.put("projectToGridInit", new int[] {numBlocksParticles, 0});
 		
 		kernelParams.put("computeVol", Pointer.to(
-				Pointer.to(new int[] {numPartsActual}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(part_mass),Pointer.to(part_vol),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(grid_mass)));
 		funcGridDimAndMemSize.put("computeVol", new int[] {numBlocksParticles, 0});
 		
 		kernelParams.put("updPartVelocities",Pointer.to(
-				Pointer.to(new int[] {numPartsActual}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
+				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(mat.getAlphaPicFlipPtr()),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2]),
@@ -629,7 +701,7 @@ public abstract class base_MPMCudaSim{
 		funcGridDimAndMemSize.put("gridCollisions", new int[] {numBlocksGrid, 0});
 
         kernelParams.put("updDeformationGradient", Pointer.to(
-        		Pointer.to(new int[] {numPartsActual}), Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {deltaT}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
+        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {deltaT}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
         		Pointer.to(mat.getCriticalCompressionPtr()), Pointer.to(mat.getCriticalStretchPtr()),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
     			//elastic matrix
@@ -645,19 +717,21 @@ public abstract class base_MPMCudaSim{
         funcGridDimAndMemSize.put("updDeformationGradient", new int[] {numBlocksParticles, 0});  
         
         kernelParams.put("partCollAndUpdPos", Pointer.to(
-        		Pointer.to(new int[] {numPartsActual}), Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
+        		Pointer.to(new int[] {numParts}), Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
         		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {deltaT}),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2])				
         		));   
         funcGridDimAndMemSize.put("partCollAndUpdPos", new int[] {numBlocksParticles, 0});        
    
-        win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished CUDA Init | Launch first MPM Pass.");
+        win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "cudaSetup","Finished CUDA Init | Launch first MPM Pass.");
 	 	//launch init functions
-        for (int j=0;j<initStepFuncKeys.length;++j) {        	launchKernel(initStepFuncKeys[j]);	}
+        for (int j=0;j<initStepFuncKeys.length;++j) {
+        	//win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "cudaSetup","\tinitStepFuncKeys Handle : "+initStepFuncKeys[j]);
+        	launchKernel(initStepFuncKeys[j]);	}
 
     	setSimFlags(simIsBuiltIDX, true);
-    	win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "cudaSetup","Finished first MPM Pass.");
+    	win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "cudaSetup","Finished first MPM Pass.");
 	}//cudaSetup
 	
 	/**
@@ -666,17 +740,22 @@ public abstract class base_MPMCudaSim{
 	 * @param key string key of kernel to launch
 	 */
 	private void launchKernel(String key) {
-		int[] kernelVal = funcGridDimAndMemSize.get(key);
-		//dispMessage("MPM_Abs_CUDASim : "+simName, "launchKernel","Launching kernel : " + cuFuncs.get(key) + " with kernelVal[0] : " +kernelVal[0] + " kernelVal[1] : " + kernelVal[1]+" kernelParams.get(key) : "+  kernelParams.get(key) + " key : "+key , MsgCodes.info1);
-		
+		//Set context properly before launching kernels
+		JCudaDriver.cuCtxSetCurrent(pctx);
+		int[] kernalDims = funcGridDimAndMemSize.get(key);
         cuLaunchKernel(cuFuncs.get(key), 
-        		kernelVal[0], 1, 1,           // Grid dimension 
+        		kernalDims[0], 1, 1,           // Grid dimension 
                 numCUDAThreads, 1, 1,  // Block dimension
-                kernelVal[1], null,           // Shared memory size and stream 
+                kernalDims[1], null,           // Shared memory size and stream 
                 kernelParams.get(key), null);// Kernel- and extra parameters		
 	}
     
-	//compiles Ptx file from file in passed file name -> cuFileName needs to have format "xxxxx.cu"
+	/**
+	 * Compiles Ptx file from file in passed file name -> cuFileName needs to have format "xxxxx.cu"
+	 * @param krnFileName Cuda source code kernel file name
+	 * @param ptxFileName File name for output Cuda ptx file.
+	 * @throws IOException
+	 */
 	public final void compilePtxFile(String krnFileName, String ptxFileName) throws IOException {
 		File cuFile = new File(krnFileName);
 		if (!cuFile.exists()) {
@@ -686,7 +765,7 @@ public abstract class base_MPMCudaSim{
 		//build compilation command
 		String command = "nvcc " + modelString + " -ptx " + cuFile.getPath() + " -o " + ptxFileName;
 		//execute compilation
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "compilePtxFile","Executing\n" + command);
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "compilePtxFile","Executing\n" + command);
 		Process process = Runtime.getRuntime().exec(command);
 
 		String errorMessage = new String(toByteArray(process.getErrorStream())), 
@@ -699,12 +778,12 @@ public abstract class base_MPMCudaSim{
 		}
 
 		if (exitValue != 0) {
-			win.getMsgObj().dispErrorMessage("MPM_Abs_CUDASim : "+simName, "compilePtxFile","nvcc process error : exitValue : " + exitValue);
-			win.getMsgObj().dispErrorMessage("MPM_Abs_CUDASim : "+simName, "compilePtxFile","errorMessage :\n" + errorMessage);
-			win.getMsgObj().dispErrorMessage("MPM_Abs_CUDASim : "+simName, "compilePtxFile","outputMessage :\n" + outputMessage);
+			win.getMsgObj().dispErrorMessage("MPM_Abs_CUDASim:"+simName, "compilePtxFile","nvcc process error : exitValue : " + exitValue);
+			win.getMsgObj().dispErrorMessage("MPM_Abs_CUDASim:"+simName, "compilePtxFile","errorMessage :\n" + errorMessage);
+			win.getMsgObj().dispErrorMessage("MPM_Abs_CUDASim:"+simName, "compilePtxFile","outputMessage :\n" + outputMessage);
 			throw new IOException("Could not create .ptx file: " + errorMessage);
 		}
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Finished compiling PTX file : "+ ptxFileName);
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "compilePtxFile","Finished compiling PTX file : "+ ptxFileName);
 	}//compilePtxFile
 
     /**
@@ -725,11 +804,39 @@ public abstract class base_MPMCudaSim{
         return bytes.toByteArray();
     }
     
+    private final void buildSimEnvironment(SimResetProcess rebuildSim) {
+        //initialize all particle values
+		//Build the particle layout for this simulation
+		initPartValsMap();     
+		
+		//determine sim-specific particle layouts
+		if (rebuildSim == SimResetProcess.RebuildSim) {
+			//call this if we wish to rebuild simulation layout
+			buildPartLayoutMap(partVals);
+		} else {
+			//call this if we want to reinitialize existing simulation configuration
+			reinitSimObjects(partVals);
+		}      	
+    }//handlePartValsMap
+    
+    
     /**
      * Reset simulation environment
-     * @param freeCuda
+     * @param rebuildSim Should entire sim environment be rebuilt?
      */
-	public final void resetSim() {
+	public final void resetSim(SimResetProcess rebuildSim) {
+		if (rebuildSim == SimResetProcess.DoNothing) {
+			return;
+		}
+		//stop simulation and reset
+		myDispWindow.AppMgr.setSimIsRunning(false);	
+		//setSimFlags(CUDADevInit,false);
+		setSimFlags(simIsBuiltIDX, false);	
+		//if only remaking kernel, don't rebuild simulation environment
+		if (rebuildSim != SimResetProcess.RemakeKernel) {
+			buildSimEnvironment(rebuildSim);
+		}       
+		
 		//reset active ptrs
 		JCuda.cudaFree(part_mass);		  
         JCuda.cudaFree(part_vol); 
@@ -749,30 +856,27 @@ public abstract class base_MPMCudaSim{
 		//sim start time - time from when sim object was first instanced
 		simStartTime = getCurTime();	
 		
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Start resetting sim");
-
-		setSimFlags(CUDADevInit,false);
-		setSimFlags(simIsBuiltIDX, false);
-		
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "resetSim","Start resetting sim");
 		
 		if (!getSimFlags(CUDADevInit)) {
             //init cuda device and kernel file if not done already - only do 1 time
-			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","CUDA Module load/init");
+			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "resetSim","CUDA Module load/init");
             initCUDAModuleSetup();
         }
-		//Build all simulation values
-		buildSimVals();
-		
+
+		//Set context
+		JCudaDriver.cuCtxSetCurrent(pctx);    
+        //init ptrs to particle-based arrays - numparts and numPartsFloatSz need to be initialized by here
+        initCUDAMemPtrs_Parts();		
+        //initialize pointers to grid-based arrays
+        initCUDAMemPtrs_Grids();		
 		//rebuild cuda kernel configurations
 		cudaSetup();
 
 		setSimFlags(simIsBuiltIDX, true);
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "resetSim","Finished resetting sim");
-	}//initOnce
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "resetSim","Finished resetting sim");
+	}//resetSim
 
-
-	//only called after particles are built
-	public void setSimPartsAreBuilt() {setSimFlags(simIsBuiltIDX, true);}
 	
 	//boolean flag handling
 	protected void initSimFlags(){simFlags = new int[1 + numSimFlags/32]; for(int i = 0; i<numSimFlags; ++i){setSimFlags(i,false);}}
@@ -784,7 +888,8 @@ public abstract class base_MPMCudaSim{
 		simFlags[flIDX] = (val ?  simFlags[flIDX] | mask : simFlags[flIDX] & ~mask);
 		switch(idx){
 			case debugSimIDX 			: {break;}	
-			case simIsBuiltIDX 			: {break;}		
+			case simIsBuiltIDX 			: {break;}			
+			case showLocColors 			: {break;}
 			case showCollider 			: {break;}
 			case showParticles			: {break;}
 			case showParticleVelArrows 	: {break;}
@@ -803,28 +908,26 @@ public abstract class base_MPMCudaSim{
 	 * @return true when simulation run is complete - true turns run sim flag off
 	 */	
 	public final boolean simMe(float modAmtMillis) {
-	 	JCudaDriver.cuCtxSetCurrent(pctx);
  		for (int i=0;i<simStepsPerFrame;++i) { 	        
  			//for every sim step, launch each kernel by key specified in simStepFuncKeys
 			for (int j=0;j<simStepFuncKeys.length;++j) {	        	launchKernel(simStepFuncKeys[j]);		}
  		}
  		
- 		if((getSimFlags(showParticles)) || getSimFlags(showParticleVelArrows)) {
-			//copy from device data to host particle position arrays
- 			for(int i=0;i<h_part_pos.length;++i) {			cuMemcpyDtoH(Pointer.to(h_part_pos[i]),part_pos[i], numPartsFloatSz);			}
+		//copy from device data to host particle position or velocity arrays
+ 		if(getSimFlags(showParticles) || getSimFlags(showParticleVelArrows)) {
+ 			for(int i=0;i<h_part_pos.length;++i) {		cuMemcpyDtoH(Pointer.to(h_part_pos[i]),part_pos[i], numPartsFloatSz);}
  		} 		
 		
  		if(getSimFlags(showParticleVelArrows)) {
- 			for(int i=0;i<h_part_vel.length;++i) { 				cuMemcpyDtoH(Pointer.to(h_part_vel[i]),part_vel[i], numPartsFloatSz);			}
+ 			for(int i=0;i<h_part_vel.length;++i) { 		cuMemcpyDtoH(Pointer.to(h_part_vel[i]),part_vel[i], numPartsFloatSz);}
  		}
- 		
+ 		//copy from device data to host grid velocity, accel or mass arrays
 		if(getSimFlags(showGridVelArrows)) {
- 			for(int i=0;i<h_grid_vel.length;++i) { 				cuMemcpyDtoH(Pointer.to(h_grid_vel[i]),grid_newvel[i], numGridFloatSz);			}
+ 			for(int i=0;i<h_grid_vel.length;++i) { 		cuMemcpyDtoH(Pointer.to(h_grid_vel[i]),grid_newvel[i], numGridFloatSz);}
 		}
 		if(getSimFlags(showGridAccelArrows)) {
- 			for(int i=0;i<h_grid_accel.length;++i) { 				cuMemcpyDtoH(Pointer.to(h_grid_accel[i]),grid_force[i], numGridFloatSz);			}		
-		}
-		
+ 			for(int i=0;i<h_grid_accel.length;++i) { 	cuMemcpyDtoH(Pointer.to(h_grid_accel[i]),grid_force[i], numGridFloatSz);}		
+		}		
 		if(getSimFlags(showGridMass)) {
 			cuMemcpyDtoH(Pointer.to(h_grid_mass),grid_mass, numGridFloatSz);	
 		}
@@ -832,12 +935,16 @@ public abstract class base_MPMCudaSim{
 		return false;
 	}//simMe
 	
-	//sim method to show execution time for each step
+	/**
+	 * sim method to show execution time and debug information for each sim step
+	 * @param modAmtMillis
+	 * @return
+	 */
 	public abstract boolean simMeDebug(float modAmtMillis);	//simMeDebug	
 
-	public void showTimeMsgSimStart(String _str) {win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - simStartTime));}
+	public void showTimeMsgSimStart(String _str) {win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "showTimeMsgSimStart",_str+" Time Now : "+(getCurTime() - simStartTime));}
 	//display message and time now
-	public void showTimeMsgNow(String _str, long stTime) {	win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim : "+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - stTime)+" ms");}
+	public void showTimeMsgNow(String _str, long stTime) {	win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - stTime)+" ms");}
 	
 	/////////////////////////////
 	// utility : time stamp; display messages; state flags
@@ -845,7 +952,7 @@ public abstract class base_MPMCudaSim{
 	//get time from "start time" (ctor run for map manager)
 	protected long getCurTime() {			
 		Instant instant = Instant.now();
-		return instant.toEpochMilli() - expMgrBuiltTime;//milliseconds since 1/1/1970, subtracting when mapmgr was built to keep millis low		
+		return instant.toEpochMilli() - expMgrBuiltTime;//milliseconds since 1/1/1970, subtracting when sim was built to keep millis low		
 	}//getCurTime() 	
 	//returns a positive int value in millis of current world time since sim start
 	protected long getCurSimTime() {	return getCurTime() - simStartTime;}
@@ -864,6 +971,7 @@ public abstract class base_MPMCudaSim{
 
 	
 	private final int[] gridVecClr = new int[] {250,0,0}, gridAccelClr = new int[] {0,0,250}, gridMassClr = new int[] {0,150,50};
+	private final int[] whitePoints = new int[] {255,255,255}; 
 
 	//draw 1 frame of results	//animTimeMod is in seconds, counting # of seconds since last draw
 	public final void drawMe(float animTimeMod) {
@@ -874,33 +982,34 @@ public abstract class base_MPMCudaSim{
 			pa.setStrokeWt(2.0f/sclAmt);
 			pa.scale(sclAmt);	
 			
-			//TODO control via UI - draw ever pincr points in point array
-			int pincr = 1;
 			//draw material points
 			if(getSimFlags(showParticles)){	
 				pa.pushMatState();
-				pa.drawPointCloudWithColors(h_part_pos[0].length, pincr, h_part_clr_int, h_part_pos[0], h_part_pos[1], h_part_pos[2]);
+				if (getSimFlags(showLocColors)) {
+					pa.drawPointCloudWithColors(h_part_pos[0].length, drawPointIncr, h_part_clr_int, h_part_pos[0], h_part_pos[1], h_part_pos[2]);
+				} else {
+					pa.drawPointCloudWithColor(h_part_pos[0].length, drawPointIncr, whitePoints, h_part_pos[0], h_part_pos[1], h_part_pos[2]);
+				}
 				pa.popMatState();
 			} 
 			
 			if(getSimFlags(showParticleVelArrows)){
-				drawPointVel(pincr);
+				_drawPointVel(drawPointIncr);
 			}
 			
 			//draw colliders, if exist
-			drawCollider(animTimeMod);
-			
+			if(getSimFlags(showCollider)){
+				_drawColliders(animTimeMod);
+			}
 			//if desired, draw grid
 			if(getSimFlags(showGrid)) {	_drawGrid();}
-			//TODO control via UI - scale size of vectors
-			float mult = .01f;
-			if (getSimFlags(showGridVelArrows)) {	_drawGridVec(mult, gridVecClr, h_grid_vel[0], h_grid_vel[1], h_grid_vel[2]);}
-			if (getSimFlags(showGridAccelArrows)){	_drawGridVec(mult, gridAccelClr, h_grid_accel[0], h_grid_accel[1], h_grid_accel[2]);}
-			if(getSimFlags(showGridMass)) {			_drawGridScalar(mult, gridMassClr, h_grid_mass);}
+			if (getSimFlags(showGridVelArrows)) {	_drawGridVec(gridVecClr, h_grid_vel[0], h_grid_vel[1], h_grid_vel[2]);}
+			if (getSimFlags(showGridAccelArrows)){	_drawGridVec(gridAccelClr, h_grid_accel[0], h_grid_accel[1], h_grid_accel[2]);}
+			if(getSimFlags(showGridMass)) {			_drawGridScalar(gridMassClr, h_grid_mass);}
 		pa.popMatState();
 	}//drawMe
 	
-	private void drawPointVel(int pincr) {
+	private void _drawPointVel(int pincr) {
 		pa.pushMatState();
 		float mult = .01f;
 		float minMag = MyMathUtils.EPS_F/mult;
@@ -917,29 +1026,32 @@ public abstract class base_MPMCudaSim{
 		}			
 		pa.popMatState();
 	}//drawPointVel
-
+	
+	/**
+	 * Every 10th grid line should be drawn
+	 */
+	private final int gridIncr = 10;
 	private void _drawGrid() {
-		int incr = 10;
 		pa.pushMatState();		
 			pa.setStroke(0,0,0,20);
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
 			//shows every "incr" gridcells
-			for (int i=0; i<=gridCount;i+=incr) {
+			for (int i=0; i<=gridCount;i+=gridIncr) {
 				float iLoc = i*cellSize;
-				for(int j=0;j<=gridCount;j+=incr) {
+				for(int j=0;j<=gridCount;j+=gridIncr) {
 					myVectorf startPos=new myVectorf(iLoc,j*cellSize,0.0f);
 					myVectorf endPos=new myVectorf(iLoc, startPos.y,gridDim);
 					pa.drawLine(startPos,endPos);
 				}
-				for(int k=0;k<=gridCount;k+=incr) {
+				for(int k=0;k<=gridCount;k+=gridIncr) {
 					myVectorf startPos=new myVectorf(iLoc,0.0f, k*cellSize);
 					myVectorf endPos=new myVectorf(iLoc,gridDim,startPos.z);
 					pa.drawLine(startPos,endPos);
 				}
 			}
-			for(int j=0;j<=gridCount;j+=incr) {
+			for(int j=0;j<=gridCount;j+=gridIncr) {
 				float jLoc = j*cellSize;
-				for(int k=0;k<=gridCount;k+=incr) {
+				for(int k=0;k<=gridCount;k+=gridIncr) {
 					myVectorf startPos=new myVectorf(0.0f,jLoc,k*cellSize);
 					myVectorf endPos=new myVectorf(gridDim,jLoc,startPos.z);
 					pa.drawLine(startPos,endPos);
@@ -948,8 +1060,8 @@ public abstract class base_MPMCudaSim{
 		pa.popMatState();		
 	}//_drawGrid()
 
-	private void _drawGridVec(float mult, int[] clr, float[] xVal, float[] yVal, float[] zVal) {
-		float minMag = MyMathUtils.EPS_F/mult;
+	private void _drawGridVec(int[] clr, float[] xVal, float[] yVal, float[] zVal) {
+		float minMag = MyMathUtils.EPS_F/vecLengthScale;
 		pa.pushMatState();	
 		pa.setStroke(clr,20);
 		pa.translate(minSimBnds,minSimBnds,minSimBnds);
@@ -959,15 +1071,15 @@ public abstract class base_MPMCudaSim{
 					(Math.abs(zVal[i]) > minMag)) {
 				pa.pushMatState();	
 				pa.translate(h_grid_pos[0][i], h_grid_pos[1][i], h_grid_pos[2][i]);
-				pa.drawLine(0,0,0, mult*xVal[i],mult*yVal[i],mult*zVal[i]);
+				pa.drawLine(0,0,0, vecLengthScale*xVal[i],vecLengthScale*yVal[i],vecLengthScale*zVal[i]);
 				pa.popMatState();
 			}
 		}
 		pa.popMatState();
 	}
 	
-	private void _drawGridScalar(float mult, int[] clr, float[] xVal) {
-		float minMag = MyMathUtils.EPS_F/(.01f * mult);
+	private void _drawGridScalar(int[] clr, float[] xVal) {
+		float minMag = MyMathUtils.EPS_F/vecLengthScale;
 		pa.pushMatState();	
 		pa.setSphereDetail(4);
 		pa.setStroke(clr,20);
@@ -976,15 +1088,24 @@ public abstract class base_MPMCudaSim{
 			if(		(Math.abs(xVal[i]) > minMag)) {
 				pa.pushMatState();	
 				pa.translate(h_grid_pos[0][i], h_grid_pos[1][i], h_grid_pos[2][i]);
-				pa.drawSphere(xVal[i]*mult);
+				pa.drawSphere(xVal[i]*vecLengthScale);
 				pa.popMatState();
 			}
 		}
 		pa.popMatState();		
 	}
 	
+	/**
+	 * Draw any colliders if they exist
+	 * @param animTimeMod
+	 */
+	private void _drawColliders(float animTimeMod) {
+		pa.pushMatState();	
+		drawColliders_Indiv(animTimeMod);
+		pa.popMatState();
+	}
 	//draw internal-to-sim colliders, if they exist
-	protected abstract void drawCollider(float animTimeMod);
+	protected abstract void drawColliders_Indiv(float animTimeMod);
 	
 	//some utility functions and constants
 	protected myPointf Pf(myPointf O, float x, myVectorf I, double y, myVectorf J, double z, myVectorf K) {return new myPointf(O.x+x*I.x+y*J.x+z*K.x,O.y+x*I.y+y*J.y+z*K.y,O.z+x*I.z+y*J.z+z*K.z);}  // O+xI+yJ+zK
