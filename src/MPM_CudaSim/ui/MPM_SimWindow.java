@@ -96,7 +96,7 @@ public class MPM_SimWindow extends myDispWindow {
 	public static final int 
 		debugAnimIDX 			= 0,			//debug
 		resetSimIDX				= 1,			//whether or not to reset sim	
-		resetReqIDX				= 2,			//reset of sim is required for best results
+		rebuildSimIDX			= 2,			//reset of sim is required for best results
 		showLocColors			= 3,			//display particles by color of their initial location
 		showCollider			= 4,			//show collider cylinder
 		showParticles			= 5,
@@ -119,7 +119,8 @@ public class MPM_SimWindow extends myDispWindow {
 	//initialize all private-flag based UI buttons here - called by base class
 	public int initAllPrivBtns(ArrayList<Object[]> tmpBtnNamesArray){	
 		tmpBtnNamesArray.add(new Object[]{"Visualization Debug",    "Enable Debug",       debugAnimIDX});          
-		tmpBtnNamesArray.add(new Object[]{"Resetting Simulation",   "Reset Simulation",   resetSimIDX});           
+		tmpBtnNamesArray.add(new Object[]{"Resetting Sim Env",   	"Reset Sim Environment",  resetSimIDX});      
+		tmpBtnNamesArray.add(new Object[]{"Remaking Simulation",    "Remake Simulation",   rebuildSimIDX});
 		tmpBtnNamesArray.add(new Object[]{"Showing Init Loc Clr",   "Show Init Loc Clr",  showLocColors});          
 		tmpBtnNamesArray.add(new Object[]{"Showing Collider",       "Show Collider",      showCollider});          
 		tmpBtnNamesArray.add(new Object[]{"Showing Particles",      "Show Particles",     showParticles});  
@@ -162,8 +163,8 @@ public class MPM_SimWindow extends myDispWindow {
 	}
 
 	//call this to initialize or reinitialize simulation (on reset)
-	protected void reinitSim() {	
-		currSim.resetSim(SimResetProcess.RemakeKernel);
+	protected void reinitSim(SimResetProcess process) {	
+		currSim.resetSim(process);
 	}
 		
 	@Override
@@ -179,11 +180,15 @@ public class MPM_SimWindow extends myDispWindow {
 				break;}
 			case resetSimIDX			: {
 				if(val) {
-					reinitSim();
+					reinitSim(SimResetProcess.RemakeKernel);
 					addPrivBtnToClear(resetSimIDX);
 				}
 				break;}						
-			case resetReqIDX			: {//simulation reset not forced, but required for good results				
+			case rebuildSimIDX			: {//Rebuild sim environment
+				if(val) {
+					reinitSim(SimResetProcess.RebuildSim);
+					addPrivBtnToClear(rebuildSimIDX);
+				}
 				break;}	
 			case showLocColors			: {
 				currSim.setSimFlags(base_MPMCudaSim.showLocColors, val);
