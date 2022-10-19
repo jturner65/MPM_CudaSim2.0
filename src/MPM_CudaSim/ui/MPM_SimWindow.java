@@ -258,7 +258,7 @@ public class MPM_SimWindow extends myDispWindow {
 		tmpUIObjArray.put(gIDX_DrawPointIncr, new Object[] {new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point", GUIObj_Type.IntVal, new boolean[]{true}});//every x'th point to draw
 	}//setupGUIObjsAras
 	/**
-	 * This function would provide an instance of the override class for base_UpdateFromUIData, which would
+	 * This function provides an instance of the override class for base_UpdateFromUIData, which would
 	 * be used to communicate changes in UI settings directly to the value consumers.
 	 */
 	@Override

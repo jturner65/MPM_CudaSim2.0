@@ -93,8 +93,8 @@ public abstract class base_MPMCudaSim{
 	
 	////////////////////////////////////////////////////
     // CUDA references
-    protected CUcontext pctx;
     protected CUdevice dev;
+    protected CUcontext context;
     protected CUmodule module;
     protected CUgraphicsResource pCudaResource;
 	// CUDA Device ptr constructions
@@ -318,27 +318,6 @@ public abstract class base_MPMCudaSim{
 	 */
 	protected abstract void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd);
 	
-//	/**
-//	 * Determines whether sim should be rebuilt (re-assign particles and reconstruct kernels) due to UI input   
-//	 * @param upd new UI Updater
-//	 * @return true if any values in upd are different than current values, excluding values at passed idxs.
-//	 */
-//	private boolean shouldSimBeRebuilt(MPM_SimUpdateFromUIData upd) {
-//		HashMap<Integer,Integer> IntIdxsToIgnore = new HashMap<Integer,Integer>();
-//		HashMap<Integer,Integer> FloatIdxsToIgnore = new HashMap<Integer,Integer>();
-//		HashMap<Integer,Integer> BoolIdxsToIgnore = new HashMap<Integer,Integer>();
-//		//specify idxs of UI elements that should not force a sim rebuild across all simulations
-//		//i.e. values not sent to cuda kernel
-//		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_SimStepsPerFrame, MPM_SimWindow.gIDX_SimStepsPerFrame);
-//		IntIdxsToIgnore.put(MPM_SimWindow.gIDX_DrawPointIncr, MPM_SimWindow.gIDX_DrawPointIncr);
-//		FloatIdxsToIgnore.put(MPM_SimWindow.gIDX_DrawnValScale, MPM_SimWindow.gIDX_DrawnValScale);
-//		FloatIdxsToIgnore.put(MPM_SimWindow.gIDX_InitVel, MPM_SimWindow.gIDX_InitVel);
-//		//add idxs that should be ignored for specific simulations
-//		setUIIdxsToIgnorePerSim(IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
-//		
-//		return upd.shouldSimBeReset(currUIVals, IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToIgnore);
-//	}//shouldSimBeRebuilt
-	
 	/**
 	 * run 1 time to load kernel and assign function pointers to functions
 	 */
@@ -349,14 +328,13 @@ public abstract class base_MPMCudaSim{
         // Initialize the driver and create a context for the first device. (device 0)
         // build maps that hold values for cuda grid dim and shared mem size        
         cuInit(0);
-        pctx = new CUcontext();
         dev = new CUdevice();
+        context = new CUcontext();
         cuDeviceGet(dev, 0);
-        cuCtxCreate(pctx, 0, dev);
+        cuCtxCreate(context, 0, dev);
         
 		// Load the ptx file.
 		module = new CUmodule();
-//		System.out.println("Working Directory = " +  System.getProperty("user.dir"));
 //		try {
 //			compilePtxFile("src\\Cuda\\MPM_ABS_Sim.cu","MPM_ABS_Sim.ptx");
 //			ptxFileName = "MPM_ABS_Sim.ptx";
@@ -470,6 +448,7 @@ public abstract class base_MPMCudaSim{
 				for(int k=0;k<gridCount;++k) {
 					float zPos = (k+.5f)*cellSize;
 					//weird orientation stuffs
+					//TODO fix grid orientation
 					h_grid_pos[0][gridDim] = zPos;
 					h_grid_pos[1][gridDim] = yPos;
 					h_grid_pos[2][gridDim] = xPos;					
@@ -492,7 +471,9 @@ public abstract class base_MPMCudaSim{
         }
 	}//initCUDAMemPtrs_Grids
 	
-	//Only performed from ctor
+	/**
+	 * Only performed from ctor
+	 */
 	private final void buildCudaDeviceConstructs() {
 		part_mass = new CUdeviceptr();   		part_vol = new CUdeviceptr();   
 		grid_mass = new CUdeviceptr();    
@@ -725,13 +706,15 @@ public abstract class base_MPMCudaSim{
 	 */
 	private void launchKernel(String key) {
 		//Set context properly before launching kernels
-		JCudaDriver.cuCtxSetCurrent(pctx);
+		JCudaDriver.cuCtxSetCurrent(context);
 		int[] kernalDims = funcGridDimAndMemSize.get(key);
         cuLaunchKernel(cuFuncs.get(key), 
         		kernalDims[0], 1, 1,           // Grid dimension 
                 numCUDAThreads, 1, 1,  // Block dimension
                 kernalDims[1], null,           // Shared memory size and stream 
-                kernelParams.get(key), null);// Kernel- and extra parameters		
+                kernelParams.get(key), null);// Kernel- and extra parameters
+        //Allow kernel to complete
+        cuCtxSynchronize();
 	}
     
 	/**
@@ -849,7 +832,7 @@ public abstract class base_MPMCudaSim{
         }
 
 		//Set context
-		JCudaDriver.cuCtxSetCurrent(pctx);    
+		JCudaDriver.cuCtxSetCurrent(context);    
         //init ptrs to particle-based arrays - numparts and numPartsFloatSz need to be initialized by here
         initCUDAMemPtrs_Parts();		
         //initialize pointers to grid-based arrays
