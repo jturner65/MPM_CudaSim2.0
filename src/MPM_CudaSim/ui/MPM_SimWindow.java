@@ -83,14 +83,7 @@ public class MPM_SimWindow extends myDispWindow {
 	
 	//////////////////////////////////////
 	//custom debug/function ui button names -empty will do nothing
-	public String[][] menuBtnNames = new String[][] {	//each must have literals for every button defined in side bar menu, or ignored
-		{"Func 00", "Func 01", "Func 02"},				//row 1
-		{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 2
-		{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 3
-		{"Func 20", "Func 21", "Func 22", "Func 23"},	//row 4
-		{"Func 30", "Func 31", "Func 32", "Func 33","Func 34"}	//dbg
-	};
-	
+
 	//////////////////////////////////////
 	//private child-class flags - window specific
 	public static final int 
@@ -146,7 +139,7 @@ public class MPM_SimWindow extends myDispWindow {
 		setFlags(drawRightSideMenu, true);
 		
 		//init simulation construct here
-		msgObj.dispInfoMessage(className,"initMe","Start building simulation now.");
+		msgObj.dispInfoMessage(className+"(MPM_SimWindow)","initMe","Start building simulation now.");
 		//build sim(s) here
 		currSim = new MPM_CudaBalls(pa, this, (MPM_SimUpdateFromUIData) uiUpdateData);		
 		//initialize simulation here to simple world sim
@@ -290,7 +283,7 @@ public class MPM_SimWindow extends myDispWindow {
 			case gIDX_SimStepsPerFrame 		:{break;}
 			case gIDX_DrawPointIncr			:{break;}
 			default : {
-				msgObj.dispWarningMessage(className, "setUI_IntValsCustom", "No int-defined gui object mapped to idx :"+UIidx);
+				msgObj.dispWarningMessage(className+"(MPM_SimWindow)", "setUI_IntValsCustom", "No int-defined gui object mapped to idx :"+UIidx);
 				break;}
 		}				
 	}//setUI_IntValsCustom
@@ -320,7 +313,7 @@ public class MPM_SimWindow extends myDispWindow {
 			case gIDX_CollFricCoeff 		:{break;}
 			case gIDX_DrawnValScale			:{break;}
 			default : {
-				msgObj.dispWarningMessage(className, "setUI_FloatValsCustom", "No float-defined gui object mapped to idx :"+UIidx);
+				msgObj.dispWarningMessage(className+"(MPM_SimWindow)", "setUI_FloatValsCustom", "No float-defined gui object mapped to idx :"+UIidx);
 				break;}
 		}				
 	}//setUI_FloatValsCustom	
@@ -376,7 +369,7 @@ public class MPM_SimWindow extends myDispWindow {
 	protected void closeMe() {}	
 	@Override
 	//stopping simulation
-	protected void stopMe() {	msgObj.dispInfoMessage(className,"stopMe","Simulation Finished");	}	
+	protected void stopMe() {	msgObj.dispInfoMessage(className+"(MPM_SimWindow)","stopMe","Simulation Finished");	}	
 	
 	@Override
 	public void processTrajIndiv(myDrawnSmplTraj drawnNoteTraj){	}
@@ -418,15 +411,127 @@ public class MPM_SimWindow extends myDispWindow {
 	protected void resizeMe(float scale) { }
 	@Override
 	protected void showMe() {}
-
+	/**
+	 * type is row of buttons (1st idx in curCustBtn array) 2nd idx is btn
+	 * @param funcRow idx for button row
+	 * @param btn idx for button within row (column)
+	 * @param label label for this button (for display purposes)
+	 */
 	@Override
-	protected final void launchMenuBtnHndlr(int funcRow, int btn) {	}
-
+	protected final void launchMenuBtnHndlr(int funcRow, int btn, String label){
+		msgObj.dispMessage(className+"(MPM_SimWindow)", "launchMenuBtnHndlr", "Begin requested action : Click '" + label +"' (Row:"+(funcRow+1)+"|Col:"+btn+") in " + name, MsgCodes.info4);
+		switch (funcRow) {
+			case 0: {// row 1 of menu side bar buttons
+				switch (btn) {
+					case 0: {
+						//Reset all UI vals to be initial values
+						resetUIVals(false);
+						resetButtonState();
+						break;
+					}
+					case 1: {
+						resetButtonState();
+						break;
+					}
+					case 2: {
+						resetButtonState();
+						break;
+					}
+					default: {
+						msgObj.dispMessage(className+"(MPM_SimWindow)","launchMenuBtnHndlr", "Unknown Functions 1 btn : " + btn, MsgCodes.warning2);
+						break;
+					}
+				}
+				break;
+			} // row 1 of menu side bar buttons
+	
+			case 1: {// row 2 of menu side bar buttons
+				switch (btn) {
+					case 0: {	
+						resetButtonState();
+						break;
+					}
+					case 1: {	
+						resetButtonState();
+						break;
+					}
+					case 2: {
+						resetButtonState();
+						break;
+					}
+					case 3: {
+						resetButtonState();
+						break;
+					}
+					default: {
+						msgObj.dispMessage(className+"(MPM_SimWindow)","launchMenuBtnHndlr", "Unknown Functions 2 btn : " + btn, MsgCodes.warning2);
+						resetButtonState();
+						break;
+					}
+				}
+				break;
+			} // row 2 of menu side bar buttons
+			case 2: {// row 3 of menu side bar buttons
+				switch (btn) {
+					case 0: {
+						resetButtonState();
+						break;
+					}
+					case 1: {
+						resetButtonState();
+						break;
+					}
+					case 2: {
+						resetButtonState();
+						break;
+					}
+					case 3: {
+						resetButtonState();
+						break;
+					}
+					default: {
+						msgObj.dispMessage(className+"(MPM_SimWindow)","launchMenuBtnHndlr", "Unknown Functions 3 btn : " + btn,
+								MsgCodes.warning2);
+						resetButtonState();
+						break;
+					}
+				}
+				break;
+			} // row 3 of menu side bar buttons
+			case 3: {// row 3 of menu side bar buttons
+				switch (btn) {
+					case 0: {
+						resetButtonState();
+						break;
+					}
+					case 1: {
+						resetButtonState();
+						break;
+					}
+					case 2: {
+						resetButtonState();
+						break;
+					}
+					case 3: {
+						resetButtonState();
+						break;
+					}
+					default: {
+						msgObj.dispMessage(className+"(MPM_SimWindow)", "launchMenuBtnHndlr", "Unknown Functions 4 btn : " + btn, MsgCodes.warning2);
+						resetButtonState();
+						break;
+					}
+				}
+				break;
+			} // row 3 of menu side bar buttons
+		}
+		msgObj.dispMessage(className+"(MPM_SimWindow)","launchMenuBtnHndlr", "End requested action (multithreaded actions may still be working) : Click Functions "+(funcRow+1)+" in " + name + " : btn : " + btn, MsgCodes.info4);
+	}
 	@Override
 	public void handleSideMenuMseOvrDispSel(int btn, boolean val) {}
 	@Override
 	public final void handleSideMenuDebugSelEnable(int btn) {
-		msgObj.dispMessage(className, "handleSideMenuDebugSelEnable","Click Debug functionality on in " + name + " : btn : " + btn, MsgCodes.info4);
+		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable","Click Debug functionality on in " + name + " : btn : " + btn, MsgCodes.info4);
 		switch (btn) {
 			case 0: {				break;			}
 			case 1: {				break;			}
@@ -435,16 +540,16 @@ public class MPM_SimWindow extends myDispWindow {
 			case 4: {				break;			}
 			case 5: {				break;			}
 			default: {
-				msgObj.dispMessage(className, "handleSideMenuDebugSelEnable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
+				msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
 				break;
 			}
 		}
-		msgObj.dispMessage(className, "handleSideMenuDebugSelEnable", "End Debug functionality on selection.",MsgCodes.info4);
+		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable", "End Debug functionality on selection.",MsgCodes.info4);
 	}
 	
 	@Override
 	public final void handleSideMenuDebugSelDisable(int btn) {
-		msgObj.dispMessage(className, "handleSideMenuDebugSelDisable","Click Debug functionality off in " + name + " : btn : " + btn, MsgCodes.info4);
+		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelDisable","Click Debug functionality off in " + name + " : btn : " + btn, MsgCodes.info4);
 		switch (btn) {
 			case 0: {				break;			}
 			case 1: {				break;			}
@@ -453,11 +558,11 @@ public class MPM_SimWindow extends myDispWindow {
 			case 4: {				break;			}
 			case 5: {				break;			}
 		default: {
-			msgObj.dispMessage(className, "handleSideMenuDebugSelDisable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
+			msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelDisable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
 			break;
 			}
 		}
-		msgObj.dispMessage(className, "handleSideMenuDebugSelDisable", "End Debug functionality off selection.",MsgCodes.info4);
+		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelDisable", "End Debug functionality off selection.",MsgCodes.info4);
 	}
 	
 	@Override
@@ -467,7 +572,7 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	protected void setVisScreenDimsPriv() {	}
 	@Override
-	protected void setCustMenuBtnLabels() {		AppMgr.setAllMenuBtnNames(menuBtnNames);		}
+	protected void setCustMenuBtnLabels() {				}
 	@Override
 	public void hndlFileLoad(File file, String[] vals, int[] stIdx) {	}
 	@Override

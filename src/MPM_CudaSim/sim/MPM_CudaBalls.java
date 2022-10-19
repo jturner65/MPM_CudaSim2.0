@@ -60,7 +60,7 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
 	/**
 	 * First instance of sim should be set to specified layout; subsequent instances are randomly synthesized
 	 */
-	static private boolean doRand = false;	
+	static public boolean doRand = false;	
 	/**
 	 * build particle layout for cuda sim - use multiples of h as radius
 	 * @param partVals [OUT] map of particle locs, initial velocities and min/max vals being constructed

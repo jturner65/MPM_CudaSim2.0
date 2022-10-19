@@ -83,8 +83,8 @@ public class MPM_SimMain extends GUI_AppManager {
 		//includes 1 for menu window (never < 1) - always have same # of visFlags as myDispWindows
 		int numWins = numVisFlags;		
 		//titles and descs, need to be set before sidebar menu is defined
-		String[] _winTitles = new String[]{"","Snow Balls"},
-				_winDescr = new String[] {"", "Display Two Colliding Snowballs Simulated via MPM"};
+		String[] _winTitles = new String[]{"","Snow Balls!"},
+				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver"};
 		initWins(numWins,_winTitles, _winDescr);
 		//call for menu window
 		buildInitMenuWin(showUIMenu);
@@ -92,7 +92,7 @@ public class MPM_SimMain extends GUI_AppManager {
 		int wIdx = dispMenuIDX,fIdx=showUIMenu;
 		String[] menuBtnTitles =  new String[]{"Functions 1","Functions 2","Functions 3","Functions 4"};
 		String[][] menuBtnNames = new String[][] {	//each must have literals for every button defined in side bar menu, or ignored
-			{"Func 00", "Func 01", "Func 02"},				//row 1
+			{"Restore Init Vals", "Func 01", "Func 02"},				//row 1
 			{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 2
 			{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 3
 			{"Func 20", "Func 21", "Func 22", "Func 23"},	//row 4		
@@ -135,7 +135,6 @@ public class MPM_SimMain extends GUI_AppManager {
 
 	@Override
 	public String[] getMouseOverSelBtnLabels() {
-		// TODO Auto-generated method stub
 		return new String[0];
 	}
 	

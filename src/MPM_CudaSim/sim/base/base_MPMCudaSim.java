@@ -181,7 +181,6 @@ public abstract class base_MPMCudaSim{
 		//Hold sim setup particle values
 		partVals = new TreeMap<String, ArrayList<float[]>>();
 		
-		
 		//set up grid and initialize sim with UI values and reset sim
 		updateSimVals_FromUI(_currUIVals);
 	}//MPM_ABS_Sim
