@@ -498,21 +498,42 @@ public abstract class base_MPMCudaSim{
 	}//buildCudaDeviceConstructs	
 	
 	private static final double lcl_third = 1.0/3.0;
+	/**
+	 * Find a random position in a sphere centered at ctr of radius rad, using spherical coords as rand axes
+	 * @param rad
+	 * @param ctr
+	 * @return
+	 */
+	public final myPointf getRandPosInSphere(double rad){ return getRandPosInSphere(rad, new float[3]);}
+	public final myPointf getRandPosInSphere(double rad, float[] ctr){
+		myPointf pos = new myPointf();
+		double u = ThreadLocalRandom.current().nextDouble(0,1),	
+			cosTheta = ThreadLocalRandom.current().nextDouble(-1,1),
+			phi = ThreadLocalRandom.current().nextDouble(0,MyMathUtils.TWO_PI_F),
+			r = rad * Math.pow(u, lcl_third),
+			rSinTheta = r * Math.sin(Math.acos(cosTheta));			
+		pos.set(rSinTheta * Math.cos(phi), rSinTheta * Math.sin(phi),cosTheta*r);
+		pos._add(ctr[0],ctr[1],ctr[2]);
+		return pos;
+	}
+	
 	//return a float array of random positions within a sphere of radius rad at ctr 
 	protected float[] getRandPosInSphereAra(float rad, float[] ctr){
-		myVectorf pos = new myVectorf();
-		ThreadLocalRandom rnd = ThreadLocalRandom.current();
-		double u = rnd.nextDouble(0,1);
-		Float r = (float) (rad * Math.pow(u, lcl_third));
-		do{
-			pos.set(rnd.nextDouble(-1,1), rnd.nextDouble(-1,1),rnd.nextDouble(-1,1));
-		} while (pos.sqMagn > 1.0f);
-		float[] posRes = pos.asArray();
-		for(int i=0;i<3;++i) {
-			posRes[i] *= r;
-			posRes[i] += ctr[i];
-		}
-		return posRes;
+//		myVectorf posV = new myVectorf();
+//		ThreadLocalRandom rnd = ThreadLocalRandom.current();
+//		double u = rnd.nextDouble(0,1);
+//		Float r = (float) (rad * Math.pow(u, lcl_third));
+//		do{
+//			posV.set(rnd.nextDouble(-1,1), rnd.nextDouble(-1,1),rnd.nextDouble(-1,1));
+//		} while (posV.sqMagn > 1.0f);
+//		float[] posRes = posV.asArray();
+//		for(int i=0;i<3;++i) {
+//			posRes[i] *= r;
+//			posRes[i] += ctr[i];
+//		}
+//		return posRes;
+		myPointf pos = getRandPosInSphere(rad,ctr);
+		return pos.asArray();
 	}//getRandPosInSphereAra
 	
 	/**
@@ -544,6 +565,7 @@ public abstract class base_MPMCudaSim{
 		float[] maxVals = partVals.get("minMaxVals").get(1); 
 		ArrayList<float[]> posMap = partVals.get("pos");
 		int[] returnIdxs = new int[2];
+		//start at beginning of current posMap
 		returnIdxs[0] = posMap.size();
 		for (int i=0;i<numParts;++i) {
 			float[] posVals = getRandPosInSphereAra(ballRad, ctr); 
@@ -556,15 +578,14 @@ public abstract class base_MPMCudaSim{
         }
 		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "createSphere",
 				"Created a sphere of radius " + ballRad + " with "+numParts+" particles, centered at [" +ctr[0] +"," +ctr[1] +"," +ctr[2] + "].");
+		//Ending at final size of posMap
 		returnIdxs[1] = posMap.size();
 		return returnIdxs;
 	}//createSphere
 	
 	protected final void setPartInitVelocities(TreeMap<String, ArrayList<float[]>> partVals, int stIdx, int endIdx, float[] initVel) {
 		ArrayList<float[]> velMap = partVals.get("vel");
-		for (int i=stIdx; i<endIdx;++i) {
-			velMap.add(initVel);
-		}
+		for (int i=stIdx; i<endIdx;++i) {			velMap.add(initVel);		}
 	}//setPartInitVelocities
 
 	/**
