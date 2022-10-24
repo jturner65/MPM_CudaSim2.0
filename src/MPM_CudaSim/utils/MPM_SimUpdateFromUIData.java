@@ -89,8 +89,6 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 		return havePassedValuesChanged(_otr,IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck);
 	}
 	
-	
-	
 	@Override
 	public String toString() {
 		String res = "Owning Window Name: "+win.name+" | Tracked values : "+intValues.size() +" Integers, " +floatValues.size() +" Floats, " +boolValues.size() + " Booleans\n";
