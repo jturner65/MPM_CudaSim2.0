@@ -307,7 +307,7 @@ public abstract class base_MPMCudaSim{
 			win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RemakeKernel");
 			return SimResetProcess.RemakeKernel;
 		}
-		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing");
+		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing - nothing pertinent has changed.");
 		return SimResetProcess.DoNothing;
 	}
 	

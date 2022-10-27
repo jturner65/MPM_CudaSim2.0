@@ -25,14 +25,13 @@ public class MPM_SimMain extends GUI_AppManager {
 	private static final int
 		dispMPMWinIDX = 1;
 	
-	//private boolean cyclModCmp;										//comparison every draw of cycleModDraw			
 	private final int[] bground = new int[]{244,244,244,255};		//bground color	
 	
 	
 ///////////////
 //CODE STARTS
 ///////////////	
-//////////////////////////////////////////////// code																		//set array of vector values (sceneFcsVals) based on application
+//////////////////////////////////////////////// code
 	//needs main to run project - do not modify this code in any way
 	public static void main(String[] passedArgs) {		
 		MPM_SimMain me = new MPM_SimMain();
