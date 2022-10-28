@@ -127,7 +127,7 @@ public abstract class base_MPMCudaSim{
     //local rep of grid scalars for rendering
 	protected float[] h_grid_mass;     
     //particle colors based on initial location
-    protected int[][] h_part_clr_int;
+    protected int[][] h_part_clr_int, h_part_grey_int;
     
     ////////////////////////////////////////////////////
     //Sim instance variables, populated from currUIVals structure on creation/ui update
@@ -358,12 +358,26 @@ public abstract class base_MPMCudaSim{
         setSimFlags(CUDADevInit, true);
 	}//loadModuleAndSetFuncPtrs
 		
-	private int getClrValInt(Float val, Float min, Float max) {
-		Float denom = (max-min);
-		if(denom <=0) return 255;
-		return (int) (55.0f + 200.0f * (val - min)/denom);	
+	private int[] getClrValInt(float[] val, float[] min, float[] max) {
+		int[] res = new int[3];
+		for (int i=0;i<3;++i) {
+			Float denom = (max[i]-min[i]);
+			if(denom <=0) {res[i] = 255;}
+			res[i] = (int) (55.0f + 200.0f * (val[i] - min[i])/denom);	
+		}
+		return res;
 	}
 	
+	private int[] getGreyValInt(float[] val, float[] min, float[] max) {
+		int sum = 0;
+		for (int i=0;i<3;++i) {
+			Float denom = (max[i]-min[i]);
+			if(denom <=0) {sum += 255;}
+			sum += (int) (55.0f + 200.0f * (val[i] - min[i])/denom);	
+		}
+		int avg = 50 + sum/3;
+		return new int[] {avg,avg+5,avg+11} ;
+	}
 	/**
 	 * allocate dev mem for all objects based on number of particles
 	 */
@@ -383,7 +397,8 @@ public abstract class base_MPMCudaSim{
         float[] maxVals = partVals.get("minMaxVals").get(1);       
         float[] posAra, velAra;
         
-        h_part_clr_int = new int[numParts][3];        
+        h_part_clr_int = new int[numParts][3]; 
+        h_part_grey_int = new int[numParts][3]; 
         for(int i = 0; i < numParts; ++i){
         	h_part_mass[i] = particleMass;
         	posAra = partVals.get("pos").get(i);
@@ -392,9 +407,12 @@ public abstract class base_MPMCudaSim{
         		h_part_pos[j][i] = posAra[j];
         		h_part_vel[j][i] = velAra[j];
         	}
-        	for(int j=0;j<h_part_clr_int[i].length;++j) {
-        		h_part_clr_int[i][j] = getClrValInt(h_part_pos[j][i],minVals[j],maxVals[j]);
-        	}
+        	
+        	h_part_clr_int[i] = getClrValInt(posAra,minVals,maxVals);
+        	h_part_grey_int[i] = getGreyValInt(posAra,minVals,maxVals);
+//        	for(int j=0;j<h_part_clr_int[i].length;++j) {
+//        		h_part_clr_int[i][j] = getClrValInt(h_part_pos[j][i],minVals[j],maxVals[j]);
+//        	}
         	h_part_eye[i]=1.0f;
         }
         
@@ -975,7 +993,7 @@ public abstract class base_MPMCudaSim{
 				if (getSimFlags(showLocColors)) {
 					pa.drawPointCloudWithColors(h_part_pos[0].length, drawPointIncr, h_part_clr_int, h_part_pos[0], h_part_pos[1], h_part_pos[2]);
 				} else {
-					pa.drawPointCloudWithColor(h_part_pos[0].length, drawPointIncr, whitePoints, h_part_pos[0], h_part_pos[1], h_part_pos[2]);
+					pa.drawPointCloudWithColors(h_part_pos[0].length, drawPointIncr, h_part_grey_int, h_part_pos[0], h_part_pos[1], h_part_pos[2]);
 				}
 				pa.popMatState();
 			} 
@@ -1004,7 +1022,7 @@ public abstract class base_MPMCudaSim{
 					(Math.abs(h_part_vel[1][i]) > minMag) || 
 					(Math.abs(h_part_vel[2][i]) > minMag)) {
 				pa.pushMatState();
-				pa.setStroke(h_part_clr_int[i], 100);
+				pa.setStroke(h_part_clr_int[i], 255);
 				pa.translate(h_part_pos[0][i], h_part_pos[1][i], h_part_pos[2][i]);
 				pa.drawLine(0,0,0, vecLengthScale*h_part_vel[0][i],vecLengthScale*h_part_vel[1][i],vecLengthScale*h_part_vel[2][i]);
 				pa.popMatState();
@@ -1103,7 +1121,7 @@ public abstract class base_MPMCudaSim{
 		myVectorf I = myVectorf.UP;
 		myVectorf Nvec = new myVectorf(I.y*V.z-I.z*V.y, I.z*V.x-I.x*V.z, I.x*V.y-I.y*V.x);
 		if(Math.abs(Nvec.magn) < 0.000001) {//singular - cylinder wanting to go up
-			System.out.println("vec singlr : "+ Nvec.magn + " V:"+V.toStrBrf()+" | I : " + I.toStrBrf());
+			//System.out.println("vec singlr : "+ Nvec.magn + " V:"+V.toStrBrf()+" | I : " + I.toStrBrf());
 			I = myVectorf.RIGHT;
 			Nvec = new myVectorf(I.y*V.z-I.z*V.y, I.z*V.x-I.x*V.z, I.x*V.y-I.y*V.x);// Nf(I,V);
 		}

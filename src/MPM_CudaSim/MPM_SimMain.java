@@ -57,9 +57,9 @@ public class MPM_SimMain extends GUI_AppManager {
 		//modify default grid dims to be 1500x1500x1500
 		setDesired3DGridDims(1500);
 		//TODO move to window to set up specific background for each different "scene" type
-		//PImage bgrndTex = loadImage("bkgrndTex.jpg");
+		//PImage bgrndTex = loadImage("bkgrndTex.jpg"); 
 		//PImage bgrndTex = loadImage("sky_1.jpg");
-		if(useSphereBKGnd) {			pa.loadBkgndSphere("bkgrndTex.jpg");	} else {		setBkgrnd();	}
+		if(useSphereBKGnd) {			pa.loadBkgndSphere("winter.jpg");	} else {		setBkgrnd();	}
 	}	
 	@Override
 	public void setBkgrnd(){
