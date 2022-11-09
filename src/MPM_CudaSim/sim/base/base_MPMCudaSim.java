@@ -3,7 +3,6 @@ package MPM_CudaSim.sim.base;
 import static jcuda.driver.JCudaDriver.*;
 
 import java.io.*;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -64,10 +63,6 @@ public abstract class base_MPMCudaSim{
 		CUDADevInit				= 11;			//if 1 time cuda device and kernel file init is complete
 	protected static final int numSimFlags = 12;
 
-	//time of current process start, from initial construction of mapmgr - TODO use this to monitor specific process time elapsed.  set to 0 at beginning of a particular process, then measure time elapsed in process
-	protected long simStartTime;
-	//time mapMgr built, in millis - used as offset for instant to provide smaller values for timestamp
-	protected final long expMgrBuiltTime;	
 	//constants for collider calcs
 	protected static float cyl_da = (float) (Math.PI/18.0f);	
 	
@@ -167,10 +162,6 @@ public abstract class base_MPMCudaSim{
 		currUIVals = new MPM_SimUpdateFromUIData(win);
 		//initialize cuda device pointers
 		buildCudaDeviceConstructs();
-	
-		//for display of time since experiment was built  
-		Instant now = Instant.now();
-		expMgrBuiltTime = now.toEpochMilli();//milliseconds since 1/1/1970 when this exec was built.
 		//mat's quantities are managed by UI - only need to instance once
 		mat = new myMaterial(_currUIVals);
 		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
@@ -859,7 +850,7 @@ public abstract class base_MPMCudaSim{
 	        }
         }
 		//sim start time - time from when sim object was first instanced
-		simStartTime = getCurTime();	
+		//simStartTime = getCurTime();	
 		
 		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "resetSim","Start resetting sim");
 		
@@ -947,36 +938,9 @@ public abstract class base_MPMCudaSim{
 	 */
 	public abstract boolean simMeDebug(float modAmtMillis);	//simMeDebug	
 
-	public void showTimeMsgSimStart(String _str) {win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "showTimeMsgSimStart",_str+" Time Now : "+(getCurTime() - simStartTime));}
-	//display message and time now
-	public void showTimeMsgNow(String _str, long stTime) {	win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "showTimeMsgNow",_str+" Time Now : "+(getCurTime() - stTime)+" ms");}
-	
-	/////////////////////////////
-	// utility : time stamp; display messages; state flags
-	
-	//get time from "start time" (ctor run for map manager)
-	protected long getCurTime() {			
-		Instant instant = Instant.now();
-		return instant.toEpochMilli() - expMgrBuiltTime;//milliseconds since 1/1/1970, subtracting when sim was built to keep millis low		
-	}//getCurTime() 	
-	//returns a positive int value in millis of current world time since sim start
-	protected long getCurSimTime() {	return getCurTime() - simStartTime;}
-	protected String getTimeStrFromProcStart() {return  getTimeStrFromPassedMillis(getCurSimTime());}
-	//get a decent display of passed milliseconds elapsed
-	//	long msElapsed = getCurRunTimeForProc();
-	protected String getTimeStrFromPassedMillis(long msElapsed) {
-		long ms = msElapsed % 1000, sec = (msElapsed / 1000) % 60, min = (msElapsed / 60000) % 60, hr = (msElapsed / 3600000) % 24;	
-		String res = String.format("%02d:%02d:%02d.%03d", hr, min, sec, ms);
-		return res;
-	}//getTimeStrFromPassedMillis	
-	
-
-	///////////////////////////
-	// end message display functionality
-
 	
 	private final int[] gridVecClr = new int[] {250,0,0}, gridAccelClr = new int[] {0,0,250}, gridMassClr = new int[] {0,150,50};
-	private final int[] whitePoints = new int[] {255,255,255}; 
+	//private final int[] whitePoints = new int[] {255,255,255}; 
 
 	//draw 1 frame of results	//animTimeMod is in seconds, counting # of seconds since last draw
 	public final void drawMe(float animTimeMod) {
@@ -1008,8 +972,8 @@ public abstract class base_MPMCudaSim{
 			}
 			//if desired, draw grid
 			if(getSimFlags(showGrid)) {	_drawGrid();}
-			if (getSimFlags(showGridVelArrows)) {	_drawGridVec(gridVecClr, h_grid_vel[0], h_grid_vel[1], h_grid_vel[2]);}
-			if (getSimFlags(showGridAccelArrows)){	_drawGridVec(gridAccelClr, h_grid_accel[0], h_grid_accel[1], h_grid_accel[2]);}
+			if(getSimFlags(showGridVelArrows)) {	_drawGridVec(gridVecClr, h_grid_vel[0], h_grid_vel[1], h_grid_vel[2]);}
+			if(getSimFlags(showGridAccelArrows)){	_drawGridVec(gridAccelClr, h_grid_accel[0], h_grid_accel[1], h_grid_accel[2]);}
 			if(getSimFlags(showGridMass)) {			_drawGridScalar(gridMassClr, h_grid_mass);}
 		pa.popMatState();
 	}//drawMe
