@@ -9,16 +9,18 @@ import MPM_CudaSim.sim.SimResetProcess;
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
 import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
 import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
+import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
 import base_UI_Objects.GUI_AppManager;
-import base_UI_Objects.windowUI.base.myDispWindow;
-import base_UI_Objects.windowUI.drawnObjs.myDrawnSmplTraj;
+import base_UI_Objects.windowUI.base.Base_DispWindow;
+import base_UI_Objects.windowUI.drawnObjs.DrawnSimpleTraj;
 import base_UI_Objects.windowUI.uiData.UIDataUpdater;
-import base_UI_Objects.windowUI.uiObjs.GUIObj_Type;
+import base_UI_Objects.windowUI.uiObjs.base.GUIObj_Type;
 import base_Utils_Objects.io.messaging.MsgCodes;
+import base_Utils_Objects.tools.myTools;
 
-public class MPM_SimWindow extends myDispWindow {
+public class MPM_SimWindow extends Base_DispWindow {
 
 	//simulator world within which simulation executes
 	//TODO support multiple sim worlds possibly, with different configurations
@@ -370,9 +372,7 @@ public class MPM_SimWindow extends myDispWindow {
 	@Override
 	//stopping simulation
 	protected void stopMe() {	msgObj.dispInfoMessage(className+"(MPM_SimWindow)","stopMe","Simulation Finished");	}	
-	
-	@Override
-	public void processTrajIndiv(myDrawnSmplTraj drawnNoteTraj){	}
+
 	@Override
 	protected boolean hndlMouseMoveIndiv(int mouseX, int mouseY, myPoint mseClckInWorld){
 		return false;
@@ -430,6 +430,8 @@ public class MPM_SimWindow extends myDispWindow {
 						break;
 					}
 					case 1: {
+						int[] winDims = AppMgr.getWindowLoc();
+						msgObj.dispInfoMessage(className+"(MPM_SimWindow)", "launchMenuBtnHndlr", "Window dims : X:"+winDims[0]+" | Y:"+winDims[1]+" | width:"+winDims[2]+" | height :"+winDims[3]);
 						resetButtonState();
 						break;
 					}
@@ -533,7 +535,16 @@ public class MPM_SimWindow extends myDispWindow {
 	public final void handleSideMenuDebugSelEnable(int btn) {
 		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable","Click Debug functionality on in " + name + " : btn : " + btn, MsgCodes.info4);
 		switch (btn) {
-			case 0: {				break;			}
+			case 0: {				
+				//TEMP Factorial test
+				msgObj.dispInfoMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable","Factorials 1->1000");
+				for(int i=1;i<1000;++i) {
+					byte[] ans = MyMathUtils.bigFact(i);
+					String str = myTools.digitAraToString(ans);
+					msgObj.dispInfoMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable","\t"+i+" ("+ans.length +") : "+str);
+					
+				}
+				break;			}
 			case 1: {				break;			}
 			case 2: {				break;			}
 			case 3: {				break;			}
@@ -581,6 +592,8 @@ public class MPM_SimWindow extends myDispWindow {
 	protected void drawOnScreenStuffPriv(float modAmtMillis) {	}
 	@Override
 	protected void drawRightSideInfoBarPriv(float modAmtMillis) {	}
+	@Override
+	public void processTrajIndiv(DrawnSimpleTraj drawnTraj) {	}
 
 }//DESSimWindow
 

@@ -2,7 +2,7 @@ package MPM_CudaSim;
 
 import MPM_CudaSim.ui.MPM_SimWindow;
 import base_UI_Objects.GUI_AppManager;
-import base_UI_Objects.windowUI.base.myDispWindow;
+import base_UI_Objects.windowUI.base.Base_DispWindow;
 
 /**
 * MPM Snow Simulation in CUDA 2.0
@@ -63,7 +63,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	}	
 	@Override
 	public void setBkgrnd(){
-		//TODO move to myDispWindow	
+		//TODO move to Base_DispWindow	
 		if(useSphereBKGnd) { pa.setBkgndSphere();	} else {pa.setRenderBackground(bground[0],bground[1],bground[2],bground[3]);		}
 	}//setBkgrnd
 
@@ -79,7 +79,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	protected void initAllDispWindows() {
 		showInfo = true;
 		
-		//includes 1 for menu window (never < 1) - always have same # of visFlags as myDispWindows
+		//includes 1 for menu window (never < 1) - always have same # of visFlags as Base_DispWindows
 		int numWins = numVisFlags;		
 		//titles and descs, need to be set before sidebar menu is defined
 		String[] _winTitles = new String[]{"","Snow Balls!"},
@@ -212,7 +212,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	//address all flag-setting here, so that if any special cases need to be addressed they can be
 	protected void setVisFlag_Indiv(int idx, boolean val ){
 		switch (idx){
-			case showUIMenu 	    : { dispWinFrames[dispMenuIDX].setFlags(myDispWindow.showIDX,val);    break;}											//whether or not to show the main ui window (sidebar)			
+			case showUIMenu 	    : { dispWinFrames[dispMenuIDX].setFlags(Base_DispWindow.showIDX,val);    break;}											//whether or not to show the main ui window (sidebar)			
 			case showMPMwin			: {setWinFlagsXOR(dispMPMWinIDX, val); break;}
 			default : {break;}
 		}

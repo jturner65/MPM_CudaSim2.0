@@ -14,7 +14,7 @@ import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
-import base_UI_Objects.windowUI.base.myDispWindow;
+import base_UI_Objects.windowUI.base.Base_DispWindow;
 import jcuda.*;
 import jcuda.driver.*;
 import jcuda.runtime.JCuda;
@@ -234,7 +234,7 @@ public abstract class base_MPMCudaSim{
 		minSimBnds = -maxSimBnds;
 		gridDim = maxSimBnds - minSimBnds;	
 		//scale amount to fill 1500 x 1500 x 1500 visualization cube
-		sclAmt = myDispWindow.AppMgr.gridDimX/(gridCount * cellSize);
+		sclAmt = Base_DispWindow.AppMgr.gridDimX/(gridCount * cellSize);
 		//float size of particle arrays
 		numPartsFloatSz = numParts * Sizeof.FLOAT; 
 		//# cuda blocks for particle functions
@@ -825,7 +825,7 @@ public abstract class base_MPMCudaSim{
 			return;
 		}
 		//stop simulation and reset
-		myDispWindow.AppMgr.setSimIsRunning(false);	
+		Base_DispWindow.AppMgr.setSimIsRunning(false);	
 		//setSimFlags(CUDADevInit,false);
 		setSimFlags(simIsBuiltIDX, false);	
 		//if only remaking kernel, don't rebuild simulation environment
