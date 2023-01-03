@@ -8,7 +8,7 @@ import MPM_CudaSim.sim.MPM_CudaBalls;
 import MPM_CudaSim.sim.SimResetProcess;
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
 import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
-import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;

@@ -10,7 +10,7 @@ import MPM_CudaSim.material.myMaterial;
 import MPM_CudaSim.sim.SimResetProcess;
 import MPM_CudaSim.ui.MPM_SimWindow;
 import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
-import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;

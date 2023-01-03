@@ -6,12 +6,12 @@ import java.util.TreeMap;
 import MPM_CudaSim.sim.base.base_MPMCudaSim;
 import MPM_CudaSim.ui.MPM_SimWindow;
 import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
-import base_JavaProjTools_IRender.base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IRenderInterface;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
 /**
  * Instance of sim world with big snow boulders slamming into each other 
- * @author 7strb
+ * @author John Turner
  *
  */
 public class MPM_CudaBalls extends base_MPMCudaSim {
