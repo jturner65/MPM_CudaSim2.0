@@ -1,17 +1,22 @@
 package MPM_CudaSim;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import MPM_CudaSim.ui.MPM_SimWindow;
 import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
 
 /**
-* MPM Snow Simulation in CUDA 2.0
+* MPM Snow Simulation in CUDA
 * @author john turner
 */
 
 public class MPM_SimMain extends GUI_AppManager {
 	
-	public String prjNmLong = "MPM Simulation CUDA 2.0", prjNmShrt = "MPM_SnowSim_cuda_2.0";
+	public String prjNmShrt = "MPM_SnowSim_cuda_2.0";
+	public String prjNmLong = "MPM Snow Simulation CUDA 9.1"; 
+	public String projDesc = "Simulate numerous snow balls colliding using Material Point Method solved via CUDA 9.1 kernel.";
 	
 	//use sphere background for this program
 	private boolean useSphereBKGnd = true;
@@ -38,8 +43,11 @@ public class MPM_SimMain extends GUI_AppManager {
 	    MPM_SimMain.invokeProcessingMain(me, passedArgs);
 	}//main	
 
+
 	@Override
-	protected void setRuntimeArgsVals(String[] _passedArgs) {
+	protected TreeMap<String, Object> setRuntimeArgsVals(Map<String, Object> _passedArgsMap) {
+		//Not overriding any args
+		return (TreeMap<String, Object>) _passedArgsMap;
 	}
 	
 	/**
@@ -52,6 +60,12 @@ public class MPM_SimMain extends GUI_AppManager {
 	@Override
 	protected int setAppWindowDimRestrictions() {	return 1;}	
 	
+	@Override
+	public String getPrjNmShrt() {		return prjNmShrt;}
+	@Override
+	public String getPrjNmLong() {		return prjNmLong;}
+	@Override
+	public String getPrjDescr() {		return projDesc;}	
 	//instance-specific setup code
 	protected void setup_Indiv() {
 		//modify default grid dims to be 1500x1500x1500
@@ -136,13 +150,8 @@ public class MPM_SimMain extends GUI_AppManager {
 	public String[] getMouseOverSelBtnLabels() {
 		return new String[0];
 	}
+
 	
-
-	@Override
-	protected String getPrjNmLong() {		return prjNmLong;}
-	@Override
-	protected String getPrjNmShrt() {		return prjNmShrt;}
-
 	@Override
 	protected void handleKeyPress(char key, int keyCode) {
 		switch (key){
