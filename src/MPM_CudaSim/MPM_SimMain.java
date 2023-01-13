@@ -82,12 +82,12 @@ public class MPM_SimMain extends GUI_AppManager {
 	}//setBkgrnd
 
 	@Override
-	protected void initMainFlags_Indiv() {
-		setMainFlagToShow_debugMode(false);
-		setMainFlagToShow_saveAnim(true); 
-		setMainFlagToShow_runSim(true);
-		setMainFlagToShow_singleStep(true);
-		setMainFlagToShow_showRtSideMenu(true);
+	protected void initBaseFlags_Indiv() {
+		setBaseFlagToShow_debugMode(false);
+		setBaseFlagToShow_saveAnim(true); 
+		setBaseFlagToShow_runSim(true);
+		setBaseFlagToShow_singleStep(true);
+		setBaseFlagToShow_showRtSideMenu(true);
 	}
 	@Override
 	protected void initAllDispWindows() {
@@ -100,7 +100,10 @@ public class MPM_SimMain extends GUI_AppManager {
 				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver"};
 		initWins(numWins,_winTitles, _winDescr);
 		//call for menu window
-		buildInitMenuWin(showUIMenu);
+		buildInitMenuWin();
+		//instanced window dimensions when open and closed - only showing 1 open at a time
+		float[] _dimOpen  = getDefaultWinDimOpen(), 
+				_dimClosed  = getDefaultWinDimClosed();	
 		//menu bar init
 		int wIdx = dispMenuIDX,fIdx=showUIMenu;
 		String[] menuBtnTitles =  new String[]{"Functions 1","Functions 2","Functions 3","Functions 4"};
@@ -113,9 +116,6 @@ public class MPM_SimMain extends GUI_AppManager {
 		String[] dbgBtnNames = new String[] {"Func 30", "Func 31", "Func 32", "Func 33","Func 34"};
 		dispWinFrames[wIdx] = buildSideBarMenu(wIdx, fIdx,menuBtnTitles, menuBtnNames, dbgBtnNames, false, false);
 
-		//instanced window dimensions when open and closed - only showing 1 open at a time
-		float[] _dimOpen  =  new float[]{menuWidth, 0, pa.getWidth()-menuWidth, pa.getHeight()}, 
-				_dimClosed  =  new float[]{menuWidth, 0, hideWinWidth, pa.getHeight()};	
 		//setInitDispWinVals : use this to define the values of a display window
 		//int _winIDX, 
 		//float[] _dimOpen, float[] _dimClosed  : dimensions opened or closed
