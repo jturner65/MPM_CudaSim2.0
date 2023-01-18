@@ -1,7 +1,6 @@
 package MPM_CudaSim;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.HashMap;
 
 import MPM_CudaSim.ui.MPM_SimWindow;
 import base_UI_Objects.GUI_AppManager;
@@ -43,11 +42,13 @@ public class MPM_SimMain extends GUI_AppManager {
 	    MPM_SimMain.invokeProcessingMain(me, passedArgs);
 	}//main	
 
-
+	/**
+	 * Set various relevant runtime arguments in argsMap
+	 * @param _passedArgs command-line arguments
+	 */
 	@Override
-	protected TreeMap<String, Object> setRuntimeArgsVals(Map<String, Object> _passedArgsMap) {
-		//Not overriding any args
-		return (TreeMap<String, Object>) _passedArgsMap;
+	protected HashMap<String,Object> setRuntimeArgsVals(HashMap<String, Object> _passedArgsMap) {
+		return  _passedArgsMap;
 	}
 	
 	/**
@@ -141,8 +142,6 @@ public class MPM_SimMain extends GUI_AppManager {
 		setVisFlag(showMPMwin, true);		
 	}
 	
-	@Override
-	protected void initVisProg_Indiv() {}
 	@Override
 	protected void initProgram_Indiv() {}
 
