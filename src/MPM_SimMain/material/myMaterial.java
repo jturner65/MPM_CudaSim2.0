@@ -1,8 +1,12 @@
-package MPM_CudaSim.material;
+package MPM_SimMain.material;
 
-import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
+import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 
-//class for the material that the simulation consists of
+/**
+ * class for the material that the simulation consists of
+ * @author John Turner
+ *
+ */
 public class myMaterial {
 	private float initYoungMod, poissonRatio, lambda0, mu0;
 	private float hardeningCoeff, criticalCompression, criticalStretch, alphaPicFlip;

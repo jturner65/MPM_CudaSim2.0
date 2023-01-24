@@ -3,9 +3,9 @@ package MPM_CudaSim.sim;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-import MPM_CudaSim.sim.base.base_MPMCudaSim;
-import MPM_CudaSim.ui.MPM_SimWindow;
-import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
+import MPM_CudaSim.sim.base.Base_MPMCudaSim;
+import MPM_SimMain.ui.Base_MPMSimWindow;
+import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
@@ -14,7 +14,7 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
  * @author John Turner
  *
  */
-public class MPM_CudaBalls extends base_MPMCudaSim {
+public class MPM_CudaBalls extends Base_MPMCudaSim {
 	/**
 	 * Centers of currently built spheres
 	 */
@@ -40,12 +40,12 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
 	 */
 	private int[][] idxsForSpheres;
 	
-	public MPM_CudaBalls(IRenderInterface _pa, MPM_SimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
+	public MPM_CudaBalls(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa,_win,"Snowball Slam!", _currUIVals);
 	}	
 	
 	@Override
-	protected void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
+	protected void updateCudaSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
 		//radius will be function of how many particles are built and grid dimensions
 		sphereRad = (float)(3.0*Math.cbrt(numParts)/sclAmt);
 		//derive half-length of single dimension of grid based on count of grid boxes and size of each box edge
@@ -67,7 +67,7 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
 	 */
 	@Override
 	protected void buildPartLayoutMap(TreeMap<String, ArrayList<float[]>> partVals) {	
-		win.getMsgObj().dispInfoMessage("MPM_Cuda2Balls : "+simName, "buildPartLayoutMap", "Sphere Rad : " + sphereRad+ " | maxSimBnds : "+maxSimBnds);
+		win.getMsgObj().dispInfoMessage("MPM_CudaBalls("+simName+")", "buildPartLayoutMap", "Sphere Rad : " + sphereRad+ " | maxSimBnds : "+maxSimBnds);
 
 		if (!doRand){
         	//first run default setup
@@ -88,7 +88,7 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
         //build point clouds and assign initial velocities
         reinitSimObjects(partVals);
         
-        win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "buildSimVals","Total # of particles in simulation : " + numParts+ " # parts float sz :"+numPartsFloatSz);
+        win.getMsgObj().dispInfoMessage("MPM_CudaBalls("+simName+")", "buildSimVals","Total # of particles in simulation : " + numParts+ " # parts float sz :"+numPartsFloatSz);
         //end create particle layout	
 	}//buildPartLayout
 	
@@ -188,5 +188,6 @@ public class MPM_CudaBalls extends base_MPMCudaSim {
 		//TODO any debugging that might be supportable here
 		return false;
 	}//simMeDebug
+
 
 }//class MPM_Cuda2Balls

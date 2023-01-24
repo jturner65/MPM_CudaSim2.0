@@ -1,13 +1,12 @@
-package MPM_CudaSim.ui;
+package MPM_SimMain.ui;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-import MPM_CudaSim.sim.MPM_CudaBalls;
-import MPM_CudaSim.sim.SimResetProcess;
-import MPM_CudaSim.sim.base.base_MPMCudaSim;
-import MPM_CudaSim.utils.MPM_SimUpdateFromUIData;
+import MPM_SimMain.sim.SimResetProcess;
+import MPM_SimMain.sim.Base_MPMSim;
+import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
@@ -20,11 +19,11 @@ import base_UI_Objects.windowUI.uiObjs.base.GUIObj_Type;
 import base_Utils_Objects.io.messaging.MsgCodes;
 import base_Utils_Objects.tools.myTools;
 
-public class MPM_SimWindow extends Base_DispWindow {
+public abstract class Base_MPMSimWindow extends Base_DispWindow {
 
 	//simulator world within which simulation executes
 	//TODO support multiple sim worlds possibly, with different configurations
-	public base_MPMCudaSim currSim;
+	public Base_MPMSim currSim;
 		
 	//////////////////////////////////
 	//initial values of simulation variables
@@ -81,7 +80,7 @@ public class MPM_SimWindow extends Base_DispWindow {
 		gIDX_DrawnValScale			= 16,
 		gIDX_DrawPointIncr			= 17;
 	
-	public final static int numGuiObjs = 18;
+	public final static int numBaseMPMWinUIGuiObjs = 18;
 	
 	//////////////////////////////////////
 	//custom debug/function ui button names -empty will do nothing
@@ -103,11 +102,10 @@ public class MPM_SimWindow extends Base_DispWindow {
 		showActiveNodes  		= 11,				//show the grid nodes influenced by each particle
 		showExecTime			= 12;			//show time of execution for each step in simulation
 
-	public static final int numPrivFlags = 12;
+	public static final int numBaseMPMWinUIPrivFlags = 12;
 		
-	public MPM_SimWindow(IRenderInterface _p, GUI_AppManager _AppMgr, int _winIdx, int _flagIdx) {
+	public Base_MPMSimWindow(IRenderInterface _p, GUI_AppManager _AppMgr, int _winIdx, int _flagIdx) {
 		super(_p, _AppMgr, _winIdx, _flagIdx);
-		super.initThisWin(false);
 	}//DancingBallWin
 	
 	@Override
@@ -125,10 +123,24 @@ public class MPM_SimWindow extends Base_DispWindow {
 		tmpBtnNamesArray.add(new Object[]{"Showing Grid Accel",     "Show Grid Accel",    showGridAccelArrows});    
 		tmpBtnNamesArray.add(new Object[]{"Showing Grid Mass",      "Show Grid Mass",     showGridMass});         
 		tmpBtnNamesArray.add(new Object[]{"Showing Active Nodes",   "Show Active Nodes",  showActiveNodes});     
-		tmpBtnNamesArray.add(new Object[]{"Showing Execution Time", "Show Execution Time",showExecTime});        
-		return numPrivFlags;
+		tmpBtnNamesArray.add(new Object[]{"Showing Execution Time", "Show Execution Time",showExecTime});   
+		
+		return initAllMPMPrivBtns_Indiv(tmpBtnNamesArray);
 	}//initAllPrivBtns
-	//set labels of boolean buttons 
+	
+	/**
+	 * Instancing class-specific (application driven) UI buttons to display are
+	 * built in this function. Add an entry to tmpBtnNamesArray for each button, in
+	 * the order they are to be displayed
+	 * 
+	 * @param tmpBtnNamesArray array list of Object arrays, where in each object
+	 *                         array : the first element is the true string label,
+	 *                         the 2nd elem is false string array, and the 3rd
+	 *                         element is integer flag idx
+	 * @return total number of privBtnFlags in instancing class (including those not
+	 *         displayed)
+	 */
+	protected abstract int initAllMPMPrivBtns_Indiv(ArrayList<Object[]> tmpBtnNamesArray);
 
 	
 	@Override
@@ -141,15 +153,27 @@ public class MPM_SimWindow extends Base_DispWindow {
 		setFlags(drawRightSideMenu, true);
 		
 		//init simulation construct here
-		msgObj.dispInfoMessage(className+"(MPM_SimWindow)","initMe","Start building simulation now.");
+		msgObj.dispInfoMessage(className,"initMe","Start building simulation now.");
 		//build sim(s) here
-		currSim = new MPM_CudaBalls(pa, this, (MPM_SimUpdateFromUIData) uiUpdateData);		
+		currSim = buildSim();		
 		//initialize simulation here to simple world sim
 		custMenuOffset = uiClkCoords[3];	//495	
 		setPrivFlags(showParticles, true);
 		setPrivFlags(showLocColors, true);
-
+		//instance-class-specific init
+		initMe_Indiv();
 	}//initMe	
+	
+	/**
+	 * Build sim used by instancing window/application
+	 * @return
+	 */
+	protected abstract Base_MPMSim buildSim();
+	
+	/**
+	 * instancing class-specific functionality
+	 */
+	protected abstract void initMe_Indiv();
 
 	@Override
 	protected int[] getFlagIDXsToInitToTrue() {
@@ -186,37 +210,45 @@ public class MPM_SimWindow extends Base_DispWindow {
 				}
 				break;}	
 			case showLocColors			: {
-				currSim.setSimFlags(base_MPMCudaSim.showLocColors, val);
+				currSim.setSimFlags(Base_MPMSim.showLocColors, val);
 				break;}
 			case showCollider			: {//show collider
-				currSim.setSimFlags(base_MPMCudaSim.showCollider, val);
+				currSim.setSimFlags(Base_MPMSim.showCollider, val);
 				break;}
 			case showParticles			: {
-				currSim.setSimFlags(base_MPMCudaSim.showParticles, val);				
+				currSim.setSimFlags(Base_MPMSim.showParticles, val);				
 				break;}
 			case showParticleVelArrows	: {
-				currSim.setSimFlags(base_MPMCudaSim.showParticleVelArrows, val);
+				currSim.setSimFlags(Base_MPMSim.showParticleVelArrows, val);
 				break;} 
 			case showGrid				: {
-				currSim.setSimFlags(base_MPMCudaSim.showGrid, val);
+				currSim.setSimFlags(Base_MPMSim.showGrid, val);
 				break;} 				
 			case showGridVelArrows 		: {
-				currSim.setSimFlags(base_MPMCudaSim.showGridVelArrows, val);
+				currSim.setSimFlags(Base_MPMSim.showGridVelArrows, val);
 				break;} 		
 			case showGridAccelArrows	: {
-				currSim.setSimFlags(base_MPMCudaSim.showGridAccelArrows, val);
+				currSim.setSimFlags(Base_MPMSim.showGridAccelArrows, val);
 				break;} 	
 			case showGridMass  			: {
-				currSim.setSimFlags(base_MPMCudaSim.showGridMass, val);
+				currSim.setSimFlags(Base_MPMSim.showGridMass, val);
 				break;} 		
 			case showActiveNodes 	: {
-				currSim.setSimFlags(base_MPMCudaSim.showActiveNodes, val);
+				currSim.setSimFlags(Base_MPMSim.showActiveNodes, val);
 				break;} 	
 			case showExecTime			: { 
 				break;}
-			default:					{}
+			default: {			setPrivFlags_Indiv(idx, val);}
 		}		
 	}//setPrivFlags	
+	
+	/**
+	 * set values for instancing class-specific boolean flags
+	 * 
+	 * @param idx
+	 * @param val
+	 */
+	protected abstract void setPrivFlags_Indiv(int idx, boolean val);
 		
 	/**
 	 * Build all UI objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
@@ -251,7 +283,25 @@ public class MPM_SimWindow extends Base_DispWindow {
 		tmpUIObjArray.put(gIDX_CollFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CollfricCoeffinit 1.0f  
 		tmpUIObjArray.put(gIDX_DrawnValScale, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CollfricCoeffinit 1.0f  
 		tmpUIObjArray.put(gIDX_DrawPointIncr, new Object[] {new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point", GUIObj_Type.IntVal, new boolean[]{true}});//every x'th point to draw
-	}//setupGUIObjsAras
+
+		// populate instancing application objects
+		setupGUIObjsAras_Indiv(tmpUIObjArray, tmpListObjVals);
+	}//setupGUIObjsAras	
+	
+	/**
+	 * Instancing class-specific (application driven) UI objects should be defined
+	 * in this function.  Add an entry to tmpBtnNamesArray for each button, in the order 
+	 * they are to be displayed
+	 * @param tmpUIObjArray map keyed by uiIDX of object, value is list of Object arrays, where in each object array : 
+	 * 			the first element double array of min/max/mod values
+	 * 			the 2nd element is starting value
+	 * 			the 3rd elem is label for object
+	 * 			the 4th element is boolean array of {treat as int, has list values, value is sent to owning window}
+	 * @param tmpListObjVals treemap keyed by object IDX and value is list of strings of values for all UI list select objects
+	 */
+	protected abstract void setupGUIObjsAras_Indiv(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals);	
+	
+	
 	/**
 	 * This function provides an instance of the override class for base_UpdateFromUIData, which would
 	 * be used to communicate changes in UI settings directly to the value consumers.
@@ -285,10 +335,15 @@ public class MPM_SimWindow extends Base_DispWindow {
 			case gIDX_SimStepsPerFrame 		:{break;}
 			case gIDX_DrawPointIncr			:{break;}
 			default : {
-				msgObj.dispWarningMessage(className+"(MPM_SimWindow)", "setUI_IntValsCustom", "No int-defined gui object mapped to idx :"+UIidx);
+				boolean found = setUI_IntValsCustom_Indiv( UIidx,  ival,  oldVal);
+				if (!found) {
+					msgObj.dispWarningMessage(className, "setUI_IntValsCustom", "No int-defined gui object mapped to idx :"+UIidx);
+				}
 				break;}
 		}				
 	}//setUI_IntValsCustom
+	
+	protected abstract boolean setUI_IntValsCustom_Indiv(int UIidx, int ival, int oldVal);
 
 	/**
 	 * Called if float-handling guiObjs[UIidx] has new data which updated UI adapter.  
@@ -315,12 +370,16 @@ public class MPM_SimWindow extends Base_DispWindow {
 			case gIDX_CollFricCoeff 		:{break;}
 			case gIDX_DrawnValScale			:{break;}
 			default : {
-				msgObj.dispWarningMessage(className+"(MPM_SimWindow)", "setUI_FloatValsCustom", "No float-defined gui object mapped to idx :"+UIidx);
+				boolean found = setUI_FloatValsCustom_Indiv( UIidx, val, oldVal);
+				if (!found) {
+					msgObj.dispWarningMessage(className, "setUI_FloatValsCustom", "No float-defined gui object mapped to idx :"+UIidx);
+				}
 				break;}
-		}				
-	}//setUI_FloatValsCustom	
+		}	
+	}//setUI_FloatValsCustom
 	
-	
+	protected abstract boolean setUI_FloatValsCustom_Indiv(int UIidx, float ival, float oldVal);
+		
 	@Override
 	public void initDrwnTrajIndiv(){}
 	
@@ -371,7 +430,7 @@ public class MPM_SimWindow extends Base_DispWindow {
 	protected void closeMe() {}	
 	@Override
 	//stopping simulation
-	protected void stopMe() {	msgObj.dispInfoMessage(className+"(MPM_SimWindow)","stopMe","Simulation Finished");	}	
+	protected void stopMe() {	msgObj.dispInfoMessage(className,"stopMe","Simulation Finished");	}	
 
 	@Override
 	protected boolean hndlMouseMoveIndiv(int mouseX, int mouseY, myPoint mseClckInWorld){
@@ -419,7 +478,7 @@ public class MPM_SimWindow extends Base_DispWindow {
 	 */
 	@Override
 	protected final void launchMenuBtnHndlr(int funcRow, int btn, String label){
-		msgObj.dispMessage(className+"(MPM_SimWindow)", "launchMenuBtnHndlr", "Begin requested action : Click '" + label +"' (Row:"+(funcRow+1)+"|Col:"+btn+") in " + name, MsgCodes.info4);
+		msgObj.dispMessage(className, "launchMenuBtnHndlr", "Begin requested action : Click '" + label +"' (Row:"+(funcRow+1)+"|Col:"+btn+") in " + name, MsgCodes.info4);
 		switch (funcRow) {
 			case 0: {// row 1 of menu side bar buttons
 				switch (btn) {
@@ -431,7 +490,7 @@ public class MPM_SimWindow extends Base_DispWindow {
 					}
 					case 1: {
 						int[] winDims = AppMgr.getWindowLoc();
-						msgObj.dispInfoMessage(className+"(MPM_SimWindow)", "launchMenuBtnHndlr", "Window dims : X:"+winDims[0]+" | Y:"+winDims[1]+" | width:"+winDims[2]+" | height :"+winDims[3]);
+						msgObj.dispInfoMessage(className, "launchMenuBtnHndlr", "Window dims : X:"+winDims[0]+" | Y:"+winDims[1]+" | width:"+winDims[2]+" | height :"+winDims[3]);
 						resetButtonState();
 						break;
 					}
@@ -440,7 +499,7 @@ public class MPM_SimWindow extends Base_DispWindow {
 						break;
 					}
 					default: {
-						msgObj.dispMessage(className+"(MPM_SimWindow)","launchMenuBtnHndlr", "Unknown Functions 1 btn : " + btn, MsgCodes.warning2);
+						msgObj.dispMessage(className,"launchMenuBtnHndlr", "Unknown Functions 1 btn : " + btn, MsgCodes.warning2);
 						break;
 					}
 				}
@@ -466,7 +525,7 @@ public class MPM_SimWindow extends Base_DispWindow {
 						break;
 					}
 					default: {
-						msgObj.dispMessage(className+"(MPM_SimWindow)","launchMenuBtnHndlr", "Unknown Functions 2 btn : " + btn, MsgCodes.warning2);
+						msgObj.dispMessage(className,"launchMenuBtnHndlr", "Unknown Functions 2 btn : " + btn, MsgCodes.warning2);
 						resetButtonState();
 						break;
 					}
@@ -492,7 +551,7 @@ public class MPM_SimWindow extends Base_DispWindow {
 						break;
 					}
 					default: {
-						msgObj.dispMessage(className+"(MPM_SimWindow)","launchMenuBtnHndlr", "Unknown Functions 3 btn : " + btn,
+						msgObj.dispMessage(className,"launchMenuBtnHndlr", "Unknown Functions 3 btn : " + btn,
 								MsgCodes.warning2);
 						resetButtonState();
 						break;
@@ -519,7 +578,7 @@ public class MPM_SimWindow extends Base_DispWindow {
 						break;
 					}
 					default: {
-						msgObj.dispMessage(className+"(MPM_SimWindow)", "launchMenuBtnHndlr", "Unknown Functions 4 btn : " + btn, MsgCodes.warning2);
+						msgObj.dispMessage(className, "launchMenuBtnHndlr", "Unknown Functions 4 btn : " + btn, MsgCodes.warning2);
 						resetButtonState();
 						break;
 					}
@@ -527,21 +586,21 @@ public class MPM_SimWindow extends Base_DispWindow {
 				break;
 			} // row 3 of menu side bar buttons
 		}
-		msgObj.dispMessage(className+"(MPM_SimWindow)","launchMenuBtnHndlr", "End requested action (multithreaded actions may still be working) : Click Functions "+(funcRow+1)+" in " + name + " : btn : " + btn, MsgCodes.info4);
+		msgObj.dispMessage(className,"launchMenuBtnHndlr", "End requested action (multithreaded actions may still be working) : Click Functions "+(funcRow+1)+" in " + name + " : btn : " + btn, MsgCodes.info4);
 	}
 	@Override
 	public void handleSideMenuMseOvrDispSel(int btn, boolean val) {}
 	@Override
 	public final void handleSideMenuDebugSelEnable(int btn) {
-		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable","Click Debug functionality on in " + name + " : btn : " + btn, MsgCodes.info4);
+		msgObj.dispMessage(className, "handleSideMenuDebugSelEnable","Click Debug functionality on in " + name + " : btn : " + btn, MsgCodes.info4);
 		switch (btn) {
 			case 0: {				
 				//TEMP Factorial test
-				msgObj.dispInfoMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable","Factorials 1->1000");
+				msgObj.dispInfoMessage(className, "handleSideMenuDebugSelEnable","Factorials 1->1000");
 				for(int i=1;i<1000;++i) {
 					byte[] ans = MyMathUtils.bigFact(i);
 					String str = myTools.digitAraToString(ans);
-					msgObj.dispInfoMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable","\t"+i+" ("+ans.length +") : "+str);
+					msgObj.dispInfoMessage(className, "handleSideMenuDebugSelEnable","\t"+i+" ("+ans.length +") : "+str);
 					
 				}
 				break;			}
@@ -551,16 +610,16 @@ public class MPM_SimWindow extends Base_DispWindow {
 			case 4: {				break;			}
 			case 5: {				break;			}
 			default: {
-				msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
+				msgObj.dispMessage(className, "handleSideMenuDebugSelEnable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
 				break;
 			}
 		}
-		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelEnable", "End Debug functionality on selection.",MsgCodes.info4);
+		msgObj.dispMessage(className, "handleSideMenuDebugSelEnable", "End Debug functionality on selection.",MsgCodes.info4);
 	}
 	
 	@Override
 	public final void handleSideMenuDebugSelDisable(int btn) {
-		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelDisable","Click Debug functionality off in " + name + " : btn : " + btn, MsgCodes.info4);
+		msgObj.dispMessage(className, "handleSideMenuDebugSelDisable","Click Debug functionality off in " + name + " : btn : " + btn, MsgCodes.info4);
 		switch (btn) {
 			case 0: {				break;			}
 			case 1: {				break;			}
@@ -569,11 +628,11 @@ public class MPM_SimWindow extends Base_DispWindow {
 			case 4: {				break;			}
 			case 5: {				break;			}
 		default: {
-			msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelDisable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
+			msgObj.dispMessage(className, "handleSideMenuDebugSelDisable", "Unknown Debug btn : " + btn,MsgCodes.warning2);
 			break;
 			}
 		}
-		msgObj.dispMessage(className+"(MPM_SimWindow)", "handleSideMenuDebugSelDisable", "End Debug functionality off selection.",MsgCodes.info4);
+		msgObj.dispMessage(className, "handleSideMenuDebugSelDisable", "End Debug functionality off selection.",MsgCodes.info4);
 	}
 	
 	@Override

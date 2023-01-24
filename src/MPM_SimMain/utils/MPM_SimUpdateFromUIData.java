@@ -1,15 +1,15 @@
-package MPM_CudaSim.utils;
+package MPM_SimMain.utils;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import MPM_CudaSim.ui.MPM_SimWindow;
+import MPM_SimMain.ui.Base_MPMSimWindow;
 import base_UI_Objects.windowUI.uiData.UIDataUpdater;
 
 public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 
-	public MPM_SimUpdateFromUIData(MPM_SimWindow _win) {		super(_win);	}
-	public MPM_SimUpdateFromUIData(MPM_SimWindow _win, Map<Integer, Integer> _iVals, Map<Integer, Float> _fVals,
+	public MPM_SimUpdateFromUIData(Base_MPMSimWindow _win) {		super(_win);	}
+	public MPM_SimUpdateFromUIData(Base_MPMSimWindow _win, Map<Integer, Integer> _iVals, Map<Integer, Float> _fVals,
 			Map<Integer, Boolean> _bVals) {
 		super(_win, _iVals, _fVals, _bVals);
 	}
@@ -18,32 +18,32 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	/**
 	 * access app-specific ints
 	 */
-	public int getSimStepsPerFrame() {return intValues.get(MPM_SimWindow.gIDX_SimStepsPerFrame);}
-	public int getNumParticles() {return intValues.get(MPM_SimWindow.gIDX_NumParticles);}
-	public int getNumSnowballs() {return intValues.get(MPM_SimWindow.gIDX_NumSnowballs);}
-	public int getGridCellsPerSide() {return intValues.get(MPM_SimWindow.gIDX_GridCount);}
-	public int getDrawPtIncr() {return intValues.get(MPM_SimWindow.gIDX_DrawPointIncr);}
+	public int getSimStepsPerFrame() {return intValues.get(Base_MPMSimWindow.gIDX_SimStepsPerFrame);}
+	public int getNumParticles() {return intValues.get(Base_MPMSimWindow.gIDX_NumParticles);}
+	public int getNumSnowballs() {return intValues.get(Base_MPMSimWindow.gIDX_NumSnowballs);}
+	public int getGridCellsPerSide() {return intValues.get(Base_MPMSimWindow.gIDX_GridCount);}
+	public int getDrawPtIncr() {return intValues.get(Base_MPMSimWindow.gIDX_DrawPointIncr);}
 	
 	/**
 	 * access app-specific floats
 	 */
 	//sim related
-	public float getTimeStep() {return floatValues.get(MPM_SimWindow.gIDX_TimeStep);}		 	          
-	public float getPartMass() {return floatValues.get(MPM_SimWindow.gIDX_PartMass);}          
-	public float getInitVel() {return floatValues.get(MPM_SimWindow.gIDX_InitVel);}
-	public float getGridCellSize() {return floatValues.get(MPM_SimWindow.gIDX_GridCellSize);}
-	public float getWallFricCoeff() {return floatValues.get(MPM_SimWindow.gIDX_wallFricCoeff);}		     
-	public float getCollFricCoeff() {return floatValues.get(MPM_SimWindow.gIDX_CollFricCoeff);} 
-	public float getDrawnVecScale() {return floatValues.get(MPM_SimWindow.gIDX_DrawnValScale);} 
+	public float getTimeStep() {return floatValues.get(Base_MPMSimWindow.gIDX_TimeStep);}		 	          
+	public float getPartMass() {return floatValues.get(Base_MPMSimWindow.gIDX_PartMass);}          
+	public float getInitVel() {return floatValues.get(Base_MPMSimWindow.gIDX_InitVel);}
+	public float getGridCellSize() {return floatValues.get(Base_MPMSimWindow.gIDX_GridCellSize);}
+	public float getWallFricCoeff() {return floatValues.get(Base_MPMSimWindow.gIDX_wallFricCoeff);}		     
+	public float getCollFricCoeff() {return floatValues.get(Base_MPMSimWindow.gIDX_CollFricCoeff);} 
+	public float getDrawnVecScale() {return floatValues.get(Base_MPMSimWindow.gIDX_DrawnValScale);} 
 	
 
 	//material related
-	public float getInitYoungMod() {return floatValues.get(MPM_SimWindow.gIDX_InitYoungMod);} 			      
-	public float getPoissonRatio() {return floatValues.get(MPM_SimWindow.gIDX_PoissonRatio);} 			      
-	public float getHardeningCoeff() {return floatValues.get(MPM_SimWindow.gIDX_HardeningCoeff);}		     
-	public float getCriticalCompression() {return floatValues.get(MPM_SimWindow.gIDX_CriticalCompression);} 	 
-	public float getCriticalStretch() {return floatValues.get(MPM_SimWindow.gIDX_CriticalStretch);}    
-	public float getAlphaPicFlip() {return floatValues.get(MPM_SimWindow.gIDX_AlphaPicFlip);}	      
+	public float getInitYoungMod() {return floatValues.get(Base_MPMSimWindow.gIDX_InitYoungMod);} 			      
+	public float getPoissonRatio() {return floatValues.get(Base_MPMSimWindow.gIDX_PoissonRatio);} 			      
+	public float getHardeningCoeff() {return floatValues.get(Base_MPMSimWindow.gIDX_HardeningCoeff);}		     
+	public float getCriticalCompression() {return floatValues.get(Base_MPMSimWindow.gIDX_CriticalCompression);} 	 
+	public float getCriticalStretch() {return floatValues.get(Base_MPMSimWindow.gIDX_CriticalStretch);}    
+	public float getAlphaPicFlip() {return floatValues.get(Base_MPMSimWindow.gIDX_AlphaPicFlip);}	      
 		
 	/**
 	 * access app-specific booleans
@@ -57,12 +57,12 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	
 	public boolean haveMaterialValsChanged(MPM_SimUpdateFromUIData _otr) {
 		HashMap<Integer,Integer> FloatIdxsToCheck = new HashMap<Integer,Integer>();		
-		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_InitYoungMod, MPM_SimWindow.gIDX_InitYoungMod);		 
-		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_PoissonRatio,MPM_SimWindow.gIDX_PoissonRatio); 			 
-		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_HardeningCoeff,MPM_SimWindow.gIDX_HardeningCoeff);		 
-		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_CriticalCompression,MPM_SimWindow.gIDX_CriticalCompression);
-		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_CriticalStretch,MPM_SimWindow.gIDX_CriticalStretch);    
-		FloatIdxsToCheck.put(MPM_SimWindow.gIDX_AlphaPicFlip,MPM_SimWindow.gIDX_AlphaPicFlip);	   
+		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_InitYoungMod, Base_MPMSimWindow.gIDX_InitYoungMod);		 
+		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_PoissonRatio,Base_MPMSimWindow.gIDX_PoissonRatio); 			 
+		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_HardeningCoeff,Base_MPMSimWindow.gIDX_HardeningCoeff);		 
+		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_CriticalCompression,Base_MPMSimWindow.gIDX_CriticalCompression);
+		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_CriticalStretch,Base_MPMSimWindow.gIDX_CriticalStretch);    
+		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_AlphaPicFlip,Base_MPMSimWindow.gIDX_AlphaPicFlip);	   
 		return havePassedValuesChanged(_otr,new HashMap<Integer,Integer>(), FloatIdxsToCheck, new HashMap<Integer,Integer>());
 	}
 	

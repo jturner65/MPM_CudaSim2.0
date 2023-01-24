@@ -1,4 +1,4 @@
-package MPM_CudaSim.sim;
+package MPM_SimMain.sim;
 
 import java.util.HashMap;
 import java.util.Map;
