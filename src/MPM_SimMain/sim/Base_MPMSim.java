@@ -1,9 +1,8 @@
 package MPM_SimMain.sim;
 
-import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
-import MPM_SimMain.material.myMaterial;
+import MPM_SimMain.material.MPM_Material;
 import MPM_SimMain.ui.Base_MPMSimWindow;
 import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Math_Objects.MyMathUtils;
@@ -32,7 +31,7 @@ public abstract class Base_MPMSim {
 	/**
 	 * Material quantities of particle matter
 	 */
-	public myMaterial mat;		
+	public MPM_Material mat;		
 	/**
 	 * Current ui values describing variables used in the simulation
 	 */
@@ -145,7 +144,7 @@ public abstract class Base_MPMSim {
 		System.arraycopy(_gravity, 0, gravity, 0, gravity.length);
 		numSimFlags = getNumSimFlags();
 		//mat's quantities are managed by UI - only need to instance once
-		mat = new myMaterial(_currUIVals);
+		mat = new MPM_Material(_currUIVals);
 		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
 		//setup flag array
 		initSimFlags();	
@@ -298,51 +297,31 @@ public abstract class Base_MPMSim {
 	 * 
 	 * @param upd
 	 * @return
-	 */
-	protected final SimResetProcess checkValuesForChanges(MPM_SimUpdateFromUIData upd) {
-		HashMap<Integer,Integer> IntIdxsToCheck = new HashMap<Integer,Integer>();
-		HashMap<Integer,Integer> FloatIdxsToCheck = new HashMap<Integer,Integer>();
-		HashMap<Integer,Integer> BoolIdxsToCheck = new HashMap<Integer,Integer>();
-
-		IntIdxsToCheck.put(Base_MPMSimWindow.gIDX_GridCount, Base_MPMSimWindow.gIDX_GridCount);
-		IntIdxsToCheck.put(Base_MPMSimWindow.gIDX_NumSnowballs, Base_MPMSimWindow.gIDX_NumSnowballs);
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_GridCellSize, Base_MPMSimWindow.gIDX_GridCellSize);
-		
-		if(upd.checkPassedValuesChanged(currUIVals, IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck)) {
+	 */	
+	protected SimResetProcess checkValuesForChanges(MPM_SimUpdateFromUIData upd) {
+		boolean rebuildSim = upd.checkSimRebuild(currUIVals);
+		if(rebuildSim) {
 			win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RebuildSim");
 			return SimResetProcess.RebuildSim;
 		}
-		
-		IntIdxsToCheck.clear();
-		FloatIdxsToCheck.clear();
-
-		IntIdxsToCheck.put(Base_MPMSimWindow.gIDX_NumParticles, Base_MPMSimWindow.gIDX_NumParticles);
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_InitVel, Base_MPMSimWindow.gIDX_InitVel);		
-		if(upd.checkPassedValuesChanged(currUIVals, IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck)) {
+		boolean resetSim = upd.checkSimReset(currUIVals);
+		if(resetSim) {
 			win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.ResetSim");
 			return SimResetProcess.ResetSim;
 		}
-		
-		
 		boolean matsHaveChanged = upd.haveMaterialValsChanged(currUIVals);
 		if(matsHaveChanged) {
 			win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Materials have changed; Specifying SimResetProcess.RemakeKernel");
 			return SimResetProcess.RemakeKernel;			
-		}
-		IntIdxsToCheck.clear();
-		FloatIdxsToCheck.clear();
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_TimeStep, Base_MPMSimWindow.gIDX_TimeStep);		
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_PartMass, Base_MPMSimWindow.gIDX_PartMass);		
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_wallFricCoeff, Base_MPMSimWindow.gIDX_wallFricCoeff);		
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_CollFricCoeff, Base_MPMSimWindow.gIDX_CollFricCoeff);		
-		
-		if(upd.checkPassedValuesChanged(currUIVals, IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck)) {
+		}	
+		boolean remakeKernel = upd.checkSimKernelRebuilt(currUIVals);
+		if(remakeKernel) {
 			win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RemakeKernel");
 			return SimResetProcess.RemakeKernel;
 		}
 		win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing - nothing pertinent has changed.");
 		return SimResetProcess.DoNothing;
-	}//checkValuesForChanges
+	}
 	
 	/**
 	 * Intialize all particle-based values upon sim reset

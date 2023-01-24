@@ -123,7 +123,8 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		//redundant, but placed to specify that cuda kernel needs to be loaded
 		setSimFlags(CUDADevInit,false);
 		//Hold sim setup particle values
-		partVals = new TreeMap<String, ArrayList<float[]>>();		
+		partVals = new TreeMap<String, ArrayList<float[]>>();
+		initPartArrays();
 		//initialize cuda device pointers
 		buildCudaDeviceConstructs();
 		//set up grid and initialize sim with UI values and reset sim
@@ -284,6 +285,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * allocate dev mem for all objects based on number of particles
 	 */
+	@Override
 	protected final void initValues_Parts() {
         float h_part_mass[] = new float[numParts];
         float h_part_eye[] = new float[numParts];
@@ -348,7 +350,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * allocate dev mem for all objects based on number of grid cells
 	 */
-
+	@Override
 	protected final void initValues_Grids() {
 		h_grid_pos = new float[3][];
 		h_grid_vel = new float[3][];

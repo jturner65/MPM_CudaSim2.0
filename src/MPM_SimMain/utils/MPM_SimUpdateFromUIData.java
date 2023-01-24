@@ -7,7 +7,50 @@ import MPM_SimMain.ui.Base_MPMSimWindow;
 import base_UI_Objects.windowUI.uiData.UIDataUpdater;
 
 public class MPM_SimUpdateFromUIData extends UIDataUpdater {
-
+	private static final int 
+		RemakeKernelIDX = 0,
+		ResetSimIDX = 1,
+		RebuildSimIDX = 2,
+		MatHasChangedIDX = 3;
+	private static final int numStates = 4;
+	
+	private static final int
+		intIDX = 0,
+		floatIDX = 1,
+		boolIDX = 2;
+	//int, float and bool
+	private static final int numTypes = 3;
+	
+	@SuppressWarnings("unchecked")
+	private static HashMap<Integer, Integer>[][] simStateIDXsToCheck = new HashMap[numStates][numTypes]; 
+	static { 
+		for(int i=0;i<numStates;++i) {
+			@SuppressWarnings("unchecked")
+			HashMap<Integer, Integer>[] tmpMapAra = new HashMap[numTypes];
+			for (int j=0;j<numTypes;++j) {tmpMapAra[j] = new HashMap<Integer,Integer>();}
+			simStateIDXsToCheck[i] = tmpMapAra;
+		}
+		//requires rebuilding of simulation environment
+		simStateIDXsToCheck[RebuildSimIDX][intIDX].put(Base_MPMSimWindow.gIDX_GridCount, Base_MPMSimWindow.gIDX_GridCount);
+		simStateIDXsToCheck[RebuildSimIDX][intIDX].put(Base_MPMSimWindow.gIDX_NumSnowballs, Base_MPMSimWindow.gIDX_NumSnowballs);
+		simStateIDXsToCheck[RebuildSimIDX][floatIDX].put(Base_MPMSimWindow.gIDX_GridCellSize, Base_MPMSimWindow.gIDX_GridCellSize);
+		//requires only resetting existing sim
+		simStateIDXsToCheck[ResetSimIDX][intIDX].put(Base_MPMSimWindow.gIDX_NumParticles, Base_MPMSimWindow.gIDX_NumParticles);
+		simStateIDXsToCheck[ResetSimIDX][floatIDX].put(Base_MPMSimWindow.gIDX_InitVel, Base_MPMSimWindow.gIDX_InitVel);
+		//requires rebuilding kernel/solver
+		simStateIDXsToCheck[RemakeKernelIDX][floatIDX].put(Base_MPMSimWindow.gIDX_TimeStep, Base_MPMSimWindow.gIDX_TimeStep);		
+		simStateIDXsToCheck[RemakeKernelIDX][floatIDX].put(Base_MPMSimWindow.gIDX_PartMass, Base_MPMSimWindow.gIDX_PartMass);		
+		simStateIDXsToCheck[RemakeKernelIDX][floatIDX].put(Base_MPMSimWindow.gIDX_wallFricCoeff, Base_MPMSimWindow.gIDX_wallFricCoeff);		
+		simStateIDXsToCheck[RemakeKernelIDX][floatIDX].put(Base_MPMSimWindow.gIDX_CollFricCoeff, Base_MPMSimWindow.gIDX_CollFricCoeff);		
+		//Materials have changed, also requires rebuild
+		simStateIDXsToCheck[MatHasChangedIDX][floatIDX].put(Base_MPMSimWindow.gIDX_InitYoungMod, Base_MPMSimWindow.gIDX_InitYoungMod);		 
+		simStateIDXsToCheck[MatHasChangedIDX][floatIDX].put(Base_MPMSimWindow.gIDX_PoissonRatio, Base_MPMSimWindow.gIDX_PoissonRatio); 			 
+		simStateIDXsToCheck[MatHasChangedIDX][floatIDX].put(Base_MPMSimWindow.gIDX_HardeningCoeff, Base_MPMSimWindow.gIDX_HardeningCoeff);		 
+		simStateIDXsToCheck[MatHasChangedIDX][floatIDX].put(Base_MPMSimWindow.gIDX_CriticalCompression, Base_MPMSimWindow.gIDX_CriticalCompression);
+		simStateIDXsToCheck[MatHasChangedIDX][floatIDX].put(Base_MPMSimWindow.gIDX_CriticalStretch, Base_MPMSimWindow.gIDX_CriticalStretch);    
+		simStateIDXsToCheck[MatHasChangedIDX][floatIDX].put(Base_MPMSimWindow.gIDX_AlphaPicFlip, Base_MPMSimWindow.gIDX_AlphaPicFlip);	   
+	}
+	
 	public MPM_SimUpdateFromUIData(Base_MPMSimWindow _win) {		super(_win);	}
 	public MPM_SimUpdateFromUIData(Base_MPMSimWindow _win, Map<Integer, Integer> _iVals, Map<Integer, Float> _fVals,
 			Map<Integer, Boolean> _bVals) {
@@ -44,38 +87,58 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 	public float getCriticalCompression() {return floatValues.get(Base_MPMSimWindow.gIDX_CriticalCompression);} 	 
 	public float getCriticalStretch() {return floatValues.get(Base_MPMSimWindow.gIDX_CriticalStretch);}    
 	public float getAlphaPicFlip() {return floatValues.get(Base_MPMSimWindow.gIDX_AlphaPicFlip);}	      
-		
-	/**
-	 * access app-specific booleans
-	 */		
-	//TODO
-	
-	
+
 	/**
 	 * Utilities
+	 */	
+	/**
+	 * Check whether simulation material values have changed via UI input
+	 * @param _otr
+	 * @return
 	 */
-	
-	public boolean haveMaterialValsChanged(MPM_SimUpdateFromUIData _otr) {
-		HashMap<Integer,Integer> FloatIdxsToCheck = new HashMap<Integer,Integer>();		
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_InitYoungMod, Base_MPMSimWindow.gIDX_InitYoungMod);		 
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_PoissonRatio,Base_MPMSimWindow.gIDX_PoissonRatio); 			 
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_HardeningCoeff,Base_MPMSimWindow.gIDX_HardeningCoeff);		 
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_CriticalCompression,Base_MPMSimWindow.gIDX_CriticalCompression);
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_CriticalStretch,Base_MPMSimWindow.gIDX_CriticalStretch);    
-		FloatIdxsToCheck.put(Base_MPMSimWindow.gIDX_AlphaPicFlip,Base_MPMSimWindow.gIDX_AlphaPicFlip);	   
-		return havePassedValuesChanged(_otr,new HashMap<Integer,Integer>(), FloatIdxsToCheck, new HashMap<Integer,Integer>());
+	public boolean haveMaterialValsChanged(MPM_SimUpdateFromUIData _otr) {   
+		return havePassedValuesChanged(_otr,
+				simStateIDXsToCheck[MatHasChangedIDX][intIDX],
+				simStateIDXsToCheck[MatHasChangedIDX][floatIDX],
+				simStateIDXsToCheck[MatHasChangedIDX][boolIDX]);
+	}
+
+	/**
+	 * Check whether the simulation should be rebuilt without remaking solver kernel
+	 * @param _otr
+	 * @return
+	 */
+	public boolean checkSimRebuild(MPM_SimUpdateFromUIData _otr) {
+		return havePassedValuesChanged(_otr,
+				simStateIDXsToCheck[RebuildSimIDX][intIDX],
+				simStateIDXsToCheck[RebuildSimIDX][floatIDX],
+				simStateIDXsToCheck[RebuildSimIDX][boolIDX]);
 	}
 	
 	/**
-	 * Whether or not modifications to UI values that the sim relies on occur, in which case the sim should be reset 
+	 * Check whether simulation should only be reset
+	 * @param _otr
+	 * @return 
+	 */
+	public boolean checkSimReset(MPM_SimUpdateFromUIData _otr) {
+		return havePassedValuesChanged(_otr,
+				simStateIDXsToCheck[ResetSimIDX][intIDX],
+				simStateIDXsToCheck[ResetSimIDX][floatIDX],
+				simStateIDXsToCheck[ResetSimIDX][boolIDX]);
+	}
+	
+	/**
+	 * Check whether solver kernel needs to be remade
+	 * @param _otr
 	 * @return
 	 */
-	public boolean shouldSimBeReset(MPM_SimUpdateFromUIData _otr, 
-			HashMap<Integer,Integer> IntIdxsToIgnore, 
-			HashMap<Integer,Integer> FloatIdxsToIgnore, 
-			HashMap<Integer,Integer> BoolIdxsToCheck) {
-		return haveValuesChangedExceptPassed(_otr,IntIdxsToIgnore, FloatIdxsToIgnore, BoolIdxsToCheck);
+	public boolean checkSimKernelRebuilt(MPM_SimUpdateFromUIData _otr) {
+		return havePassedValuesChanged(_otr,
+				simStateIDXsToCheck[RemakeKernelIDX][intIDX],
+				simStateIDXsToCheck[RemakeKernelIDX][floatIDX],
+				simStateIDXsToCheck[RemakeKernelIDX][boolIDX]);
 	}
+		
 	
 	/**
 	 * 
@@ -88,7 +151,7 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 			HashMap<Integer,Integer> BoolIdxsToCheck){
 		return havePassedValuesChanged(_otr,IntIdxsToCheck, FloatIdxsToCheck, BoolIdxsToCheck);
 	}
-	
+
 	@Override
 	public String toString() {
 		String res = "Owning Window Name: "+win.name+" | Tracked values : "+intValues.size() +" Integers, " +floatValues.size() +" Floats, " +boolValues.size() + " Booleans\n";

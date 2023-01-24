@@ -13,7 +13,7 @@ public enum SimResetProcess{
 	private int value; 
 	private String[] _valExplanation = new String[] {
 			"No need to modify simulation in any way due to UI Input",
-			"Remap Kernel functions but do not modify simulation environment",
+			"Remap Solver/Kernel functions but do not modify simulation environment",
 			"Reset existing simulation points using some new values",
 			"Rebuild simulation environment entirely"};
 	private static String[] _valName = new String[] {"No Modification","Remap Kernel","Reset Existing Sim","Rebuild Simulation"};

@@ -7,11 +7,11 @@ import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
  * @author John Turner
  *
  */
-public class myMaterial {
+public class MPM_Material {
 	private float initYoungMod, poissonRatio, lambda0, mu0;
 	private float hardeningCoeff, criticalCompression, criticalStretch, alphaPicFlip;
 		
-	public myMaterial(MPM_SimUpdateFromUIData _currUIVals) {
+	public MPM_Material(MPM_SimUpdateFromUIData _currUIVals) {
 		updateMatVals_FromUI(_currUIVals);
 	}//ctor
 		
