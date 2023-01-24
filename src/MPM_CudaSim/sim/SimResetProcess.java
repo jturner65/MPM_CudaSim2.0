@@ -26,5 +26,5 @@ public enum SimResetProcess{
 	public static int getNumVals(){return map.size();}						//get # of values in enum
 	public String getName() {return _valName[value];}
 	@Override
-    public String toString() { return ""+value + ":"+_valExplanation[value]; }	
+   public String toString() { return ""+name() + ":"+_valExplanation[value]; }	
 }//SimResetProcess

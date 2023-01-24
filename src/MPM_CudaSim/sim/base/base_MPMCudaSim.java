@@ -25,28 +25,44 @@ import jcuda.runtime.JCuda;
  * different configurations/initialization setups
  */
 public abstract class base_MPMCudaSim{	
-
+	/**
+	 * Render interface to render results
+	 */
 	public static IRenderInterface pa;
-	//name of instancing sim
+	/**
+	 * Name of instancing sim
+	 */
 	public final String simName;
-	//owning window
+	/**
+	 * Owning window
+	 */
 	protected MPM_SimWindow win;	
-	//cuda kernel file name
+	/**
+	 * CUDA kernel file name
+	 */
 	private String ptxFileName = "MPM_CUDA_Sim_New.ptx";
-	//material quantities of particle matter
+	/**
+	 * Material quantities of particle matter
+	 */
 	public myMaterial mat;	
 		
 	/**
-	 * current ui values describing variables used in the simulation
+	 * Current ui values describing variables used in the simulation
 	 */
 	public MPM_SimUpdateFromUIData currUIVals;	
 	
-	//const matrix for calculations - z is up/down
+	/**
+	 * const gravity vector for calculations - z is up/down
+	 */
 	protected final float[] gravity = new float[] {0, 0, -9.8f};
-	//scale amount for visualization to fill cube frame in 3d world; particle radius, scaled by different visual scales
+	/**
+	 * Scale amount for visualization to fill cube frame in 3d world
+	 */
 	protected float sclAmt;
 	
-	//flags relevant to simulator execution
+	/**
+	 * flags relevant to simulator execution
+	 */
 	protected int[] simFlags;	
 	public static final int
 		debugSimIDX 			= 0,
@@ -63,11 +79,13 @@ public abstract class base_MPMCudaSim{
 		CUDADevInit				= 11;			//if 1 time cuda device and kernel file init is complete
 	protected static final int numSimFlags = 12;
 
-	//constants for collider calcs
+	/**
+	 * Constants for collider calcs
+	 */
 	protected static float cyl_da = (float) (Math.PI/18.0f);	
 	
 	////////////////////////////////////////////////////
-    // Maps holding CUDA function points and parameter pointers
+    // Maps holding CUDA function pointers and parameter pointers
 	// This facilitates CUDA calcs and access to appropriately configured CUDA args
 	protected TreeMap<String, Pointer> kernelParams;
 	protected TreeMap<String, CUfunction> cuFuncs;
@@ -99,15 +117,25 @@ public abstract class base_MPMCudaSim{
 	protected CUdeviceptr[][] part_fe, part_fp;    
     protected CUdeviceptr grid_mass;
     // CUDA calc helper variables
-    //total # of grid cells in grid
+    /**
+     * total # of grid cells in grid
+     */
     protected int ttlGridCount;
-    //# of cuda blocks to use for particles
+    /**
+     * # of cuda blocks to use for particles
+     */
     protected int numBlocksParticles;
-    //# of cuda blocks to use for grid
+    /**
+     * # of cuda blocks to use for grid
+     */
     protected int numBlocksGrid;
-	//# parts * size of float & num grid cells * size float 
+    /**
+     * # parts * size of float & num grid cells * size float 
+     */
 	protected long numPartsFloatSz, numGridFloatSz;
-	//# of cuda threads
+	/**
+	 * # of cuda threads
+	 */
     protected final int numCUDAThreads=128;
     
     //Raw initial particle values
@@ -115,48 +143,87 @@ public abstract class base_MPMCudaSim{
     
     ////////////////////////////////////////////////////
     //representations for rendering
-    //local representation of particle vector quantities for rendering
+    /**
+     * local representation of particle vector quantities for rendering
+     */
     protected float[][] h_part_pos, h_part_vel;
-    //local representation of grid vector quantities for rendering
+    /**
+     * local representation of grid vector quantities for rendering
+     */
     protected float [][] h_grid_pos, h_grid_vel, h_grid_accel;
-    //local rep of grid scalars for rendering
+    /**
+     * local rep of grid scalars for rendering
+     */
 	protected float[] h_grid_mass;     
-    //particle colors based on initial location
+	/**
+	 * particle colors based on initial location
+	 */
     protected int[][] h_part_clr_int, h_part_grey_int;
     
     ////////////////////////////////////////////////////
     //Sim instance variables, populated from currUIVals structure on creation/ui update
     
-	//# of snowballs - all particles evenly distrbuted amongst this many snowballs
+    /**
+     * # of snowballs - all particles evenly distrbuted amongst this many snowballs
+     */
 	protected int numSnowballs;
-	//# of particles total in the sim
+	/**
+	 * # of particles total in the sim
+	 */
 	protected int numParts;
-	//sim iterations per frame
+	/**
+	 * sim iterations per frame
+	 */
     protected int simStepsPerFrame;	
-	//# of cells per side - cube so same in all 3 dims; # of particles in sim
+    /**
+     * # of cells per side - cube so same in all 3 dims; # of particles in sim
+     */
 	protected int gridCount;
-	//Fraction of points to draw (every x'th point will be drawn)
+	/**
+	 * Fraction of points to draw (every x'th point will be drawn)
+	 */
 	protected int drawPointIncr;
 	
-	//timestep of simulation - 
+	/**
+	 * timestep of simulation - 
+	 */
 	protected float deltaT;
-	//Initial particle velocities
+	/**
+	 * Initial particle velocities
+	 */
 	protected float initVel;
-	//mass of particles
+	/**
+	 * mass of particles
+	 */
 	protected float particleMass;
-	//size of single dimension of grid cell
+	/**
+	 * size of single dimension of grid cell
+	 */
 	protected float cellSize;
-	//simulation boundaries - symmetric cube, only need min and max, grid length per dim
+	/**
+	 * simulation boundaries - symmetric cube, only need min and max, grid length per dim
+	 */
 	protected float minSimBnds, maxSimBnds, gridDim;
-	//friction coefficients of wall and TODO:colliders
+	/**
+	 * friction coefficients of wall and TODO:colliders
+	 */
     protected float wallFric;
-    //TODO support this
+    /**
+     * TODO support this
+     */
     protected float collFric;
-	//Scaling value to scale drawn vectors
+    /**
+     * Scaling value to scale drawn vectors
+     */
 	protected float vecLengthScale;
-    	
-	//grid count per side - center grid always in display; grid cell dim per side
-	//@SuppressWarnings("unchecked")
+    
+	/**
+	 * 
+	 * @param _pa
+	 * @param _win
+	 * @param _simName
+	 * @param _currUIVals
+	 */
 	public base_MPMCudaSim(IRenderInterface _pa, MPM_SimWindow _win, String _simName, MPM_SimUpdateFromUIData _currUIVals) {		
 		pa=_pa;win=_win;simName = _simName;		
 		currUIVals = new MPM_SimUpdateFromUIData(win);
@@ -257,6 +324,11 @@ public abstract class base_MPMCudaSim{
 		
 	}//updateSimVals_FromUI
 	
+	/**
+	 * 
+	 * @param upd
+	 * @return
+	 */
 	protected SimResetProcess checkValuesForChanges(MPM_SimUpdateFromUIData upd) {
 		HashMap<Integer,Integer> IntIdxsToCheck = new HashMap<Integer,Integer>();
 		HashMap<Integer,Integer> FloatIdxsToCheck = new HashMap<Integer,Integer>();
@@ -300,7 +372,7 @@ public abstract class base_MPMCudaSim{
 		}
 		win.getMsgObj().dispInfoMessage("MPM_Abs_CUDASim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing - nothing pertinent has changed.");
 		return SimResetProcess.DoNothing;
-	}
+	}//checkValuesForChanges
 	
 	/**
 	 * Update instancing class variables based on potential UI changes
@@ -942,7 +1014,10 @@ public abstract class base_MPMCudaSim{
 	private final int[] gridVecClr = new int[] {250,0,0}, gridAccelClr = new int[] {0,0,250}, gridMassClr = new int[] {0,150,50};
 	//private final int[] whitePoints = new int[] {255,255,255}; 
 
-	//draw 1 frame of results	//animTimeMod is in seconds, counting # of seconds since last draw
+	/**
+	 * draw 1 frame of results	//animTimeMod is in seconds, counting # of seconds since last draw
+	 * @param animTimeMod
+	 */
 	public final void drawMe(float animTimeMod) {
 		if(!getSimFlags(simIsBuiltIDX)) {return;}//if not built yet, don't try to draw anything
 		//render all particles - TODO determine better rendering method
@@ -1072,35 +1147,11 @@ public abstract class base_MPMCudaSim{
 		drawColliders_Indiv(animTimeMod);
 		pa.popMatState();
 	}
-	//draw internal-to-sim colliders, if they exist
+	/**
+	 * draw internal-to-sim colliders, if they exist
+	 * @param animTimeMod
+	 */
 	protected abstract void drawColliders_Indiv(float animTimeMod);
-	
-	//some utility functions and constants
-	protected myPointf Pf(myPointf O, float x, myVectorf I, double y, myVectorf J, double z, myVectorf K) {return new myPointf(O.x+x*I.x+y*J.x+z*K.x,O.y+x*I.y+y*J.y+z*K.y,O.z+x*I.z+y*J.z+z*K.z);}  // O+xI+yJ+zK
-	//returns arrays of start and end points for cylinder of passed radius r going from point a to point b
-	@SuppressWarnings("unchecked")
-	protected ArrayList<myPointf>[] buildCylinder(myPointf A, myPointf B, float r){
-		myPointf P = A;
-		myVectorf V = new myVectorf(A, B);
-		myVectorf I = myVectorf.UP;
-		myVectorf Nvec = new myVectorf(I.y*V.z-I.z*V.y, I.z*V.x-I.x*V.z, I.x*V.y-I.y*V.x);
-		if(Math.abs(Nvec.magn) < 0.000001) {//singular - cylinder wanting to go up
-			//System.out.println("vec singlr : "+ Nvec.magn + " V:"+V.toStrBrf()+" | I : " + I.toStrBrf());
-			I = myVectorf.RIGHT;
-			Nvec = new myVectorf(I.y*V.z-I.z*V.y, I.z*V.x-I.x*V.z, I.x*V.y-I.y*V.x);// Nf(I,V);
-		}
-		myVectorf J = Nvec._normalize();
-		ArrayList<myPointf>[] res = new ArrayList[2];
-		for(int idx =0;idx<res.length;++idx) {res[idx]=new ArrayList<myPointf>();}
-		float rcA, rsA;
-		for(float a=0; a<=MyMathUtils.TWO_PI_F+cyl_da; a+=cyl_da) {
-			rcA = (float) (r*Math.cos(a)); 
-			rsA = (float) (r*Math.sin(a));
-			res[0].add(Pf(P,rcA,I,rsA,J,0.0,V)); 
-			res[1].add(Pf(P,rcA,I,rsA,J,1.0,V));
-		}
-		return res;
-	}
 	
 }//class MPM_ABS_Sim 
 
