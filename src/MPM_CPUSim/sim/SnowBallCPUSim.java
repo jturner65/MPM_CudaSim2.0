@@ -27,8 +27,6 @@ public class SnowBallCPUSim extends Base_MPMCPUSim {
 
 	@Override
 	protected void updateCPUSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
-		// TODO Auto-generated method stub
-
 	}//updateCPUSimVals_FromUI_Indiv
 
 	@Override
