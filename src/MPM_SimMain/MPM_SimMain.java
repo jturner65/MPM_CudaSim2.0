@@ -5,8 +5,8 @@ import java.util.HashMap;
 import MPM_CPUSim.ui.MPM_CPUSimWindow;
 import MPM_CudaSim.ui.MPM_CudaSimWindow;
 import base_UI_Objects.GUI_AppManager;
-import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_UI_Objects.windowUI.sidebar.SidebarMenu;
+import base_Utils_Objects.io.messaging.MsgCodes;
 
 /**
 * MPM Snow Simulation in CUDA
@@ -71,6 +71,19 @@ public class MPM_SimMain extends GUI_AppManager {
 	public String getPrjNmLong() {		return prjNmLong;}
 	@Override
 	public String getPrjDescr() {		return projDesc;}	
+	/**
+	 * Set minimum level of message object console messages to display for this application. If null then all messages displayed
+	 * @return
+	 */
+	@Override
+	protected final MsgCodes getMinConsoleMsgCodes() {return MsgCodes.info1;}
+	/**
+	 * Set minimum level of message object log messages to save to log for this application. If null then all messages saved to log.
+	 * @return
+	 */
+	@Override
+	protected final MsgCodes getMinLogMsgCodes() {return MsgCodes.info1;}
+	
 	//instance-specific setup code
 	protected void setup_Indiv() {
 		//modify default grid dims to be 1500x1500x1500
@@ -229,7 +242,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	//address all flag-setting here, so that if any special cases need to be addressed they can be
 	protected void setVisFlag_Indiv(int idx, boolean val ){
 		switch (idx){
-			case showUIMenu 	    : { dispWinFrames[dispMenuIDX].setFlags(Base_DispWindow.showIDX,val);    break;}											//whether or not to show the main ui window (sidebar)			
+			case showUIMenu 	: { dispWinFrames[dispMenuIDX].dispFlags.setShowWin(val);    break;}											//whether or not to show the main ui window (sidebar)			
 			case showMPMCudawin			: {setWinFlagsXOR(dispMPMCudaWinIDX, val); break;}
 			case showMPMCPUwin			: {setWinFlagsXOR(dispMPMCPUWinIDX, val); break;}
 			default : {break;}
