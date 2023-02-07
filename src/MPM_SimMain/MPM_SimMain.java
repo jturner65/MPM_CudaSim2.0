@@ -33,8 +33,7 @@ public class MPM_SimMain extends GUI_AppManager {
 		dispMPMCudaWinIDX = 1,
 		dispMPMCPUWinIDX = 2;
 	
-	private final int[] bground = new int[]{244,244,244,255};		//bground color	
-	
+	private final int[] bground = new int[]{244,244,244,255};		//bground color		
 	
 ///////////////
 //CODE STARTS
@@ -84,7 +83,9 @@ public class MPM_SimMain extends GUI_AppManager {
 	@Override
 	protected final MsgCodes getMinLogMsgCodes() {return MsgCodes.info1;}
 	
-	//instance-specific setup code
+	/**
+	 * instance-specific setup code
+	 */
 	protected void setup_Indiv() {
 		//modify default grid dims to be 1500x1500x1500
 		setDesired3DGridDims(1500);
@@ -184,8 +185,10 @@ public class MPM_SimMain extends GUI_AppManager {
 			default : {	}
 		}//switch	
 	}
+	/**
+	 * gives multiplier based on whether shift, alt or cntl (or any combo) is pressed
+	 */
 	@Override
-	//gives multiplier based on whether shift, alt or cntl (or any combo) is pressed
 	public double clickValModMult(){return ((altIsPressed() ? .1 : 1.0) * (shiftIsPressed() ? 10.0 : 1.0));}	
 	@Override
 	public boolean isClickModUIVal() {
@@ -193,21 +196,24 @@ public class MPM_SimMain extends GUI_AppManager {
 		return altIsPressed() || shiftIsPressed();		
 	}
 	
-	//get the ui rect values of the "master" ui region (another window) -> this is so ui objects of one window can be made, clicked, and shown displaced from those of the parent windwo
+	/**
+	 * get the ui rect values of the "master" ui region (another window).
+	 * this is so ui objects of one window can be made, clicked, and shown displaced from those of the parent window
+	 */
 	@Override
 	public float[] getUIRectVals(int idx){
-			//this.pr("In getUIRectVals for idx : " + idx);
 		switch(idx){
 			case dispMenuIDX 		: {return new float[0];}			//idx 0 is parent menu sidebar
 			case dispMPMCudaWinIDX 	: {return dispWinFrames[dispMenuIDX].uiClkCoords;}
 			case dispMPMCPUWinIDX	: {return dispWinFrames[dispMenuIDX].uiClkCoords;}
-			//case disp2ndWinIDX 	: {	return dispWinFrames[dispMenuIDX].uiClkCoords;}
 			default :  return dispWinFrames[dispMenuIDX].uiClkCoords;
 			}
 	}//getUIRectVals
 
+	/**
+	 * these tie using the UI buttons to modify the window in with using the boolean tags - PITA but currently necessary
+	 */
 	@Override
-	//these tie using the UI buttons to modify the window in with using the boolean tags - PITA but currently necessary
 	public void handleShowWin(int btn, int val, boolean callFlags){//display specific windows - multi-select/ always on if sel
 		if(!callFlags){//called from setflags - only sets button state in UI to avoid infinite loop
 			setMenuBtnState(SidebarMenu.btnShowWinIdx,btn, val);
@@ -238,13 +244,15 @@ public class MPM_SimMain extends GUI_AppManager {
 	 */
 	@Override
 	public int getNumVisFlags() {return numVisFlags;}
+	/**
+	 * address all flag-setting here, so that if any special cases need to be addressed they can be easily
+	 */
 	@Override
-	//address all flag-setting here, so that if any special cases need to be addressed they can be
 	protected void setVisFlag_Indiv(int idx, boolean val ){
 		switch (idx){
-			case showUIMenu 	: { dispWinFrames[dispMenuIDX].dispFlags.setShowWin(val);    break;}											//whether or not to show the main ui window (sidebar)			
-			case showMPMCudawin			: {setWinFlagsXOR(dispMPMCudaWinIDX, val); break;}
-			case showMPMCPUwin			: {setWinFlagsXOR(dispMPMCPUWinIDX, val); break;}
+			case showUIMenu 		: { dispWinFrames[dispMenuIDX].dispFlags.setShowWin(val);    break;}											//whether or not to show the main ui window (sidebar)			
+			case showMPMCudawin		: {setWinFlagsXOR(dispMPMCudaWinIDX, val); break;}
+			case showMPMCPUwin		: {setWinFlagsXOR(dispMPMCPUWinIDX, val); break;}
 			default : {break;}
 		}
 	}//setFlags  

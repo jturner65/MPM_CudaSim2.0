@@ -80,7 +80,7 @@
 	<classpathentry kind="lib" path="libs/jblas-1.2.4.jar"/>
 	<classpathentry kind="lib" path="libs/base_JavaProjTools_Math.jar"/>
 	<classpathentry kind="lib" path="libs/base_JavaProjTools_Utils.jar"/>
-	<classpathentry kind="lib" path="libs/processing/core.jar" sourcepath="E:/Processing stuff/processing Source/core/src"/>
+	<classpathentry kind="lib" path="libs/processing/core.jar" sourcepath="E:/Eclipse Workspace/eclipse workspace/processing4/core"/>
 	<classpathentry kind="lib" path="libs/base_JavaProjTools_UI.jar"/>
 	<classpathentry kind="lib" path="libs/processing/gluegen-rt.jar"/>
 	<classpathentry kind="lib" path="libs/processing/gluegen-rt-natives-linux-aarch64.jar"/>
