@@ -12,8 +12,6 @@ import base_Render_Interface.IRenderInterface;
  * @author John Turner
  */
 public abstract class Base_MPMCPUSim extends Base_MPMSim {
-
-	protected static final int numSimFlags = numBaseMPMSimFlags;
 	
 	/**
 	 * @param _pa
@@ -146,15 +144,5 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 
 	}
 
-	@Override
-	protected final int getNumSimFlags() {return numSimFlags;	}
-
-	/**
-	 * set values for instancing class-specific boolean flags
-	 * @param idx
-	 * @param val
-	 */
-	@Override
-	protected final void setPrivFlags_Indiv(int idx, boolean val) {}
 
 }//class Base_MPMCPUSim

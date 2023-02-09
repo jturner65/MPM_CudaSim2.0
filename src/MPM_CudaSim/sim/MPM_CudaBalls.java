@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 
 import MPM_CudaSim.sim.base.Base_MPMCudaSim;
+import MPM_CudaSim.sim.base.MPM_CudaSimFlags;
+import MPM_SimMain.sim.Base_MPMSimFlags;
 import MPM_SimMain.ui.Base_MPMSimWindow;
 import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
@@ -188,6 +190,18 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
 		//TODO any debugging that might be supportable here
 		return false;
 	}//simMeDebug
+
+	@Override
+	protected Base_MPMSimFlags buildSimFlags() {
+		// TODO Auto-generated method stub
+		return new MPM_CudaSimFlags(this);
+	}
+
+	@Override
+	public void handleSimFlagsDebug_Indiv(boolean val) {
+		// TODO Auto-generated method stub
+		
+	}
 
 
 }//class MPM_Cuda2Balls

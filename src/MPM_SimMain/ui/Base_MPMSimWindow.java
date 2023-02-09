@@ -140,17 +140,27 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	 *         displayed)
 	 */
 	protected abstract int initAllMPMPrivBtns_Indiv(ArrayList<Object[]> tmpBtnNamesArray);
-
-	
+	/**
+	 * Initialize any UI control flags appropriate for all boids window application
+	 */
 	@Override
-	protected void initMe() {//all ui objects set by here
+	protected final void initDispFlags() {
 		//this window is runnable
 		dispFlags.setIsRunnable(true);
 		//this window uses a customizable camera
 		dispFlags.setUseCustCam(true);
 		// capable of using right side menu
 		dispFlags.setDrawRtSideMenu(true);
-		
+		//any app-specific disp flags to set
+		initDispFlags_Indiv();
+	}
+	/**
+	 * Initialize any UI control flags appropriate for specific instanced boids window
+	 */
+	protected abstract void initDispFlags_Indiv();
+	
+	@Override
+	protected void initMe() {//all ui objects set by here
 		//init simulation construct here
 		msgObj.dispInfoMessage(className,"initMe","Start building simulation now.");
 		//build sim(s) here
@@ -218,31 +228,31 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 				}
 				break;}	
 			case showLocColors			: {
-				currSim.setSimFlags(Base_MPMSim.showLocColors, val);
+				currSim.simFlags.setShowLocColors(val);
 				break;}
 			case showCollider			: {//show collider
-				currSim.setSimFlags(Base_MPMSim.showCollider, val);
+				currSim.simFlags.setShowCollider(val);
 				break;}
 			case showParticles			: {
-				currSim.setSimFlags(Base_MPMSim.showParticles, val);				
+				currSim.simFlags.setShowParticles(val);				
 				break;}
 			case showParticleVelArrows	: {
-				currSim.setSimFlags(Base_MPMSim.showParticleVelArrows, val);
+				currSim.simFlags.setShowPartVels(val);
 				break;} 
 			case showGrid				: {
-				currSim.setSimFlags(Base_MPMSim.showGrid, val);
+				currSim.simFlags.setShowGrid(val);
 				break;} 				
 			case showGridVelArrows 		: {
-				currSim.setSimFlags(Base_MPMSim.showGridVelArrows, val);
+				currSim.simFlags.setShowGridVel(val);
 				break;} 		
 			case showGridAccelArrows	: {
-				currSim.setSimFlags(Base_MPMSim.showGridAccelArrows, val);
+				currSim.simFlags.setShowGridAccel(val);
 				break;} 	
 			case showGridMass  			: {
-				currSim.setSimFlags(Base_MPMSim.showGridMass, val);
+				currSim.simFlags.setShowGridMass(val);
 				break;} 		
 			case showActiveNodes 	: {
-				currSim.setSimFlags(Base_MPMSim.showActiveNodes, val);
+				currSim.simFlags.setShowActiveNodes(val);
 				break;} 	
 			case showExecTime			: { 
 				break;}
@@ -425,7 +435,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		
 	//draw custom 2d constructs below interactive component of menu
 	@Override
-	public void drawCustMenuObjs(){
+	public void drawCustMenuObjs(float animTimeMod){
 		pa.pushMatState();	
 		//all sub menu drawing within push mat call
 		pa.translate(0,custMenuOffset+yOff);		

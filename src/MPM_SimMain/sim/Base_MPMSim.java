@@ -37,27 +37,7 @@ public abstract class Base_MPMSim {
 	 */
 	public MPM_SimUpdateFromUIData currUIVals;
 	
-	
-	/**
-	 * flags relevant to simulator execution
-	 */
-	protected int[] simFlags;	
-	public static final int
-		debugSimIDX 			= 0,
-		simIsBuiltIDX			= 1,			//simulation is finished being built
-		showLocColors			= 2,			//display particles by color of their initial location
-		showCollider			= 3,			//display visual rep of collider object, if one exists
-		showParticles			= 4,			//display visual rep of material points
-		showParticleVelArrows 	= 5,			//plot velocity arrows for each particle	
-		showGrid				= 6,			//plot the computational grid
-		showGridVelArrows 		= 7,			//plot velocity arrows for each gridNode
-		showGridAccelArrows 	= 8,			//plot acceleration arrows for each gridNode
-		showGridMass  			= 9,			//plot variable sized spheres proportional to gridnode mass
-		showActiveNodes		  	= 10;			//show the grid nodes influenced by each particle
-	protected static final int numBaseMPMSimFlags = 11;
-	
-	//Total # of flags used by instancing class
-	protected final int numSimFlags;
+	public Base_MPMSimFlags simFlags; 
 	
     ////////////////////////////////////////////////////
     //Sim instance variables, populated from currUIVals structure on creation/ui update
@@ -142,15 +122,18 @@ public abstract class Base_MPMSim {
 		currUIVals = new MPM_SimUpdateFromUIData(win);
 		gravity = new float[_gravity.length];
 		System.arraycopy(_gravity, 0, gravity, 0, gravity.length);
-		numSimFlags = getNumSimFlags();
 		//mat's quantities are managed by UI - only need to instance once
 		mat = new MPM_Material(_currUIVals);
 		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
 		//setup flag array
-		initSimFlags();	
+		simFlags = buildSimFlags();	
 	}//ctor
 	
-	
+	/**
+	 * Instancing class simulation flags structure
+	 * @return
+	 */
+	protected abstract Base_MPMSimFlags buildSimFlags();
     /**
      * Reset simulation environment
      * @param rebuildSim Should entire sim environment be rebuilt?
@@ -161,7 +144,7 @@ public abstract class Base_MPMSim {
 		}
 		//stop simulation and reset
 		Base_DispWindow.AppMgr.setSimIsRunning(false);
-		setSimFlags(simIsBuiltIDX, false);	
+		simFlags.setSimIsBuilt(false);	
 		//if only simulation parameters, don't rebuild simulation environment
 		if (rebuildSim != SimResetProcess.RemakeKernel) {
 			buildSimEnvironment(rebuildSim);
@@ -169,7 +152,7 @@ public abstract class Base_MPMSim {
 		//instance-specific reset - rebuild simulation kernel/solver
 		resetSim_Indiv(rebuildSim);
 
-		setSimFlags(simIsBuiltIDX, true);
+		simFlags.setSimIsBuilt(true);
 		win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "resetSim","Finished resetting/rebuilding sim");
 	}//resetSim
 	
@@ -179,6 +162,22 @@ public abstract class Base_MPMSim {
 	 */
 	protected abstract void resetSim_Indiv(SimResetProcess rebuildSim);
 	
+	/**
+	 * Called by simFlags structure, when debug is set or cleared
+	 * @param val
+	 */
+	public final void handleSimFlagsDebug(boolean val) {
+		
+		
+		handleSimFlagsDebug_Indiv(val);
+	}
+	
+	/**
+	 * Instance class-specific debug handling
+	 * Called by simFlags structure, when debug is set or cleared
+	 * @param val
+	 */
+	public abstract void handleSimFlagsDebug_Indiv(boolean val);
 	
 	/**
 	 * Functionality to rebuild the simulation environment
@@ -433,7 +432,7 @@ public abstract class Base_MPMSim {
 	 * @param animTimeMod
 	 */
 	public final void drawMe(float animTimeMod) {
-		if(!getSimFlags(simIsBuiltIDX)) {return;}//if not built yet, don't try to draw anything
+		if(!simFlags.getSimIsBuilt()) {return;}//if not built yet, don't try to draw anything
 		//render all particles - TODO determine better rendering method
 		pa.pushMatState();
 		//set stroke values and visual scale
@@ -441,17 +440,17 @@ public abstract class Base_MPMSim {
 			pa.scale(sclAmt);	
 			
 			//point-based rendering
-			if(getSimFlags(showParticles)){			_drawParts(animTimeMod, getSimFlags(showLocColors));}			
-			if(getSimFlags(showParticleVelArrows)){ _drawPartVel(animTimeMod, drawPointIncr);}
+			if(simFlags.getShowParticles()){			_drawParts(animTimeMod, simFlags.getShowLocColors());}			
+			if(simFlags.getShowPartVels()){ _drawPartVel(animTimeMod, drawPointIncr);}
 			
 			//draw colliders, if exist
-			if(getSimFlags(showCollider)){			_drawColliders(animTimeMod);}
+			if(simFlags.getShowCollider()){			_drawColliders(animTimeMod);}
 			
 			//Grid-based rendering
-			if(getSimFlags(showGrid)) {				_drawGrid();}
-			if(getSimFlags(showGridVelArrows)) {	_drawGridVel(animTimeMod);}
-			if(getSimFlags(showGridAccelArrows)){	_drawGridAccel(animTimeMod);}
-			if(getSimFlags(showGridMass)) {			_drawGridMass(animTimeMod);}
+			if(simFlags.getShowGrid()) {				_drawGrid();}
+			if(simFlags.getShowGridVel()) {	_drawGridVel(animTimeMod);}
+			if(simFlags.getShowGridAccel()){	_drawGridAccel(animTimeMod);}
+			if(simFlags.getShowGridMass()) {			_drawGridMass(animTimeMod);}
 		pa.popMatState();
 	}//drawMe
 	
@@ -585,36 +584,36 @@ public abstract class Base_MPMSim {
 	 * Returns the number of simulation flags in instanced simulation 
 	 * @return
 	 */
-	protected abstract int getNumSimFlags();
-	
-	protected final void initSimFlags(){simFlags = new int[1 + numSimFlags/32]; for(int i = 0; i<simFlags.length; ++i){setSimFlags(i,false);}}
-	public final boolean getSimFlags(int idx){int bitLoc = 1<<(idx%32);return (simFlags[idx/32] & bitLoc) == bitLoc;}	
-	public final void setSimFlags(int idx, boolean val) {
-		boolean curVal = getSimFlags(idx);
-		if(val == curVal) {return;}
-		int flIDX = idx/32, mask = 1<<(idx%32);
-		simFlags[flIDX] = (val ?  simFlags[flIDX] | mask : simFlags[flIDX] & ~mask);
-		switch(idx){
-			case debugSimIDX 			: {break;}	
-			case simIsBuiltIDX 			: {break;}			
-			case showLocColors 			: {break;}
-			case showCollider 			: {break;}
-			case showParticles			: {break;}
-			case showParticleVelArrows 	: {break;}
-			case showGrid				: {break;}				
-			case showGridVelArrows 		: {break;}		
-			case showGridAccelArrows 	: {break;}
-			case showGridMass  			: {break;}		
-			case showActiveNodes  		: {break;}
-			default :{
-				setPrivFlags_Indiv(idx, val);
-			}			
-		}			
-	}//setSimFlags
-	/**
-	 * set values for instancing class-specific boolean flags
-	 * @param idx
-	 * @param val
-	 */
-	protected abstract void setPrivFlags_Indiv(int idx, boolean val);
+//	protected abstract int getNumSimFlags();
+//	
+//	protected final void initSimFlags(){simFlagsOld = new int[1 + numSimFlags/32]; for(int i = 0; i<simFlagsOld.length; ++i){setSimFlags(i,false);}}
+//	public final boolean getSimFlags(int idx){int bitLoc = 1<<(idx%32);return (simFlagsOld[idx/32] & bitLoc) == bitLoc;}	
+//	public final void setSimFlags(int idx, boolean val) {
+//		boolean curVal = getSimFlags(idx);
+//		if(val == curVal) {return;}
+//		int flIDX = idx/32, mask = 1<<(idx%32);
+//		simFlagsOld[flIDX] = (val ?  simFlagsOld[flIDX] | mask : simFlagsOld[flIDX] & ~mask);
+//		switch(idx){
+//			case debugSimIDX 			: {break;}	
+//			case simIsBuiltIDX 			: {break;}			
+//			case showLocColors 			: {break;}
+//			case showCollider 			: {break;}
+//			case showParticles			: {break;}
+//			case showParticleVelArrows 	: {break;}
+//			case showGrid				: {break;}				
+//			case showGridVelArrows 		: {break;}		
+//			case showGridAccelArrows 	: {break;}
+//			case showGridMass  			: {break;}		
+//			case showActiveNodes  		: {break;}
+//			default :{
+//				setPrivFlags_Indiv(idx, val);
+//			}			
+//		}			
+//	}//setSimFlags
+//	/**
+//	 * set values for instancing class-specific boolean flags
+//	 * @param idx
+//	 * @param val
+//	 */
+//	protected abstract void setPrivFlags_Indiv(int idx, boolean val);
 }//class base_MPMSim

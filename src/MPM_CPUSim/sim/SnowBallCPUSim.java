@@ -4,6 +4,8 @@
 package MPM_CPUSim.sim;
 
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
+import MPM_CPUSim.sim.base.MPM_CPUSimFlags;
+import MPM_SimMain.sim.Base_MPMSimFlags;
 import MPM_SimMain.ui.Base_MPMSimWindow;
 import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
@@ -41,5 +43,17 @@ public class SnowBallCPUSim extends Base_MPMCPUSim {
 	public final boolean simMeDebug(float modAmtMillis) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	protected Base_MPMSimFlags buildSimFlags() {
+		// TODO Auto-generated method stub
+		return new MPM_CPUSimFlags(this);
+	}
+
+	@Override
+	public void handleSimFlagsDebug_Indiv(boolean val) {
+		// TODO Auto-generated method stub
+		
 	}
 }//class SnowBallSim

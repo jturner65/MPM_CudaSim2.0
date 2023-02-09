@@ -34,6 +34,9 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 		super(_p, _AppMgr, _winIdx, _flagIdx);
 		super.initThisWin(false);
 	}
+
+	@Override
+	protected void initDispFlags_Indiv() {}
 	@Override
 	protected final void initMe_Indiv() {	}
 	

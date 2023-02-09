@@ -42,6 +42,8 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
 	}
 
 	@Override
+	protected void initDispFlags_Indiv() {}
+	@Override
 	protected final void initMe_Indiv() {}
 	
 	@Override

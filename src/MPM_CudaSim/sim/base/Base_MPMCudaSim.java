@@ -23,14 +23,6 @@ import jcuda.runtime.JCuda;
  * different configurations/initialization setups
  */
 public abstract class Base_MPMCudaSim extends Base_MPMSim{	
-
-	/**
-	 * flags relevant to CUDA simulator execution
-	 */
-	public static final int
-		CUDADevInit				= numBaseMPMSimFlags + 0;			//if 1 time cuda device and kernel file init is complete
-	protected static final int numSimFlags = numBaseMPMSimFlags + 1;
-	
 	
 	/**
 	 * CUDA kernel file name
@@ -121,7 +113,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	public Base_MPMCudaSim(IRenderInterface _pa, Base_MPMSimWindow _win, String _simName, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa, _win, _simName, new float[] {0, 0, -9.8f}, _currUIVals);
 		//redundant, but placed to specify that cuda kernel needs to be loaded
-		setSimFlags(CUDADevInit,false);
+		((MPM_CudaSimFlags) simFlags).setCudaDevInit(false);
 		//Hold sim setup particle values
 		partVals = new TreeMap<String, ArrayList<float[]>>();
 		initPartArrays();
@@ -158,7 +150,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		
 		win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "resetSim","Start resetting sim");
 		
-		if (!getSimFlags(CUDADevInit)) {
+		if (!((MPM_CudaSimFlags)simFlags).getCudaDevInit()) {
             //init cuda device and kernel file if not done already - only do 1 time
 			win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "resetSim","CUDA Module load/init");
             initCUDAModuleSetup();
@@ -279,7 +271,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 			cuFuncs.put(key,  c);
 		}
     
-        setSimFlags(CUDADevInit, true);
+        ((MPM_CudaSimFlags) simFlags).setCudaDevInit(true);
 	}//loadModuleAndSetFuncPtrs
 	
 	/**
@@ -618,7 +610,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         	//win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "cudaSetup","\tinitStepFuncKeys Handle : "+initStepFuncKeys[j]);
         	launchKernel(initStepFuncKeys[j]);	}
 
-    	setSimFlags(simIsBuiltIDX, true);
+    	simFlags.setSimIsBuilt(true);
     	win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "cudaSetup","Finished first MPM Pass.");
 	}//cudaSetup
 
@@ -675,21 +667,6 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		}
 		win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "compilePtxFile","Finished compiling PTX file : "+ ptxFileName);
 	}//compilePtxFile
-
-	/**
-	 * set values for instancing class-specific boolean flags
-	 * @param idx
-	 * @param val
-	 */
-	@Override
-	protected final void setPrivFlags_Indiv(int idx, boolean val) {}
-	
-	/**
-	 * Returns the number of simulation flags in instanced simulation 
-	 * @return
-	 */
-	@Override
-	protected final int getNumSimFlags() {return numSimFlags;}
 	
 	/**
 	 * Instance-specific per-sim cycle simulation execution code
@@ -710,20 +687,20 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 */
 	protected final boolean simMePost_Indiv(float modAmtMillis) {
 		//copy from device data to host particle position or velocity arrays
- 		if(getSimFlags(showParticles) || getSimFlags(showParticleVelArrows)) {
+ 		if(simFlags.getShowParticles() || simFlags.getShowPartVels()) {
  			for(int i=0;i<h_part_pos.length;++i) {		cuMemcpyDtoH(Pointer.to(h_part_pos[i]),part_pos[i], numPartsFloatSz);}
  		} 			
- 		if(getSimFlags(showParticleVelArrows)) {
+ 		if(simFlags.getShowPartVels()) {
  			for(int i=0;i<h_part_vel.length;++i) { 		cuMemcpyDtoH(Pointer.to(h_part_vel[i]),part_vel[i], numPartsFloatSz);}
  		}
  		//copy from device data to host grid velocity, accel or mass arrays
-		if(getSimFlags(showGridVelArrows)) {
+		if(simFlags.getShowGridVel()) {
  			for(int i=0;i<h_grid_vel.length;++i) { 		cuMemcpyDtoH(Pointer.to(h_grid_vel[i]),grid_newvel[i], numGridFloatSz);}
 		}
-		if(getSimFlags(showGridAccelArrows)) {
+		if(simFlags.getShowGridAccel()) {
  			for(int i=0;i<h_grid_accel.length;++i) { 	cuMemcpyDtoH(Pointer.to(h_grid_accel[i]),grid_force[i], numGridFloatSz);}		
 		}		
-		if(getSimFlags(showGridMass)) {
+		if(simFlags.getShowGridMass()) {
 			cuMemcpyDtoH(Pointer.to(h_grid_mass),grid_mass, numGridFloatSz);	
 		}
 		return false;
