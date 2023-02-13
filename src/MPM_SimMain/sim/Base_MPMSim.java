@@ -153,7 +153,7 @@ public abstract class Base_MPMSim {
 		resetSim_Indiv(rebuildSim);
 
 		simFlags.setSimIsBuilt(true);
-		win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "resetSim","Finished resetting/rebuilding sim");
+		win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "resetSim","Finished resetting/rebuilding sim");
 	}//resetSim
 	
 	/**
@@ -300,25 +300,25 @@ public abstract class Base_MPMSim {
 	protected SimResetProcess checkValuesForChanges(MPM_SimUpdateFromUIData upd) {
 		boolean rebuildSim = upd.checkSimRebuild(currUIVals);
 		if(rebuildSim) {
-			win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RebuildSim");
+			win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RebuildSim");
 			return SimResetProcess.RebuildSim;
 		}
 		boolean resetSim = upd.checkSimReset(currUIVals);
 		if(resetSim) {
-			win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.ResetSim");
+			win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.ResetSim");
 			return SimResetProcess.ResetSim;
 		}
 		boolean matsHaveChanged = upd.haveMaterialValsChanged(currUIVals);
 		if(matsHaveChanged) {
-			win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Materials have changed; Specifying SimResetProcess.RemakeKernel");
+			win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Materials have changed; Specifying SimResetProcess.RemakeKernel");
 			return SimResetProcess.RemakeKernel;			
 		}	
 		boolean remakeKernel = upd.checkSimKernelRebuilt(currUIVals);
 		if(remakeKernel) {
-			win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RemakeKernel");
+			win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RemakeKernel");
 			return SimResetProcess.RemakeKernel;
 		}
-		win.getMsgObj().dispInfoMessage("base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing - nothing pertinent has changed.");
+		win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing - nothing pertinent has changed.");
 		return SimResetProcess.DoNothing;
 	}
 	
@@ -440,17 +440,17 @@ public abstract class Base_MPMSim {
 			pa.scale(sclAmt);	
 			
 			//point-based rendering
-			if(simFlags.getShowParticles()){			_drawParts(animTimeMod, simFlags.getShowLocColors());}			
-			if(simFlags.getShowPartVels()){ _drawPartVel(animTimeMod, drawPointIncr);}
+			if(simFlags.getShowParticles()){	_drawParts(animTimeMod, simFlags.getShowLocColors());}			
+			if(simFlags.getShowPartVels()){		_drawPartVel(animTimeMod, drawPointIncr);}
 			
 			//draw colliders, if exist
-			if(simFlags.getShowCollider()){			_drawColliders(animTimeMod);}
+			if(simFlags.getShowCollider()){		_drawColliders(animTimeMod);}
 			
 			//Grid-based rendering
-			if(simFlags.getShowGrid()) {				_drawGrid();}
-			if(simFlags.getShowGridVel()) {	_drawGridVel(animTimeMod);}
+			if(simFlags.getShowGrid()) {		_drawGrid();}
+			if(simFlags.getShowGridVel()) {		_drawGridVel(animTimeMod);}
 			if(simFlags.getShowGridAccel()){	_drawGridAccel(animTimeMod);}
-			if(simFlags.getShowGridMass()) {			_drawGridMass(animTimeMod);}
+			if(simFlags.getShowGridMass()) {	_drawGridMass(animTimeMod);}
 		pa.popMatState();
 	}//drawMe
 	
@@ -616,4 +616,4 @@ public abstract class Base_MPMSim {
 //	 * @param val
 //	 */
 //	protected abstract void setPrivFlags_Indiv(int idx, boolean val);
-}//class base_MPMSim
+}//class Base_MPMSim

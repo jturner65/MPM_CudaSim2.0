@@ -36,15 +36,39 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * Lists of names of kernel functions to perform for MPM algorithm.   
 	 */
-	protected String[] CUFileFuncNames = new String[] {"projectToGridandComputeForces","projectToGridInit", "computeVol", "updPartVelocities",  "compGridVelocities", "partCollAndUpdPos", "gridCollisions", "clearGrid", "updDeformationGradient" };
+	protected String[] CUFileFuncNames = new String[] {
+			"projectToGridandComputeForces",
+			"projectToGridInit",
+			"computeVol",
+			"updPartVelocities",
+			"compGridVelocities",
+			"partCollAndUpdPos",
+			"gridCollisions",
+			"clearGrid",
+			"updDeformationGradient"};	
 	/**
 	 * These are the individual kernel functions to execute in order for initialization of simulation
 	 */
-	protected String[] initStepFuncKeys = new String[] {"clearGrid","projectToGridInit", "computeVol","compGridVelocities", "gridCollisions", "updDeformationGradient", "updPartVelocities", "partCollAndUpdPos"}; 
+	protected String[] initStepFuncKeys = new String[] {
+			"clearGrid",
+			"projectToGridInit",
+			"computeVol",
+			"compGridVelocities",
+			"gridCollisions",
+			"updDeformationGradient",
+			"updPartVelocities",
+			"partCollAndUpdPos"}; 
 	/**
 	 * These are the individual kernel functions to execute in order for each sim step
 	 */
-	protected String[] simStepFuncKeys = new String[] {"clearGrid", "projectToGridandComputeForces", "compGridVelocities", "gridCollisions", "updDeformationGradient", "updPartVelocities", "partCollAndUpdPos"}; 
+	protected String[] simStepFuncKeys = new String[] {
+			"clearGrid",
+			"projectToGridandComputeForces",
+			"compGridVelocities",
+			"gridCollisions",
+			"updDeformationGradient",
+			"updPartVelocities",
+			"partCollAndUpdPos"}; 
    
 	protected HashMap<String, int[]> funcGridDimAndMemSize;
 	
@@ -77,7 +101,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * # of cuda threads
 	 */
-    protected final int numCUDAThreads=128;
+    protected final int numCUDAThreads=512;
     
     /**
      * Raw initial particle values
@@ -148,11 +172,11 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		//sim start time - time from when sim object was first instanced
 		//simStartTime = getCurTime();	
 		
-		win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "resetSim","Start resetting sim");
+		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "resetSim_Indiv","Start resetting sim");
 		
 		if (!((MPM_CudaSimFlags)simFlags).getCudaDevInit()) {
             //init cuda device and kernel file if not done already - only do 1 time
-			win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "resetSim","CUDA Module load/init");
+			win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "resetSim_Indiv","CUDA Module load/init");
             initCUDAModuleSetup();
         }
 
@@ -265,7 +289,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		cuFuncs = new TreeMap<String, CUfunction>();
 		for (int i =0;i<CUFileFuncNames.length; ++i) {
 			String key = CUFileFuncNames[i];			
-			win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "initOnceCUDASetup","\tRegistering Kernel Function Key : " + key);
+			win.getMsgObj().dispInfoMessage("Base_MPMCudaSim("+simName+")", "initOnceCUDASetup","\tRegistering Kernel Function Key : " + key);
 			CUfunction c = new CUfunction();			
 			cuModuleGetFunction(c, module, key);
 			cuFuncs.put(key,  c);
@@ -296,10 +320,13 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         
         h_part_clr_int = new int[numParts][3]; 
         h_part_grey_int = new int[numParts][3]; 
+        ArrayList<float[]> allPosAra = partVals.get("pos");
+        ArrayList<float[]> allVelAra = partVals.get("vel");
+        
         for(int i = 0; i < numParts; ++i){
         	h_part_mass[i] = particleMass;
-        	posAra = partVals.get("pos").get(i);
-        	velAra = partVals.get("vel").get(i);        	
+        	posAra = allPosAra.get(i);
+        	velAra = allVelAra.get(i);        	
         	for(int j=0;j<h_part_pos.length;++j) {
         		h_part_pos[j][i] = posAra[j];
         		h_part_vel[j][i] = velAra[j];
@@ -307,9 +334,6 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         	
         	h_part_clr_int[i] = getClrValInt(posAra,minVals,maxVals);
         	h_part_grey_int[i] = getGreyValInt(posAra,minVals,maxVals);
-//        	for(int j=0;j<h_part_clr_int[i].length;++j) {
-//        		h_part_clr_int[i][j] = getClrValInt(h_part_pos[j][i],minVals[j],maxVals[j]);
-//        	}
         	h_part_eye[i]=1.0f;
         }
         
@@ -477,7 +501,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 			}
 			posMap.add(posVals);
         }
-		win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "createSphere",
+		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "createSphere",
 				"Created a sphere of radius " + ballRad + " with "+numParts+" particles, centered at [" +ctr[0] +"," +ctr[1] +"," +ctr[2] + "].");
 		//Ending at final size of posMap
 		returnIdxs[1] = posMap.size();
@@ -511,7 +535,8 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 * Set up all essential cuda kernels and launch them for initial pass
 	 */
 	private void cudaSetup() {    
-        //Re initialize maps of parameters and functions
+		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "cudaSetup","Start CUDA Init.");
+	 	//Re initialize maps of parameters and functions
         kernelParams = new TreeMap<String, Pointer>();
         funcGridDimAndMemSize = new HashMap<String, int[]>();
         
@@ -604,14 +629,12 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         		));   
         funcGridDimAndMemSize.put("partCollAndUpdPos", new int[] {numBlocksParticles, 0});        
    
-        win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "cudaSetup","Finished CUDA Init | Launch first MPM Pass.");
+        win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "cudaSetup","Finished CUDA Init | Launch first MPM Pass.");
 	 	//launch init functions
-        for (int j=0;j<initStepFuncKeys.length;++j) {
-        	//win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "cudaSetup","\tinitStepFuncKeys Handle : "+initStepFuncKeys[j]);
-        	launchKernel(initStepFuncKeys[j]);	}
+        for (int j=0;j<initStepFuncKeys.length;++j) {launchKernel(initStepFuncKeys[j]);	}
 
     	simFlags.setSimIsBuilt(true);
-    	win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "cudaSetup","Finished first MPM Pass.");
+    	win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "cudaSetup","Finished first MPM Pass.");
 	}//cudaSetup
 
     /**
@@ -647,7 +670,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		//build compilation command
 		String command = "nvcc " + modelString + " -ptx " + cuFile.getPath() + " -o " + ptxFileName;
 		//execute compilation
-		win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "compilePtxFile","Executing\n" + command);
+		win.getMsgObj().dispInfoMessage("Base_MPMCudaSim("+simName+")", "compilePtxFile","Executing\n" + command);
 		Process process = Runtime.getRuntime().exec(command);
 
 		String errorMessage = new String(toByteArray(process.getErrorStream())), 
@@ -660,12 +683,12 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		}
 
 		if (exitValue != 0) {
-			win.getMsgObj().dispErrorMessage("base_MPMCudaSim("+simName+")", "compilePtxFile","nvcc process error : exitValue : " + exitValue);
-			win.getMsgObj().dispErrorMessage("base_MPMCudaSim("+simName+")", "compilePtxFile","errorMessage :\n" + errorMessage);
-			win.getMsgObj().dispErrorMessage("base_MPMCudaSim("+simName+")", "compilePtxFile","outputMessage :\n" + outputMessage);
+			win.getMsgObj().dispErrorMessage("Base_MPMCudaSim("+simName+")", "compilePtxFile","nvcc process error : exitValue : " + exitValue);
+			win.getMsgObj().dispErrorMessage("Base_MPMCudaSim("+simName+")", "compilePtxFile","errorMessage :\n" + errorMessage);
+			win.getMsgObj().dispErrorMessage("Base_MPMCudaSim("+simName+")", "compilePtxFile","outputMessage :\n" + outputMessage);
 			throw new IOException("Could not create .ptx file: " + errorMessage);
 		}
-		win.getMsgObj().dispInfoMessage("base_MPMCudaSim("+simName+")", "compilePtxFile","Finished compiling PTX file : "+ ptxFileName);
+		win.getMsgObj().dispInfoMessage("Base_MPMCudaSim("+simName+")", "compilePtxFile","Finished compiling PTX file : "+ ptxFileName);
 	}//compilePtxFile
 	
 	/**
@@ -686,6 +709,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 * @return
 	 */
 	protected final boolean simMePost_Indiv(float modAmtMillis) {
+		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "simMePost_Indiv","Start copy relevant device buffers to host.");
 		//copy from device data to host particle position or velocity arrays
  		if(simFlags.getShowParticles() || simFlags.getShowPartVels()) {
  			for(int i=0;i<h_part_pos.length;++i) {		cuMemcpyDtoH(Pointer.to(h_part_pos[i]),part_pos[i], numPartsFloatSz);}
@@ -703,6 +727,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		if(simFlags.getShowGridMass()) {
 			cuMemcpyDtoH(Pointer.to(h_grid_mass),grid_mass, numGridFloatSz);	
 		}
+		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "simMePost_Indiv","End copy relevant device buffers to host.");
 		return false;
 	}
 
@@ -786,7 +811,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 */
 	protected abstract void drawColliders_Indiv(float animTimeMod);
 	
-}//class MPM_ABS_Sim 
+}//class Base_MPMCudaSim 
 
 
 
