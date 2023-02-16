@@ -8,27 +8,43 @@ import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
  *
  */
 public class MPM_Material {
-	private float initYoungMod, poissonRatio, lambda0, mu0;
-	private float hardeningCoeff, criticalCompression, criticalStretch, alphaPicFlip;
+	//Set as ptrs(aras) to facilitate consumption
+	private float[] initYoungMod,
+					poissonRatio,
+					hardeningCoeff, 
+					criticalCompression, 
+					criticalStretch, 
+					alphaPicFlip, 
+					lambda0, 
+					mu0;
 		
 	public MPM_Material(MPM_SimUpdateFromUIData _currUIVals) {
+		initYoungMod = new float[1];
+		poissonRatio = new float[1];
+		hardeningCoeff = new float[1];
+		criticalCompression = new float[1];
+		criticalStretch = new float[1];
+		alphaPicFlip = new float[1];
+		lambda0 = new float[1];
+		mu0 = new float[1];
 		updateMatVals_FromUI(_currUIVals);
 	}//ctor
 		
 
 	//recalc lambda0 and mu0 when young mod or poisson ratio changes
-	private void recalcParams() {	
-		lambda0 = (initYoungMod * poissonRatio) / ((1.0f+poissonRatio) * (1.0f-2.0f*poissonRatio));
-		mu0 = initYoungMod / (2.0f * (1.0f+poissonRatio));
+	private void recalcParams() {
+		float poissonRatioP1 = (1.0f+poissonRatio[0]);
+		lambda0[0] = (initYoungMod[0] * poissonRatio[0]) / (poissonRatioP1 * (1.0f-2.0f*poissonRatio[0]));
+		mu0[0] = initYoungMod[0] / (2.0f * poissonRatioP1);
 	}
 	
 	public void updateMatVals_FromUI(MPM_SimUpdateFromUIData upd) {		
-		initYoungMod = upd.getInitYoungMod();
-		poissonRatio = upd.getPoissonRatio();		
-		hardeningCoeff = upd.getHardeningCoeff();     
-		criticalCompression = upd.getCriticalCompression();
-		criticalStretch = upd.getCriticalStretch();   
-		alphaPicFlip = upd.getAlphaPicFlip();
+		initYoungMod[0] = upd.getInitYoungMod();
+		poissonRatio[0] = upd.getPoissonRatio();		
+		hardeningCoeff[0]= upd.getHardeningCoeff();     
+		criticalCompression[0] = upd.getCriticalCompression();
+		criticalStretch[0] = upd.getCriticalStretch();   
+		alphaPicFlip[0] = upd.getAlphaPicFlip();
 		//recalc mu0 when ym or poisson ratio changes
 		recalcParams();
 	}//updateMatVals_FromUI
@@ -37,32 +53,32 @@ public class MPM_Material {
 	 * Return ptr to lambda0 value (precalced from Young's modulus and Poisson ration) for kernel params
 	 * @return
 	 */
-	public float[] getLambda0Ptr() {return new float[] {lambda0};}
+	public float[] getLambda0Ptr() {return lambda0;}
 	/**
 	 * Return ptr to Mu0 value (precalced from Young's modulus and Poisson ration) for kernel params
 	 * @return
 	 */
-	public float[] getMu0Ptr() {return new float[] {mu0};}	
+	public float[] getMu0Ptr() {return mu0;}	
 	/**
 	 * Return ptr to Hardening Coefficient value for kernel params
 	 * @return
 	 */
-	public float[] getHardeningCoeffPtr() {return new float[] {hardeningCoeff};}     
+	public float[] getHardeningCoeffPtr() {return hardeningCoeff;}     
 	/**
 	 * Return ptr to Critical Compression value for kernel params
 	 * @return
 	 */
-	public float[] getCriticalCompressionPtr() {return new float[] {criticalCompression};}  
+	public float[] getCriticalCompressionPtr() {return criticalCompression;}  
 	/**
 	 * Return ptr to Critical Stretch value for kernel params
 	 * @return
 	 */
-	public float[] getCriticalStretchPtr() {return new float[] {criticalStretch};} 
+	public float[] getCriticalStretchPtr() {return criticalStretch;} 
 	/**
 	 * Return ptr to Alpha PICFLIP value for kernel params
 	 * @return
 	 */
-	public float[] getAlphaPicFlipPtr() {return new float[] {alphaPicFlip};}      
+	public float[] getAlphaPicFlipPtr() {return alphaPicFlip;}      
 	
 	
-}//myMaterial
+}//MPM_Material
