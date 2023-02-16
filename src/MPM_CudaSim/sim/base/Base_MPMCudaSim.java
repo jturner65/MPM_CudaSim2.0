@@ -70,7 +70,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 			"updPartVelocities",
 			"partCollAndUpdPos"}; 
    
-	protected HashMap<String, int[]> funcGridDimAndMemSize;
+	protected HashMap<String, int[][]> funcGridDimAndMemSize;
 	
 	////////////////////////////////////////////////////
     // CUDA references
@@ -101,7 +101,13 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * # of cuda threads
 	 */
-    protected final int numCUDAThreads=512;
+    protected final int numCUDAThreads = 512;
+    protected final int[] blkThdDims = new int[] {numCUDAThreads, 1, 1};
+    protected int[] partGridDims;
+    protected int[] part4GridDims;
+    protected int[] gridGridDims;
+    protected int[] shrdMemSize = new int[] {0};
+    protected int[] partVelShrdMemSize = new int[] {numCUDAThreads*6*Sizeof.FLOAT};
     
     /**
      * Raw initial particle values
@@ -238,14 +244,18 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 */
 	@Override
 	protected final void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
-		//float size of particle arrays
+		//float size of particle arrays, for malloc
 		numPartsFloatSz = numParts * Sizeof.FLOAT; 
-		//# cuda blocks for particle functions
-		numBlocksParticles = numParts/numCUDAThreads+1;
-        //init grid ptrs        
+		//# cuda grid dims for particle functions
+		numBlocksParticles = (numParts + numCUDAThreads -1)/numCUDAThreads;
+	    partGridDims = new int[] {numBlocksParticles, 1, 1};
+	    part4GridDims = new int[] {numBlocksParticles*4, 1, 1};
+
+	    //float size of grid arrays, for malloc       
         numGridFloatSz = ttlGridCount * Sizeof.FLOAT;
-        //# cuda blocks for grid based functions			
-		numBlocksGrid = ttlGridCount/numCUDAThreads+1;			
+        //# cuda grid dims for grid based functions			
+		numBlocksGrid = (ttlGridCount + numCUDAThreads -1)/numCUDAThreads;	
+	    gridGridDims = new int[] {numBlocksGrid, 1, 1};
 		
 		//update instancing sim values
 		updateCudaSimVals_FromUI_Indiv(upd);		
@@ -516,21 +526,32 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	
 	/**
 	 * launch the kernel specified by the string key
-	 * @param kernelVal values for specific kernal 
-	 * @param key string key of kernel to launch
+	 * @param key string key of kernel to launch and kernel function grid, block and mem dims to access
 	 */
-	private void launchKernel(String key) {
+	protected void launchKernel(String key) {
 		//Set context properly before launching kernels
 		JCudaDriver.cuCtxSetCurrent(context);
-		int[] kernalDims = funcGridDimAndMemSize.get(key);
-        cuLaunchKernel(cuFuncs.get(key), 
-        		kernalDims[0], 1, 1,           // Grid dimension 
-                numCUDAThreads, 1, 1,  // Block dimension
-                kernalDims[1], null,           // Shared memory size and stream 
-                kernelParams.get(key), null);// Kernel- and extra parameters
+		int[][] kernelDims = funcGridDimAndMemSize.get(key);
+        cuLaunchKernel(cuFuncs.get(key), 										// Kernel function
+        		kernelDims[0][0],kernelDims[0][1],kernelDims[0][2],           	// Grid XYZ dimensions
+        		kernelDims[1][0],kernelDims[1][1],kernelDims[1][2],				// Block XYZ dimensions
+        		kernelDims[2][0],												// Shared memory size
+        		null, 															// Stream 
+                kernelParams.get(key), null);									// Kernel- and extra parameters
         //Allow kernel to complete
         cuCtxSynchronize();
 	}
+	/**
+	 * Build grid, block and shared mem dims into map holding these for kernel launch
+	 * @param key
+	 * @param gridDims
+	 * @param blockThdDims
+	 * @param sharedMemSize
+	 */
+	protected void putFuncGridMemSize(String key, int[] gridDims, int[] blockThdDims, int[] sharedMemSize) {
+		funcGridDimAndMemSize.put(key, new int[][] {gridDims, blockThdDims, sharedMemSize});
+	}
+	
 	/**
 	 * Set up all essential cuda kernels and launch them for initial pass
 	 */
@@ -538,8 +559,8 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "cudaSetup","Start CUDA Init.");
 	 	//Re initialize maps of parameters and functions
         kernelParams = new TreeMap<String, Pointer>();
-        funcGridDimAndMemSize = new HashMap<String, int[]>();
-        
+        funcGridDimAndMemSize = new HashMap<String, int[][]>();
+
         kernelParams.put("projectToGridandComputeForces",Pointer.to(
         		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
         		Pointer.to(mat.getLambda0Ptr()), Pointer.to(mat.getMu0Ptr()), Pointer.to(mat.getHardeningCoeffPtr()),
@@ -558,21 +579,21 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 				Pointer.to(grid_mass),
 				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),
 				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
-        funcGridDimAndMemSize.put("projectToGridandComputeForces", new int[] {numBlocksParticles*4, 0});
+        putFuncGridMemSize("projectToGridandComputeForces", part4GridDims, blkThdDims, shrdMemSize);
 		
         kernelParams.put("projectToGridInit", Pointer.to(
 				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(part_mass),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(grid_mass)));
-        funcGridDimAndMemSize.put("projectToGridInit", new int[] {numBlocksParticles, 0});
+        putFuncGridMemSize("projectToGridInit", partGridDims, blkThdDims, shrdMemSize);
 		
 		kernelParams.put("computeVol", Pointer.to(
 				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
 				Pointer.to(part_mass),Pointer.to(part_vol),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(grid_mass)));
-		funcGridDimAndMemSize.put("computeVol", new int[] {numBlocksParticles, 0});
+		putFuncGridMemSize("computeVol", partGridDims, blkThdDims, shrdMemSize);
 		
 		kernelParams.put("updPartVelocities",Pointer.to(
 				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
@@ -581,30 +602,31 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2]),
 				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),		
 				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));  
-		funcGridDimAndMemSize.put("updPartVelocities", new int[] {numBlocksParticles*4, numCUDAThreads*6*Sizeof.FLOAT});
-		
+		putFuncGridMemSize("updPartVelocities", part4GridDims, blkThdDims, partVelShrdMemSize);
+        
 	    kernelParams.put("compGridVelocities", Pointer.to(
 				Pointer.to(new int[] {ttlGridCount}), Pointer.to(new float[] {gravity[0]}),Pointer.to(new float[] {gravity[1]}),Pointer.to(new float[] {gravity[2]}),Pointer.to(new float[] {deltaT}),
 				Pointer.to(grid_mass),		
 				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),			
 				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2]),
 				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
-		funcGridDimAndMemSize.put("compGridVelocities", new int[] {numBlocksGrid, 0});
-	    
+	    putFuncGridMemSize("compGridVelocities", gridGridDims, blkThdDims, shrdMemSize);
+		
 	    kernelParams.put("clearGrid", Pointer.to(
 	    		Pointer.to(new int[] {ttlGridCount}), Pointer.to(grid_mass),		
 	    		Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),			
 	    		Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2]),
 				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
-		funcGridDimAndMemSize.put("clearGrid", new int[] {numBlocksGrid, 0});
-		//Only supports wall collisions
+	    putFuncGridMemSize("clearGrid", gridGridDims, blkThdDims, shrdMemSize);
+		
+	    //Only currently supports wall collisions
 	    kernelParams.put("gridCollisions", Pointer.to(
         		Pointer.to(new int[] {ttlGridCount}),Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {cellSize}), 
         		Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
         		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {deltaT}),Pointer.to(grid_mass),
         		Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));
-		funcGridDimAndMemSize.put("gridCollisions", new int[] {numBlocksGrid, 0});
-
+	    putFuncGridMemSize("gridCollisions", gridGridDims, blkThdDims, shrdMemSize);
+		
         kernelParams.put("updDeformationGradient", Pointer.to(
         		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {deltaT}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
         		Pointer.to(mat.getCriticalCompressionPtr()), Pointer.to(mat.getCriticalStretchPtr()),
@@ -619,15 +641,16 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 				Pointer.to(part_fp[2][0]), Pointer.to(part_fp[2][1]), Pointer.to(part_fp[2][2]),
 				//results
 				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));     
-        funcGridDimAndMemSize.put("updDeformationGradient", new int[] {numBlocksParticles, 0});  
-        
+        putFuncGridMemSize("updDeformationGradient", partGridDims, blkThdDims, shrdMemSize);
+		
+        //Only addresses wall collisions
         kernelParams.put("partCollAndUpdPos", Pointer.to(
         		Pointer.to(new int[] {numParts}), Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
         		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {deltaT}),
 				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
 				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2])				
         		));   
-        funcGridDimAndMemSize.put("partCollAndUpdPos", new int[] {numBlocksParticles, 0});        
+        putFuncGridMemSize("partCollAndUpdPos", partGridDims, blkThdDims, shrdMemSize);
    
         win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "cudaSetup","Finished CUDA Init | Launch first MPM Pass.");
 	 	//launch init functions
