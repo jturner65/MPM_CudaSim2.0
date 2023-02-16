@@ -560,95 +560,115 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 	//Re initialize maps of parameters and functions
         kernelParams = new TreeMap<String, Pointer>();
         funcGridDimAndMemSize = new HashMap<String, int[][]>();
+        Pointer numPartsPtr = Pointer.to(new int[] {numParts});
+        Pointer partMassPtr = Pointer.to(partMass);
+        Pointer partVolPtr = Pointer.to(partVolume);
+        Pointer gridMassPtr = Pointer.to(gridMass);
+        Pointer[] partPosPtrAra = new Pointer[]{Pointer.to(partPos[0]),Pointer.to(partPos[1]),Pointer.to(partPos[2])};
+        Pointer[] partVelPtrAra = new Pointer[]{Pointer.to(partVel[0]),Pointer.to(partVel[1]),Pointer.to(partVel[2])};
+        
+        Pointer cellSizePtr = Pointer.to(new float[] {cellSize});
+        Pointer numGridSidePtr = Pointer.to(new int[]{gridSideCount});
+        Pointer ttlGridCountPtr = Pointer.to(new int[] {ttlGridCount});
+        Pointer[] gridVelPtrAra = new Pointer[]{Pointer.to(gridVel[0]),Pointer.to(gridVel[1]),Pointer.to(gridVel[2])};
+        Pointer[] gridNewVelPtrAra = new Pointer[]{Pointer.to(gridNewVel[0]),Pointer.to(gridNewVel[1]),Pointer.to(gridNewVel[2])};
+        Pointer[] gridFrcPtrAra = new Pointer[]{Pointer.to(gridForce[0]),Pointer.to(gridForce[1]),Pointer.to(gridForce[2])};
+        Pointer[] gravPtrAra = new Pointer[] {Pointer.to(new float[] {gravity[0]}),Pointer.to(new float[] {gravity[1]}),Pointer.to(new float[] {gravity[2]})};
+        
+        Pointer minSimBndsPtr = Pointer.to(new float[] {minSimBnds});
+        Pointer maxSimBndsPtr = Pointer.to(new float[] {maxSimBnds});
+        Pointer deltaTPtr = Pointer.to(new float[] {deltaT});
+        Pointer wallFricPtr = Pointer.to(new float[] {wallFric});
+        
 
         kernelParams.put("projectToGridandComputeForces",Pointer.to(
-        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
+        		numPartsPtr, numGridSidePtr, cellSizePtr, minSimBndsPtr,
         		Pointer.to(mat.getLambda0Ptr()), Pointer.to(mat.getMu0Ptr()), Pointer.to(mat.getHardeningCoeffPtr()),
-        		Pointer.to(part_mass), Pointer.to(part_vol),
-				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
-				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2]),
+        		partMassPtr, partVolPtr,
+				partPosPtrAra[0], partPosPtrAra[1], partPosPtrAra[2],
+				partVelPtrAra[0], partVelPtrAra[1], partVelPtrAra[2],
     			//elastic matrix
-				Pointer.to(part_fe[0][0]), Pointer.to(part_fe[0][1]), Pointer.to(part_fe[0][2]),
-				Pointer.to(part_fe[1][0]), Pointer.to(part_fe[1][1]), Pointer.to(part_fe[1][2]),
-				Pointer.to(part_fe[2][0]), Pointer.to(part_fe[2][1]), Pointer.to(part_fe[2][2]),
+				Pointer.to(partElasticF[0][0]), Pointer.to(partElasticF[0][1]), Pointer.to(partElasticF[0][2]),
+				Pointer.to(partElasticF[1][0]), Pointer.to(partElasticF[1][1]), Pointer.to(partElasticF[1][2]),
+				Pointer.to(partElasticF[2][0]), Pointer.to(partElasticF[2][1]), Pointer.to(partElasticF[2][2]),
 				//plastic matrix
-				Pointer.to(part_fp[0][0]), Pointer.to(part_fp[0][1]), Pointer.to(part_fp[0][2]),
-				Pointer.to(part_fp[1][0]), Pointer.to(part_fp[1][1]), Pointer.to(part_fp[1][2]),
-				Pointer.to(part_fp[2][0]), Pointer.to(part_fp[2][1]), Pointer.to(part_fp[2][2]),
+				Pointer.to(partPlasticF[0][0]), Pointer.to(partPlasticF[0][1]), Pointer.to(partPlasticF[0][2]),
+				Pointer.to(partPlasticF[1][0]), Pointer.to(partPlasticF[1][1]), Pointer.to(partPlasticF[1][2]),
+				Pointer.to(partPlasticF[2][0]), Pointer.to(partPlasticF[2][1]), Pointer.to(partPlasticF[2][2]),
 
-				Pointer.to(grid_mass),
-				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),
-				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
+				gridMassPtr,
+				gridVelPtrAra[0], gridVelPtrAra[1], gridVelPtrAra[2],
+				gridFrcPtrAra[0], gridFrcPtrAra[1], gridFrcPtrAra[2]));
         putFuncGridMemSize("projectToGridandComputeForces", part4GridDims, blkThdDims, shrdMemSize);
 		
         kernelParams.put("projectToGridInit", Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
-				Pointer.to(part_mass),
-				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
-				Pointer.to(grid_mass)));
+				numPartsPtr, numGridSidePtr, cellSizePtr, minSimBndsPtr,
+				partMassPtr,
+				partPosPtrAra[0], partPosPtrAra[1], partPosPtrAra[2],
+				gridMassPtr));
         putFuncGridMemSize("projectToGridInit", partGridDims, blkThdDims, shrdMemSize);
-		
+        
 		kernelParams.put("computeVol", Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
-				Pointer.to(part_mass),Pointer.to(part_vol),
-				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
-				Pointer.to(grid_mass)));
+				numPartsPtr, numGridSidePtr, cellSizePtr, minSimBndsPtr,
+				partMassPtr, partVolPtr,
+				partPosPtrAra[0], partPosPtrAra[1], partPosPtrAra[2],
+				gridMassPtr));
 		putFuncGridMemSize("computeVol", partGridDims, blkThdDims, shrdMemSize);
 		
 		kernelParams.put("updPartVelocities",Pointer.to(
-				Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
+				numPartsPtr, numGridSidePtr, cellSizePtr, minSimBndsPtr,
 				Pointer.to(mat.getAlphaPicFlipPtr()),
-				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
-				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2]),
-				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),		
-				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));  
+				partPosPtrAra[0], partPosPtrAra[1], partPosPtrAra[2],
+				partVelPtrAra[0], partVelPtrAra[1], partVelPtrAra[2],
+				gridVelPtrAra[0], gridVelPtrAra[1], gridVelPtrAra[2],		
+				gridNewVelPtrAra[0], gridNewVelPtrAra[1], gridNewVelPtrAra[2]));  
 		putFuncGridMemSize("updPartVelocities", part4GridDims, blkThdDims, partVelShrdMemSize);
         
 	    kernelParams.put("compGridVelocities", Pointer.to(
-				Pointer.to(new int[] {ttlGridCount}), Pointer.to(new float[] {gravity[0]}),Pointer.to(new float[] {gravity[1]}),Pointer.to(new float[] {gravity[2]}),Pointer.to(new float[] {deltaT}),
-				Pointer.to(grid_mass),		
-				Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),			
-				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2]),
-				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
+				ttlGridCountPtr, gravPtrAra[0], gravPtrAra[1], gravPtrAra[2],deltaTPtr,
+				gridMassPtr,		
+				gridVelPtrAra[0], gridVelPtrAra[1], gridVelPtrAra[2],			
+				gridNewVelPtrAra[0], gridNewVelPtrAra[1], gridNewVelPtrAra[2],
+				gridFrcPtrAra[0], gridFrcPtrAra[1], gridFrcPtrAra[2]));
 	    putFuncGridMemSize("compGridVelocities", gridGridDims, blkThdDims, shrdMemSize);
 		
 	    kernelParams.put("clearGrid", Pointer.to(
-	    		Pointer.to(new int[] {ttlGridCount}), Pointer.to(grid_mass),		
-	    		Pointer.to(grid_vel[0]),Pointer.to(grid_vel[1]),Pointer.to(grid_vel[2]),			
-	    		Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2]),
-				Pointer.to(grid_force[0]),Pointer.to(grid_force[1]),Pointer.to(grid_force[2])));
+	    		ttlGridCountPtr, gridMassPtr,		
+	    		gridVelPtrAra[0], gridVelPtrAra[1], gridVelPtrAra[2],			
+	    		gridNewVelPtrAra[0], gridNewVelPtrAra[1], gridNewVelPtrAra[2],
+				gridFrcPtrAra[0], gridFrcPtrAra[1], gridFrcPtrAra[2]));
 	    putFuncGridMemSize("clearGrid", gridGridDims, blkThdDims, shrdMemSize);
 		
 	    //Only currently supports wall collisions
 	    kernelParams.put("gridCollisions", Pointer.to(
-        		Pointer.to(new int[] {ttlGridCount}),Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {cellSize}), 
-        		Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
-        		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {deltaT}),Pointer.to(grid_mass),
-        		Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));
+        		ttlGridCountPtr, numGridSidePtr, cellSizePtr, 
+        		minSimBndsPtr, maxSimBndsPtr,
+        		wallFricPtr, deltaTPtr, gridMassPtr,
+        		gridNewVelPtrAra[0], gridNewVelPtrAra[1], gridNewVelPtrAra[2]));
 	    putFuncGridMemSize("gridCollisions", gridGridDims, blkThdDims, shrdMemSize);
 		
         kernelParams.put("updDeformationGradient", Pointer.to(
-        		Pointer.to(new int[] {numParts}), Pointer.to(new int[] {gridCount}),Pointer.to(new float[] {deltaT}), Pointer.to(new float[] {cellSize}), Pointer.to(new float[] {minSimBnds}),
+        		numPartsPtr, numGridSidePtr,deltaTPtr, cellSizePtr, minSimBndsPtr,
         		Pointer.to(mat.getCriticalCompressionPtr()), Pointer.to(mat.getCriticalStretchPtr()),
-				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
+				partPosPtrAra[0], partPosPtrAra[1], partPosPtrAra[2],
     			//elastic matrix
-				Pointer.to(part_fe[0][0]), Pointer.to(part_fe[0][1]), Pointer.to(part_fe[0][2]),
-				Pointer.to(part_fe[1][0]), Pointer.to(part_fe[1][1]), Pointer.to(part_fe[1][2]),
-				Pointer.to(part_fe[2][0]), Pointer.to(part_fe[2][1]), Pointer.to(part_fe[2][2]),
+				Pointer.to(partElasticF[0][0]), Pointer.to(partElasticF[0][1]), Pointer.to(partElasticF[0][2]),
+				Pointer.to(partElasticF[1][0]), Pointer.to(partElasticF[1][1]), Pointer.to(partElasticF[1][2]),
+				Pointer.to(partElasticF[2][0]), Pointer.to(partElasticF[2][1]), Pointer.to(partElasticF[2][2]),
 				//plastic matrix
-				Pointer.to(part_fp[0][0]), Pointer.to(part_fp[0][1]), Pointer.to(part_fp[0][2]),
-				Pointer.to(part_fp[1][0]), Pointer.to(part_fp[1][1]), Pointer.to(part_fp[1][2]),
-				Pointer.to(part_fp[2][0]), Pointer.to(part_fp[2][1]), Pointer.to(part_fp[2][2]),
+				Pointer.to(partPlasticF[0][0]), Pointer.to(partPlasticF[0][1]), Pointer.to(partPlasticF[0][2]),
+				Pointer.to(partPlasticF[1][0]), Pointer.to(partPlasticF[1][1]), Pointer.to(partPlasticF[1][2]),
+				Pointer.to(partPlasticF[2][0]), Pointer.to(partPlasticF[2][1]), Pointer.to(partPlasticF[2][2]),
 				//results
-				Pointer.to(grid_newvel[0]),Pointer.to(grid_newvel[1]),Pointer.to(grid_newvel[2])));     
+				gridNewVelPtrAra[0], gridNewVelPtrAra[1], gridNewVelPtrAra[2]));     
         putFuncGridMemSize("updDeformationGradient", partGridDims, blkThdDims, shrdMemSize);
 		
         //Only addresses wall collisions
         kernelParams.put("partCollAndUpdPos", Pointer.to(
-        		Pointer.to(new int[] {numParts}), Pointer.to(new float[] {minSimBnds}),Pointer.to(new float[] {maxSimBnds}),
-        		Pointer.to(new float[] {wallFric}),Pointer.to(new float[] {deltaT}),
-				Pointer.to(part_pos[0]),Pointer.to(part_pos[1]),Pointer.to(part_pos[2]),
-				Pointer.to(part_vel[0]),Pointer.to(part_vel[1]),Pointer.to(part_vel[2])				
+        		numPartsPtr, minSimBndsPtr, maxSimBndsPtr,
+        		wallFricPtr, deltaTPtr,
+				partPosPtrAra[0], partPosPtrAra[1], partPosPtrAra[2],
+				partVelPtrAra[0], partVelPtrAra[1], partVelPtrAra[2]			
         		));   
         putFuncGridMemSize("partCollAndUpdPos", partGridDims, blkThdDims, shrdMemSize);
    
