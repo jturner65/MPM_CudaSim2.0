@@ -57,7 +57,7 @@ public abstract class Base_MPMSim {
     /**
      * # of cells per side - cube so same in all 3 dims; # of particles in sim
      */
-	protected int gridCount;
+	protected int gridSideCount;
     /**
      * total # of grid cells in grid
      */
@@ -229,7 +229,7 @@ public abstract class Base_MPMSim {
 		// SimResetProcess.RebuildSim
 		
 		//# of grid cells per side of cube
-		gridCount = upd.getGridCellsPerSide();
+		gridSideCount = upd.getGridCellsPerSide();
 		//# of snowballs to make
 		numSnowballs = upd.getNumSnowballs();
 		//cell size
@@ -269,13 +269,13 @@ public abstract class Base_MPMSim {
 		
 		////////////////////////////
 		// calculated derived values dependent on UI values
-		maxSimBnds = (gridCount*cellSize)/2.0f;
+		maxSimBnds = (gridSideCount*cellSize)/2.0f;
 		minSimBnds = -maxSimBnds;
 		gridDim = maxSimBnds - minSimBnds;	
 		//total grid size       
-        ttlGridCount=gridCount*gridCount*gridCount;
+        ttlGridCount=gridSideCount*gridSideCount*gridSideCount;
 		//scale amount to fill 1500 x 1500 x 1500 visualization cube
-		sclAmt = Base_DispWindow.AppMgr.gridDimX/(gridCount * cellSize);
+		sclAmt = Base_DispWindow.AppMgr.gridDimX/(gridSideCount * cellSize);
 		//Sim specific values
 		updateSimVals_FromUI_Indiv(upd);
 		//copy UI data to local var - copy to local last so that values that have changed can be observed
@@ -504,22 +504,22 @@ public abstract class Base_MPMSim {
 			pa.setStroke(255,255,255,20);
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
 			//shows every "incr" gridcells
-			for (int i=0; i<=gridCount;i+=gridIncr) {
+			for (int i=0; i<=gridSideCount;i+=gridIncr) {
 				float iLoc = i*cellSize;
-				for(int j=0;j<=gridCount;j+=gridIncr) {
+				for(int j=0;j<=gridSideCount;j+=gridIncr) {
 					myVectorf startPos=new myVectorf(iLoc,j*cellSize,0.0f);
 					myVectorf endPos=new myVectorf(iLoc, startPos.y,gridDim);
 					pa.drawLine(startPos,endPos);
 				}
-				for(int k=0;k<=gridCount;k+=gridIncr) {
+				for(int k=0;k<=gridSideCount;k+=gridIncr) {
 					myVectorf startPos=new myVectorf(iLoc,0.0f, k*cellSize);
 					myVectorf endPos=new myVectorf(iLoc,gridDim,startPos.z);
 					pa.drawLine(startPos,endPos);
 				}
 			}
-			for(int j=0;j<=gridCount;j+=gridIncr) {
+			for(int j=0;j<=gridSideCount;j+=gridIncr) {
 				float jLoc = j*cellSize;
-				for(int k=0;k<=gridCount;k+=gridIncr) {
+				for(int k=0;k<=gridSideCount;k+=gridIncr) {
 					myVectorf startPos=new myVectorf(0.0f,jLoc,k*cellSize);
 					myVectorf endPos=new myVectorf(gridDim,jLoc,startPos.z);
 					pa.drawLine(startPos,endPos);
