@@ -332,9 +332,6 @@ public abstract class Base_MPMSim {
 	 */
 	protected abstract void initValues_Grids();
 	
-	
-	
-	
 	/**
 	 * Get a random location within +/- bound to place sphere. bound should 
 	 * take into account desired sphere's radius, so as to not breach collider box.

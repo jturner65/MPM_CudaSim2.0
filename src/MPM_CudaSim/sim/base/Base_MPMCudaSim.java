@@ -4,13 +4,13 @@ import static jcuda.driver.JCudaDriver.*;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.*;
 
 import MPM_SimMain.sim.SimResetProcess;
 import MPM_SimMain.sim.Base_MPMSim;
 import MPM_SimMain.ui.Base_MPMSimWindow;
 import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
+import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import jcuda.*;
@@ -447,45 +447,6 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		}		
 	}//buildCudaDeviceConstructs	
 	
-	private static final double lcl_third = 1.0/3.0;
-	/**
-	 * Find a random position in a sphere centered at ctr of radius rad, using spherical coords as rand axes
-	 * @param rad
-	 * @param ctr
-	 * @return
-	 */
-	public final myPointf getRandPosInSphere(double rad){ return getRandPosInSphere(rad, new float[3]);}
-	public final myPointf getRandPosInSphere(double rad, float[] ctr){
-		myPointf pos = new myPointf();
-		double u = ThreadLocalRandom.current().nextDouble(0,1),	
-			cosTheta = ThreadLocalRandom.current().nextDouble(-1,1),
-			phi = ThreadLocalRandom.current().nextDouble(0,MyMathUtils.TWO_PI_F),
-			r = rad * Math.pow(u, lcl_third),
-			rSinTheta = r * Math.sin(Math.acos(cosTheta));			
-		pos.set(rSinTheta * Math.cos(phi) + ctr[0], rSinTheta * Math.sin(phi) + ctr[1],cosTheta*r + ctr[2]);
-		//pos._add(ctr[0],ctr[1],ctr[2]);
-		return pos;
-	}
-	
-	//return a float array of random positions within a sphere of radius rad at ctr 
-	protected float[] getRandPosInSphereAra(float rad, float[] ctr){
-//		myVectorf posV = new myVectorf();
-//		ThreadLocalRandom rnd = ThreadLocalRandom.current();
-//		double u = rnd.nextDouble(0,1);
-//		Float r = (float) (rad * Math.pow(u, lcl_third));
-//		do{
-//			posV.set(rnd.nextDouble(-1,1), rnd.nextDouble(-1,1),rnd.nextDouble(-1,1));
-//		} while (posV.sqMagn > 1.0f);
-//		float[] posRes = posV.asArray();
-//		for(int i=0;i<3;++i) {
-//			posRes[i] *= r;
-//			posRes[i] += ctr[i];
-//		}
-//		return posRes;
-		myPointf pos = getRandPosInSphere(rad,ctr);
-		return pos.asArray();
-	}//getRandPosInSphereAra
-		
 	/**
 	 * create a sphere with given center, with passed # of particles -0 returns array of [start IDX,end IDX] within posVals array for this sphere
 	 * @param partVals map holding all appropriate particle values
@@ -495,7 +456,8 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 * @param ctr
 	 * @return
 	 */
-	protected final int[] createSphere(TreeMap<String, ArrayList<float[]>> partVals, float ballRad, int numParts, float[] ctr) {   		 
+	//protected final int[] createSphere(TreeMap<String, ArrayList<float[]>> partVals, float ballRad, int numParts, float[] ctr) {   		 
+	protected final int[] createSphere(TreeMap<String, ArrayList<float[]>> partVals, float ballRad, int numParts, myPointf ctr) {   		 
 		float[] minVals = partVals.get("minMaxVals").get(0);
 		float[] maxVals = partVals.get("minMaxVals").get(1); 
 		ArrayList<float[]> posMap = partVals.get("pos");
@@ -503,7 +465,8 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		//start at beginning of current posMap
 		returnIdxs[0] = posMap.size();
 		for (int i=0;i<numParts;++i) {
-			float[] posVals = getRandPosInSphereAra(ballRad, ctr); 
+			//float[] posVals = getRandPosInSphereAra(ballRad, ctr); 
+			float[] posVals = Base_DispWindow.AppMgr.getRandPosInSphere(ballRad, ctr).asArray(); 
 			//find min/max values for all sphere particles
 			for (int v = 0; v < 3; ++v) {
 				if (posVals[v] < minVals[v]) {					minVals[v] = posVals[v];				} 
@@ -512,7 +475,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 			posMap.add(posVals);
         }
 		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "createSphere",
-				"Created a sphere of radius " + ballRad + " with "+numParts+" particles, centered at [" +ctr[0] +"," +ctr[1] +"," +ctr[2] + "].");
+				"Created a sphere of radius " + ballRad + " with "+numParts+" particles, centered at [" +ctr.toStrBrf() + "].");
 		//Ending at final size of posMap
 		returnIdxs[1] = posMap.size();
 		return returnIdxs;

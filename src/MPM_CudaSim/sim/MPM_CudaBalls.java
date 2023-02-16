@@ -9,6 +9,8 @@ import MPM_SimMain.sim.Base_MPMSimFlags;
 import MPM_SimMain.ui.Base_MPMSimWindow;
 import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
+import base_UI_Objects.windowUI.base.Base_DispWindow;
+import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
 /**
@@ -111,12 +113,13 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
         ctrTarget._div(sphere_Ctrs.length);		
 
     	sphere_Vels = new myVectorf[sphere_Ctrs.length];           
-        float[] ctrTargetAra = ctrTarget.asArray(); 
+        //float[] ctrTargetAra = ctrTarget.asArray(); 
         float tarRad = sphereRad*(1.25f + .05f*sphere_Ctrs.length);
         for (int i=0;i<sphere_Ctrs.length;++i) {
         	//pick a custom target for the ball to point at for glancing blow potential
-        	float[] custCtrTarget = getRandPosInSphereAra(tarRad, ctrTargetAra);
-        	sphere_Vels[i] = new myVectorf(sphere_Ctrs[i],new myVectorf(custCtrTarget[0],custCtrTarget[1],custCtrTarget[2]));
+        	//float[] custCtrTarget = getRandPosInSphereAra(tarRad, ctrTarget);
+        	myPointf custCtrTarget = Base_DispWindow.AppMgr.getRandPosInSphere(tarRad, ctrTarget);
+        	sphere_Vels[i] = new myVectorf(sphere_Ctrs[i], custCtrTarget);
         }   
 		
 	}//buildSphereCtrsAndVels
@@ -129,16 +132,15 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
         //Handle whether the requested number of parts can be evenly distributed amongst the request count of spheres
 		int numPartsPerSphere = numParts/sphere_Ctrs.length; 
 		int numPartsLeftOver =  numParts % sphere_Ctrs.length; 
-		idxsForSpheres = new int[sphere_Ctrs.length][];     
+		idxsForSpheres = new int[sphere_Ctrs.length][];  
 		
 		//use up extra particles, 1 per ball
         for (int i=0;i<numPartsLeftOver;++i) {
-        	idxsForSpheres[i] = createSphere(partVals, sphereRad, numPartsPerSphere+1, sphere_Ctrs[i].asArray());
+        	idxsForSpheres[i] = createSphere(partVals, sphereRad, numPartsPerSphere+1, sphere_Ctrs[i]);
         }
         for (int i=numPartsLeftOver;i<sphere_Ctrs.length;++i) {
-        	idxsForSpheres[i] = createSphere(partVals, sphereRad, numPartsPerSphere, sphere_Ctrs[i].asArray());
+        	idxsForSpheres[i] = createSphere(partVals, sphereRad, numPartsPerSphere, sphere_Ctrs[i]);
         }
-		
 	}//buildSpherePoints
 	
 	/**
