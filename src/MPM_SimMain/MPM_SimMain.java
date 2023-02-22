@@ -21,6 +21,12 @@ public class MPM_SimMain extends GUI_AppManager {
 	
 	//use sphere background for this program
 	private boolean useSphereBKGnd = true;
+	
+	private String bkSkyBox = "winter.jpg";
+	//bground color
+	private final int[] bground = new int[]{244,244,244,255};				
+	
+	private final int gridDim = 1500;
 
 	private final int
 		showUIMenu = 0,
@@ -33,7 +39,6 @@ public class MPM_SimMain extends GUI_AppManager {
 		dispMPMCudaWinIDX = 1,
 		dispMPMCPUWinIDX = 2;
 	
-	private final int[] bground = new int[]{244,244,244,255};		//bground color		
 	
 ///////////////
 //CODE STARTS
@@ -53,6 +58,31 @@ public class MPM_SimMain extends GUI_AppManager {
 	protected HashMap<String,Object> setRuntimeArgsVals(HashMap<String, Object> _passedArgsMap) {
 		return  _passedArgsMap;
 	}
+	
+	/**
+	 * Called in pre-draw initial setup, before first init
+	 * potentially override setup variables on per-project basis.
+	 * Do not use for setting background color or Skybox anymore.
+	 *  	(Current settings in my_procApplet) 	
+	 *  	strokeCap(PROJECT);
+	 *  	textSize(txtSz);
+	 *  	textureMode(NORMAL);			
+	 *  	rectMode(CORNER);	
+	 *  	sphereDetail(4);	 * 
+	 */
+	@Override
+	protected void setupAppDims_Indiv() {
+		//Set grid dimensions
+		setDesired3DGridDims(gridDim);		
+	}
+	@Override
+	protected boolean getUseSkyboxBKGnd(int winIdx) {	return useSphereBKGnd;}
+	@Override
+	protected String getSkyboxFilename(int winIdx) {	return bkSkyBox;}
+	@Override
+	protected int[] getBackgroundColor(int winIdx) {return bground;}
+	@Override
+	protected int getNumDispWindows() {	return numVisFlags;	}
 	
 	/**
 	 * whether or not we want to restrict window size on widescreen monitors
@@ -82,24 +112,8 @@ public class MPM_SimMain extends GUI_AppManager {
 	 */
 	@Override
 	protected final MsgCodes getMinLogMsgCodes() {return MsgCodes.info1;}
-	
-	/**
-	 * instance-specific setup code
-	 */
-	protected void setup_Indiv() {
-		//modify default grid dims to be 1500x1500x1500
-		setDesired3DGridDims(1500);
-		//TODO move to window to set up specific background for each different "scene" type
-		//PImage bgrndTex = loadImage("bkgrndTex.jpg"); 
-		//PImage bgrndTex = loadImage("sky_1.jpg");
-		if(useSphereBKGnd) {			pa.loadBkgndSphere("winter.jpg");	} else {		setBkgrnd();	}
-	}	
-	@Override
-	public void setBkgrnd(){
-		//TODO move to Base_DispWindow	
-		if(useSphereBKGnd) { pa.setBkgndSphere();	} else {pa.setRenderBackground(bground[0],bground[1],bground[2],bground[3]);		}
-	}//setBkgrnd
 
+	
 	@Override
 	protected void initBaseFlags_Indiv() {
 		setBaseFlagToShow_debugMode(false);
@@ -111,13 +125,10 @@ public class MPM_SimMain extends GUI_AppManager {
 	@Override
 	protected void initAllDispWindows() {
 		showInfo = true;
-		
-		//includes 1 for menu window (never < 1) - always have same # of visFlags as Base_DispWindows
-		int numWins = numVisFlags;		
 		//titles and descs, need to be set before sidebar menu is defined
 		String[] _winTitles = new String[]{"","Snow Balls!","Snow Ball"},
 				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
-		initWins(numWins,_winTitles, _winDescr);
+		setWinTitlesAndDescs(_winTitles, _winDescr);
 		//call for menu window
 		buildInitMenuWin();
 		//instanced window dimensions when open and closed - only showing 1 open at a time
@@ -148,11 +159,11 @@ public class MPM_SimMain extends GUI_AppManager {
 
 		wIdx = dispMPMCudaWinIDX; fIdx= showMPMCudawin;
 		setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
-		dispWinFrames[wIdx] = new MPM_CudaSimWindow(pa, this, wIdx, fIdx);
+		dispWinFrames[wIdx] = new MPM_CudaSimWindow(ri, this, wIdx, fIdx);
 		
 		wIdx = dispMPMCPUWinIDX; fIdx= showMPMCPUwin;
 		setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
-		dispWinFrames[wIdx] = new MPM_CPUSimWindow(pa, this, wIdx, fIdx);
+		dispWinFrames[wIdx] = new MPM_CPUSimWindow(ri, this, wIdx, fIdx);
 			
 		
 	}//initVisOnce_Priv
@@ -262,7 +273,7 @@ public class MPM_SimMain extends GUI_AppManager {
 
 	@Override
 	protected void setSmoothing() {
-		pa.setSmoothing(0);		
+		ri.setSmoothing(0);		
 	}
 
 }//class MPM_SimMain
