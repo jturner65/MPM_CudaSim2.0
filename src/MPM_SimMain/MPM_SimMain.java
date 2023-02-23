@@ -28,17 +28,18 @@ public class MPM_SimMain extends GUI_AppManager {
 	
 	private final int gridDim = 1500;
 
-	private final int
-		showUIMenu = 0,
-		showMPMCudawin = 1,
-		showMPMCPUwin = 2;
-	public final int numVisFlags = 3;
-	
-	//idx's in dispWinFrames for each window - 0 is always left side menu window
+	/**
+	 * idx's in dispWinFrames for each window - 0 is always left side menu window
+	 * Side menu is dispMenuIDX == 0
+	 */
 	private static final int
 		dispMPMCudaWinIDX = 1,
 		dispMPMCPUWinIDX = 2;
 	
+	/**
+	 * # of visible windows including side menu (always at least 1 for side menu)
+	 */
+	private static final int numVisWins = 3;
 	
 ///////////////
 //CODE STARTS
@@ -82,7 +83,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	@Override
 	protected int[] getBackgroundColor(int winIdx) {return bground;}
 	@Override
-	protected int getNumDispWindows() {	return numVisFlags;	}
+	protected int getNumDispWindows() {	return numVisWins;	}
 	
 	/**
 	 * whether or not we want to restrict window size on widescreen monitors
@@ -116,7 +117,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	
 	@Override
 	protected void initBaseFlags_Indiv() {
-		setBaseFlagToShow_debugMode(false);
+		setBaseFlagToShow_debugMode(true);
 		setBaseFlagToShow_saveAnim(true); 
 		setBaseFlagToShow_runSim(true);
 		setBaseFlagToShow_singleStep(true);
@@ -129,13 +130,9 @@ public class MPM_SimMain extends GUI_AppManager {
 		String[] _winTitles = new String[]{"","Snow Balls!","Snow Ball"},
 				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
 		setWinTitlesAndDescs(_winTitles, _winDescr);
-		//call for menu window
-		buildInitMenuWin();
 		//instanced window dimensions when open and closed - only showing 1 open at a time
 		float[] _dimOpen  = getDefaultWinDimOpen(), 
 				_dimClosed  = getDefaultWinDimClosed();	
-		//menu bar init
-		int wIdx = dispMenuIDX,fIdx=showUIMenu;
 		String[] menuBtnTitles =  new String[]{"Functions 1","Functions 2","Functions 3","Functions 4"};
 		String[][] menuBtnNames = new String[][] {	//each must have literals for every button defined in side bar menu, or ignored
 			{"Restore Init Vals", "Func 01", "Func 02"},				//row 1
@@ -144,7 +141,7 @@ public class MPM_SimMain extends GUI_AppManager {
 			{"Func 20", "Func 21", "Func 22", "Func 23"},	//row 4		
 		};
 		String[] dbgBtnNames = new String[] {"Debug 0","Debug 1","Debug 2","Debug 3","Debug 4"};
-		dispWinFrames[wIdx] = buildSideBarMenu(wIdx, fIdx,menuBtnTitles, menuBtnNames, dbgBtnNames, true, false);
+		buildSideBarMenu(menuBtnTitles, menuBtnNames, dbgBtnNames, true, false);
 
 		//setInitDispWinVals : use this to define the values of a display window
 		//int _winIDX, 
@@ -155,15 +152,15 @@ public class MPM_SimMain extends GUI_AppManager {
 		//int[] _fill, int[] _strk, 			: window fill and stroke colors
 		//int _trajFill, int _trajStrk)			: trajectory fill and stroke colors, if these objects can be drawn in window (used as alt color otherwise)
 		//specify windows that cannot be shown simultaneously here
-		initXORWins(new int[]{showMPMCudawin, showMPMCPUwin},new int[]{dispMPMCudaWinIDX, dispMPMCPUWinIDX});
+		initXORWins(new int[]{dispMPMCudaWinIDX, dispMPMCPUWinIDX},new int[]{dispMPMCudaWinIDX, dispMPMCPUWinIDX});
 
-		wIdx = dispMPMCudaWinIDX; fIdx= showMPMCudawin;
+		int wIdx = dispMPMCudaWinIDX;
 		setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
-		dispWinFrames[wIdx] = new MPM_CudaSimWindow(ri, this, wIdx, fIdx);
+		dispWinFrames[wIdx] = new MPM_CudaSimWindow(ri, this, wIdx);
 		
-		wIdx = dispMPMCPUWinIDX; fIdx= showMPMCPUwin;
+		wIdx = dispMPMCPUWinIDX;
 		setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
-		dispWinFrames[wIdx] = new MPM_CPUSimWindow(ri, this, wIdx, fIdx);
+		dispWinFrames[wIdx] = new MPM_CPUSimWindow(ri, this, wIdx);
 			
 		
 	}//initVisOnce_Priv
@@ -171,8 +168,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	@Override
 	protected void initOnce_Indiv() {
 		//which objects to initially show
-		setVisFlag(showUIMenu, true);					//show input UI menu	
-		setVisFlag(showMPMCudawin, true);		
+		setVisFlag(dispMPMCudaWinIDX, true);		
 	}
 	
 	@Override
@@ -212,12 +208,11 @@ public class MPM_SimMain extends GUI_AppManager {
 	 * this is so ui objects of one window can be made, clicked, and shown displaced from those of the parent window
 	 */
 	@Override
-	public float[] getUIRectVals(int idx){
+	public float[] getUIRectVals_Indiv(int idx, float[] menuClickDim){
 		switch(idx){
-			case dispMenuIDX 		: {return new float[0];}			//idx 0 is parent menu sidebar
-			case dispMPMCudaWinIDX 	: {return dispWinFrames[dispMenuIDX].uiClkCoords;}
-			case dispMPMCPUWinIDX	: {return dispWinFrames[dispMenuIDX].uiClkCoords;}
-			default :  return dispWinFrames[dispMenuIDX].uiClkCoords;
+			case dispMPMCudaWinIDX 	: {return menuClickDim;}
+			case dispMPMCPUWinIDX	: {return menuClickDim;}
+			default :  return menuClickDim;
 			}
 	}//getUIRectVals
 
@@ -229,7 +224,6 @@ public class MPM_SimMain extends GUI_AppManager {
 		if(!callFlags){//called from setflags - only sets button state in UI to avoid infinite loop
 			setMenuBtnState(SidebarMenu.btnShowWinIdx,btn, val);
 		} else {//called from clicking on buttons in UI
-		//val is btn state before transition 
 			//val is btn state before transition 
 			boolean bVal = (val == 1?  false : true);
 			//each entry in this array should correspond to a clickable window
@@ -254,16 +248,15 @@ public class MPM_SimMain extends GUI_AppManager {
 	 * @return
 	 */
 	@Override
-	public int getNumVisFlags() {return numVisFlags;}
+	public int getNumVisFlags() {return numVisWins;}
 	/**
 	 * address all flag-setting here, so that if any special cases need to be addressed they can be easily
 	 */
 	@Override
 	protected void setVisFlag_Indiv(int idx, boolean val ){
 		switch (idx){
-			case showUIMenu 		: { dispWinFrames[dispMenuIDX].dispFlags.setShowWin(val);    break;}											//whether or not to show the main ui window (sidebar)			
-			case showMPMCudawin		: {setWinFlagsXOR(dispMPMCudaWinIDX, val); break;}
-			case showMPMCPUwin		: {setWinFlagsXOR(dispMPMCPUWinIDX, val); break;}
+			case dispMPMCudaWinIDX		: {setWinFlagsXOR(dispMPMCudaWinIDX, val); break;}
+			case dispMPMCPUWinIDX		: {setWinFlagsXOR(dispMPMCPUWinIDX, val); break;}
 			default : {break;}
 		}
 	}//setFlags  
