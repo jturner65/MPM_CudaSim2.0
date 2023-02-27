@@ -48,7 +48,7 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 	@Override
 	protected Base_MPMSim buildSim() {
 		// TODO Auto-generated method stub
-		return new SnowBallCPUSim(pa, this, (MPM_SimUpdateFromUIData) uiUpdateData);
+		return new SnowBallCPUSim(ri, this, (MPM_SimUpdateFromUIData) uiUpdateData);
 	}
 
 	@Override

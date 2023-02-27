@@ -38,7 +38,7 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
 	
 	@Override
 	protected final Base_MPMSim buildSim() {
-		return new MPM_CudaBalls(pa, this, (MPM_SimUpdateFromUIData) uiUpdateData);
+		return new MPM_CudaBalls(ri, this, (MPM_SimUpdateFromUIData) uiUpdateData);
 	}
 
 	@Override

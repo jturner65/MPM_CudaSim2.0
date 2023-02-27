@@ -337,7 +337,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	}//updateCalcObjUIVals
 
 	/**
-	 * Called if int-handling guiObjs[UIidx] (int or list) has new data which updated UI adapter. 
+	 * Called if int-handling guiObjs_Numeric[UIidx] (int or list) has new data which updated UI adapter. 
 	 * Intended to support custom per-object handling by owning window.
 	 * Only called if data changed!
 	 * @param UIidx Index of gui obj with new data
@@ -364,7 +364,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	protected abstract boolean setUI_IntValsCustom_Indiv(int UIidx, int ival, int oldVal);
 
 	/**
-	 * Called if float-handling guiObjs[UIidx] has new data which updated UI adapter.  
+	 * Called if float-handling guiObjs_Numeric[UIidx] has new data which updated UI adapter.  
 	 * Intended to support custom per-object handling by owning window.
 	 * Only called if data changed!
 	 * @param UIidx Index of gui obj with new data
@@ -408,9 +408,9 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	@Override
 	protected void setCamera_Indiv(float[] camVals){		
 		//, float rx, float ry, float dz are now member variables of every window
-		pa.setCameraWinVals(camVals);//(camVals[0],camVals[1],camVals[2],camVals[3],camVals[4],camVals[5],camVals[6],camVals[7],camVals[8]);      
+		ri.setCameraWinVals(camVals);//(camVals[0],camVals[1],camVals[2],camVals[3],camVals[4],camVals[5],camVals[6],camVals[7],camVals[8]);      
 		// puts origin of all drawn objects at screen center and moves forward/away by dz
-		pa.translate(camVals[0],camVals[1],(float)dz); 
+		ri.translate(camVals[0],camVals[1],(float)dz); 
 	    setCamOrient();	
 	}//setCameraIndiv
 	
@@ -436,11 +436,11 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	//draw custom 2d constructs below interactive component of menu
 	@Override
 	public void drawCustMenuObjs(float animTimeMod){
-		pa.pushMatState();	
+		ri.pushMatState();	
 		//all sub menu drawing within push mat call
-		pa.translate(0,custMenuOffset+yOff);		
+		ri.translate(0,custMenuOffset+txtHeightOff);		
 		//draw any custom menu stuff here
-		pa.popMatState();
+		ri.popMatState();
 	}//drawCustMenuObjs
 
 	//things to do when swapping this window out for another window - release objects that take up a lot of memory, for example.

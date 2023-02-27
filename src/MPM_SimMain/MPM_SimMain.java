@@ -122,6 +122,7 @@ public class MPM_SimMain extends GUI_AppManager {
 		setBaseFlagToShow_runSim(true);
 		setBaseFlagToShow_singleStep(true);
 		setBaseFlagToShow_showRtSideMenu(true);
+		setBaseFlagToShow_showDrawableCanvas(false);
 	}
 	@Override
 	protected void initAllDispWindows() {
