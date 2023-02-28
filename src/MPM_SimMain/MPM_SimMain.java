@@ -130,10 +130,11 @@ public class MPM_SimMain extends GUI_AppManager {
 		//titles and descs, need to be set before sidebar menu is defined
 		String[] _winTitles = new String[]{"","Snow Balls!","Snow Ball"},
 				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
-		setWinTitlesAndDescs(_winTitles, _winDescr);
+
 		//instanced window dimensions when open and closed - only showing 1 open at a time
-		float[] _dimOpen  = getDefaultWinDimOpen(), 
-				_dimClosed  = getDefaultWinDimClosed();	
+		float[][] _floatDims  = new float[][] {getDefaultWinDimOpen(), getDefaultWinDimClosed(), getInitCameraValues()};	
+
+		//Builds sidebar menu button config - application-wide menu button bar titles and button names
 		String[] menuBtnTitles =  new String[]{"Functions 1","Functions 2","Functions 3","Functions 4"};
 		String[][] menuBtnNames = new String[][] {	//each must have literals for every button defined in side bar menu, or ignored
 			{"Restore Init Vals", "Func 01", "Func 02"},				//row 1
@@ -142,25 +143,50 @@ public class MPM_SimMain extends GUI_AppManager {
 			{"Func 20", "Func 21", "Func 22", "Func 23"},	//row 4		
 		};
 		String[] dbgBtnNames = new String[] {"Debug 0","Debug 1","Debug 2","Debug 3","Debug 4"};
-		buildSideBarMenu(menuBtnTitles, menuBtnNames, dbgBtnNames, true, false);
+		buildSideBarMenu(_winTitles, menuBtnTitles, menuBtnNames, dbgBtnNames, true, false);
 
-		//setInitDispWinVals : use this to define the values of a display window
-		//int _winIDX, 
-		//float[] _dimOpen, float[] _dimClosed  : dimensions opened or closed
-		//String _ttl, String _desc 			: window title and description
-		//boolean[] _dispFlags 					: 
-		//   flags controlling display of window :  idxs : 0 : canDrawInWin; 1 : canShow3dbox; 2 : canMoveView; 3 : dispWinIs3d
-		//int[] _fill, int[] _strk, 			: window fill and stroke colors
-		//int _trajFill, int _trajStrk)			: trajectory fill and stroke colors, if these objects can be drawn in window (used as alt color otherwise)
-		//specify windows that cannot be shown simultaneously here
 		initXORWins(new int[]{dispMPMCudaWinIDX, dispMPMCPUWinIDX},new int[]{dispMPMCudaWinIDX, dispMPMCPUWinIDX});
-
+		//define windows
+		/**
+		 *  _winIdx The index in the various window-descriptor arrays for the dispWindow being set
+		 *  _title string title of this window
+		 *  _descr string description of this window
+		 *  _dispFlags Essential flags describing the nature of the dispWindow for idxs : 
+		 * 		0 : dispWinIs3d, 
+		 * 		1 : canDrawInWin; 
+		 * 		2 : canShow3dbox (only supported for 3D); 
+		 * 		3 : canMoveView
+		 *  _floatVals an array holding float arrays for 
+		 * 				rectDimOpen(idx 0),
+		 * 				rectDimClosed(idx 1),
+		 * 				initCameraVals(idx 2)
+		 *  _intClrVals and array holding int arrays for
+		 * 				winFillClr (idx 0),
+		 * 				winStrkClr (idx 1),
+		 * 				winTrajFillClr(idx 2),
+		 * 				winTrajStrkClr(idx 3),
+		 * 				rtSideFillClr(idx 4),
+		 * 				rtSideStrkClr(idx 5)
+		 *  _sceneCenterVal center of scene, for drawing objects (optional)
+		 *  _initSceneFocusVal initial focus target for camera (optional)
+		 */
+		
 		int wIdx = dispMPMCudaWinIDX;
-		setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
+		//setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
+		setInitDispWinVals(wIdx, _winTitles[wIdx], _winDescr[wIdx], new boolean[]{true,false,true,true}, _floatDims,		
+				new int[][] {new int[]{255,245,255,255},new int[]{0,0,0,255},
+					new int[]{180,180,180,255},new int[]{100,100,100,255},
+					new int[]{0,0,0,200},new int[]{255,255,255,255}});
+
 		dispWinFrames[wIdx] = new MPM_CudaSimWindow(ri, this, wIdx);
 		
 		wIdx = dispMPMCPUWinIDX;
-		setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
+		//setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
+		setInitDispWinVals(wIdx, _winTitles[wIdx], _winDescr[wIdx], new boolean[]{true,false,true,true}, _floatDims,		
+				new int[][] {new int[]{255,255,255,255},new int[]{0,0,0,255},
+					new int[]{180,180,180,255},new int[]{100,100,100,255},
+					new int[]{0,0,0,200},new int[]{255,255,255,255}});
+		
 		dispWinFrames[wIdx] = new MPM_CPUSimWindow(ri, this, wIdx);
 			
 		
