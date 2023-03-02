@@ -14,7 +14,6 @@ import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_UI_Objects.windowUI.drawnTrajectories.DrawnSimpleTraj;
 import base_UI_Objects.windowUI.uiData.UIDataUpdater;
-import base_UI_Objects.windowUI.uiObjs.base.base.GUIObj_Type;
 import base_Utils_Objects.io.messaging.MsgCodes;
 import base_Utils_Objects.tools.flags.Base_BoolFlags;
 
@@ -283,24 +282,24 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	 */
 	@Override
 	protected final void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){		
-		tmpUIObjArray.put(gIDX_TimeStep , new Object[] {new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step", GUIObj_Type.FloatVal, new boolean[]{true}});//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
-		tmpUIObjArray.put(gIDX_SimStepsPerFrame, new Object[] {new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame", GUIObj_Type.IntVal, new boolean[]{true}});//gIDX_simStepsPerFrame  init 5
-		tmpUIObjArray.put(gIDX_NumParticles, new Object[] {new double[]{1000, 1000000, 1000}, 1.0*initNumParts, "# of Particles", GUIObj_Type.IntVal, new boolean[]{true}});//number of particles
-		tmpUIObjArray.put(gIDX_NumSnowballs, new Object[] {new double[]{2, 10, 1}, 1.0*initNumBalls, "# of Snowballs", GUIObj_Type.IntVal, new boolean[]{true}});//number of snowballs
-		tmpUIObjArray.put(gIDX_InitVel, new Object[] {new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed", GUIObj_Type.FloatVal, new boolean[]{true}});//initial speed of collisions
-		tmpUIObjArray.put(gIDX_PartMass, new Object[] {new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass", GUIObj_Type.FloatVal, new boolean[]{true}});//particle mass
-		tmpUIObjArray.put(gIDX_GridCellSize, new Object[] {new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size", GUIObj_Type.FloatVal, new boolean[]{true}});//grid cell size
-		tmpUIObjArray.put(gIDX_GridCount, new Object[] {new double[]{50, 300, 1}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side", GUIObj_Type.IntVal, new boolean[]{true}}); //# of grid cells per side
-		tmpUIObjArray.put(gIDX_InitYoungMod, new Object[] {new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Young's Modulus", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_InitYoungMod init 4.8e4f, 
-		tmpUIObjArray.put(gIDX_PoissonRatio, new Object[] {new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_PoissonRatio init 0.2f,  
-		tmpUIObjArray.put(gIDX_HardeningCoeff , new Object[] {new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_HardeningCoeff init 15.0f, 
-		tmpUIObjArray.put(gIDX_CriticalCompression, new Object[] {new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CriticalCompression  init .019f, 
-		tmpUIObjArray.put(gIDX_CriticalStretch , new Object[] {new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CriticalStretch init .0075f, 
-		tmpUIObjArray.put(gIDX_AlphaPicFlip, new Object[] {new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_AlphaPicFlip init 0.95f, 
-		tmpUIObjArray.put(gIDX_wallFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_wallfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_CollFricCoeff, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CollfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_DrawnValScale, new Object[] {new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors", GUIObj_Type.FloatVal, new boolean[]{true}});//gIDX_CollfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_DrawPointIncr, new Object[] {new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point", GUIObj_Type.IntVal, new boolean[]{true}});//every x'th point to draw
+		tmpUIObjArray.put(gIDX_TimeStep , uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step", new boolean[]{true}));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
+		tmpUIObjArray.put(gIDX_SimStepsPerFrame, uiObjInitAra_Int(new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame", new boolean[]{true}));//gIDX_simStepsPerFrame  init 5
+		tmpUIObjArray.put(gIDX_NumParticles, uiObjInitAra_Int(new double[]{1000, 1000000, 1000}, 1.0*initNumParts, "# of Particles", new boolean[]{true}));//number of particles
+		tmpUIObjArray.put(gIDX_NumSnowballs, uiObjInitAra_Int(new double[]{2, 10, 1}, 1.0*initNumBalls, "# of Snowballs", new boolean[]{true}));//number of snowballs
+		tmpUIObjArray.put(gIDX_InitVel, uiObjInitAra_Float(new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed", new boolean[]{true}));//initial speed of collisions
+		tmpUIObjArray.put(gIDX_PartMass, uiObjInitAra_Float(new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass", new boolean[]{true}));//particle mass
+		tmpUIObjArray.put(gIDX_GridCellSize, uiObjInitAra_Float(new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size", new boolean[]{true}));//grid cell size
+		tmpUIObjArray.put(gIDX_GridCount, uiObjInitAra_Int(new double[]{50, 300, 1}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side", new boolean[]{true})); //# of grid cells per side
+		tmpUIObjArray.put(gIDX_InitYoungMod, uiObjInitAra_Float(new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Young's Modulus", new boolean[]{true}));//gIDX_InitYoungMod init 4.8e4f, 
+		tmpUIObjArray.put(gIDX_PoissonRatio, uiObjInitAra_Float(new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio", new boolean[]{true}));//gIDX_PoissonRatio init 0.2f,  
+		tmpUIObjArray.put(gIDX_HardeningCoeff , uiObjInitAra_Float(new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient", new boolean[]{true}));//gIDX_HardeningCoeff init 15.0f, 
+		tmpUIObjArray.put(gIDX_CriticalCompression, uiObjInitAra_Float(new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression", new boolean[]{true}));//gIDX_CriticalCompression  init .019f, 
+		tmpUIObjArray.put(gIDX_CriticalStretch , uiObjInitAra_Float(new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch", new boolean[]{true}));//gIDX_CriticalStretch init .0075f, 
+		tmpUIObjArray.put(gIDX_AlphaPicFlip, uiObjInitAra_Float(new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "Particle PIC/FLIP Vel Ratio", new boolean[]{true}));//gIDX_AlphaPicFlip init 0.95f, 
+		tmpUIObjArray.put(gIDX_wallFricCoeff, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient", new boolean[]{true}));//gIDX_wallfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_CollFricCoeff, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient", new boolean[]{true}));//gIDX_CollfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_DrawnValScale, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors", new boolean[]{true}));//gIDX_CollfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_DrawPointIncr, uiObjInitAra_Int(new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point", new boolean[]{true}));//every x'th point to draw
 
 		// populate instancing application objects
 		setupGUIObjsAras_Indiv(tmpUIObjArray, tmpListObjVals);
