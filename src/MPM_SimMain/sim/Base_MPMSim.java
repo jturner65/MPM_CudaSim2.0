@@ -195,7 +195,7 @@ public abstract class Base_MPMSim {
 		} else {
 			//call this if we want to reinitialize existing simulation configuration
 			reinitSimObjects();	
-		}   		// TODO Auto-generated method stub
+		} 
 
 	}//buildSimEnvironment
 	/**
@@ -339,10 +339,11 @@ public abstract class Base_MPMSim {
 	 * @return a 3D center coord
 	 */
 	protected myVectorf getRandSphereCenter(float bound) {
+		var randGen = ThreadLocalRandom.current();
 		myVectorf ctr = new myVectorf(
-				ThreadLocalRandom.current().nextDouble(-1,1), 
-				ThreadLocalRandom.current().nextDouble(-1,1),
-				ThreadLocalRandom.current().nextDouble(-1,1));
+				randGen.nextDouble(-1,1), 
+				randGen.nextDouble(-1,1),
+				randGen.nextDouble(-1,1));
 		ctr._mult(bound);
 		return ctr;
 	}//getRandSphereCenter

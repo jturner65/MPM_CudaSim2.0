@@ -455,8 +455,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 * @param initVel
 	 * @param ctr
 	 * @return
-	 */
-	//protected final int[] createSphere(TreeMap<String, ArrayList<float[]>> partVals, float ballRad, int numParts, float[] ctr) {   		 
+	 */  		 
 	protected final int[] createSphere(TreeMap<String, ArrayList<float[]>> partVals, float ballRad, int numParts, myPointf ctr) {   		 
 		float[] minVals = partVals.get("minMaxVals").get(0);
 		float[] maxVals = partVals.get("minMaxVals").get(1); 

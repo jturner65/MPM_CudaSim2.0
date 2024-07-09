@@ -40,16 +40,18 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	//powdery snow is about 100
 	//wet firm compacted snow is about 600
 	protected final float initParticleDensity = 50.0f;
-	
 	protected final float initParticleMass = initCellSize *initCellSize *initCellSize * initParticleDensity; 
 	protected final float initWallFric = 1.0f;
 	protected final float initColFric = 1.0f;
 	protected final float initDrawnVecScale = .01f;
 	
 	//initial values of material quantities
-	protected final float	
+	protected final float
+		//Assuming the snow is isotropic
+		//Units are kg / (m * s^2) 
 		init_initYoungMod 			 = 1.4e5f,
 		init_poissonRatio 			 = 0.2f,
+		//Governs strain hardening, where the material gets stronger past a certain amount of stress in plastic deformation
 		init_hardeningCoeff 		 = 15.0f, 
 		init_criticalCompression 	 = 0.010f, 
 		init_criticalStretch 		 = 0.0025f, 
