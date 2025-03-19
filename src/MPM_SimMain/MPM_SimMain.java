@@ -17,7 +17,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	
 	public final String prjNmShrt = "MPM_SnowSim_cpu_cuda";
 	public final String prjNmLong = "MPM Snow Simulation Multi-Threaded CPU and CUDA 9.1"; 
-	public final String projDesc = "Simulate numerous snow balls colliding using Material Point Method solved via MT CPU solver and CUDA 9.1 kernel.";
+	public final String projDesc = "Simulate numerous snow balls colliding using Material Point Method solved via MT CPU solver or a CUDA 9.1 kernel.";
 	
 	//use sphere background for this program
 	private boolean useSphereBKGnd = true;
@@ -136,7 +136,7 @@ public class MPM_SimMain extends GUI_AppManager {
 				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
 
 		//instanced window dims when open and closed - only showing 1 open at a time - and init cam vals
-		float[][] _floatDims  = new float[][] {getDefaultWinDimOpen(), getDefaultWinDimClosed(), getInitCameraValues()};	
+		float[][] _floatDims  = getDefaultWinAndCameraDims();	
 
 		//Builds sidebar menu button config - application-wide menu button bar titles and button names
 		String[] menuBtnTitles =  new String[]{"Functions 1","Functions 2","Functions 3","Functions 4"};
@@ -199,7 +199,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	@Override
 	protected void initOnce_Indiv() {
 		//which objects to initially show
-		setVisFlag(dispMPMCudaWinIDX, true);		
+		setWinVisFlag(dispMPMCudaWinIDX, true);		
 	}
 	
 	@Override
@@ -258,7 +258,7 @@ public class MPM_SimMain extends GUI_AppManager {
 			//val is btn state before transition 
 			boolean bVal = (val == 1?  false : true);
 			//each entry in this array should correspond to a clickable window
-			setVisFlag(winFlagsXOR[btn], bVal);
+			setWinVisFlag(winFlagsXOR[btn], bVal);
 		}
 	}//handleShowWin
 

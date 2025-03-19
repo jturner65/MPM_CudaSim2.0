@@ -154,7 +154,7 @@ public class MPM_SimUpdateFromUIData extends UIDataUpdater {
 
 	@Override
 	public String toString() {
-		String res = "Owning Window Name: "+win.name+" | Tracked values : "+intValues.size() +" Integers, " +floatValues.size() +" Floats, " +boolValues.size() + " Booleans\n";
+		String res = "Owning Window Name: "+win.getName()+" | Tracked values : "+intValues.size() +" Integers, " +floatValues.size() +" Floats, " +boolValues.size() + " Booleans\n";
 		if (intValues.size() > 0) {
 			res+="Int Values: (" +intValues.size() +")\n";
 			res+="\tSim Steps per Frame : "+getSimStepsPerFrame() +"\n";
