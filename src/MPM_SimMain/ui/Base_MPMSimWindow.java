@@ -110,7 +110,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	
 	@Override
 	//initialize all private-flag based UI buttons here - called by base class
-	public int initAllPrivBtns(ArrayList<Object[]> tmpBtnNamesArray){	
+	public int initAllUIButtons(ArrayList<Object[]> tmpBtnNamesArray){	
 		tmpBtnNamesArray.add(new Object[]{"Visualization Debug",    "Enable Debug",     Base_BoolFlags.debugIDX});          
 		tmpBtnNamesArray.add(new Object[]{"Resetting Sim Env",   	"Reset Sim Environment",  resetSimIDX});      
 		tmpBtnNamesArray.add(new Object[]{"Remaking Simulation",    "Remake Simulation",   rebuildSimIDX});
@@ -436,7 +436,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	public void drawCustMenuObjs(float animTimeMod){
 		ri.pushMatState();	
 		//all sub menu drawing within push mat call
-		ri.translate(0,custMenuOffset+winInitVals.getTextHeightOffset());		
+		ri.translate(0,custMenuOffset+AppMgr.getTextHeightOffset());		
 		//draw any custom menu stuff here
 		ri.popMatState();
 	}//drawCustMenuObjs
