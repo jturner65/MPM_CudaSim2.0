@@ -9,8 +9,7 @@ import java.util.Map;
  * depending on what UI values have changed. The higher values have higher priority
  */
 public enum SimResetProcess{
-	DoNothing(0),RemakeKernel(1),ResetSim(2),RebuildSim(3);
-	private int value; 
+	DoNothing,RemakeKernel,ResetSim,RebuildSim;
 	private String[] _valExplanation = new String[] {
 			"No need to modify simulation in any way due to UI Input",
 			"Remap Solver/Kernel functions but do not modify simulation environment",
@@ -19,12 +18,12 @@ public enum SimResetProcess{
 	private static String[] _valName = new String[] {"No Modification","Remap Kernel","Reset Existing Sim","Rebuild Simulation"};
 	public static String[] getListOfValNames() {return _valName;}
 	private static Map<Integer, SimResetProcess> map = new HashMap<Integer, SimResetProcess>(); 
-	static { for (SimResetProcess enumV : SimResetProcess.values()) { map.put(enumV.value, enumV);}}
-	private SimResetProcess(int _val){value = _val;} 
-	public int getVal(){return value;}
-	public static SimResetProcess getVal(int idx){return map.get(idx);}
+	static { for (SimResetProcess enumV : SimResetProcess.values()) { map.put(enumV.ordinal(), enumV);}}
+	public int getVal(){return ordinal();}
+	public static SimResetProcess getEnumByIndex(int idx){return map.get(idx);}
+	public static SimResetProcess getEnumFromValue(int idx){return map.get(idx);}
 	public static int getNumVals(){return map.size();}						//get # of values in enum
-	public String getName() {return _valName[value];}
+	public String getName() {return _valName[ordinal()];}
 	@Override
-   public String toString() { return ""+name() + ":"+_valExplanation[value]; }	
+   public String toString() { return ""+name() + ":"+_valExplanation[ordinal()]; }	
 }//SimResetProcess
