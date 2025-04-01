@@ -111,19 +111,19 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	@Override
 	//initialize all private-flag based UI buttons here - called by base class
 	public int initAllUIButtons(ArrayList<Object[]> tmpBtnNamesArray){	
-		tmpBtnNamesArray.add(new Object[]{"Visualization Debug",    "Enable Debug",     Base_BoolFlags.debugIDX});          
-		tmpBtnNamesArray.add(new Object[]{"Resetting Sim Env",   	"Reset Sim Environment",  resetSimIDX});      
-		tmpBtnNamesArray.add(new Object[]{"Remaking Simulation",    "Remake Simulation",   rebuildSimIDX});
-		tmpBtnNamesArray.add(new Object[]{"Showing Init Loc Clr",   "Show Init Loc Clr",  showLocColors});          
-		tmpBtnNamesArray.add(new Object[]{"Showing Collider",       "Show Collider",      showCollider});          
-		tmpBtnNamesArray.add(new Object[]{"Showing Particles",      "Show Particles",     showParticles});  
-		tmpBtnNamesArray.add(new Object[]{"Showing Particle Vel",   "Show Particle Vel",  showParticleVelArrows});  
-		tmpBtnNamesArray.add(new Object[]{"Showing Grid",           "Show Grid",          showGrid});           
-		tmpBtnNamesArray.add(new Object[]{"Showing Grid Vel",       "Show Grid Vel",      showGridVelArrows});     
-		tmpBtnNamesArray.add(new Object[]{"Showing Grid Accel",     "Show Grid Accel",    showGridAccelArrows});    
-		tmpBtnNamesArray.add(new Object[]{"Showing Grid Mass",      "Show Grid Mass",     showGridMass});         
-		tmpBtnNamesArray.add(new Object[]{"Showing Active Nodes",   "Show Active Nodes",  showActiveNodes});     
-		tmpBtnNamesArray.add(new Object[]{"Showing Execution Time", "Show Execution Time",showExecTime});   
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Visualization Debug",    "Enable Debug"},     Base_BoolFlags.debugIDX));          
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Resetting Sim Env",   	"Reset Sim Environment"},  resetSimIDX));      
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Remaking Simulation",    "Remake Simulation"},   rebuildSimIDX));
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Init Loc Clr",   "Show Init Loc Clr"},  showLocColors));          
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Collider",       "Show Collider"},      showCollider));          
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Particles",      "Show Particles"},     showParticles));  
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Particle Vel",   "Show Particle Vel"},  showParticleVelArrows));  
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Grid",           "Show Grid"},          showGrid));           
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Grid Vel",       "Show Grid Vel"},      showGridVelArrows));     
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Grid Accel",     "Show Grid Accel"},    showGridAccelArrows));    
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Grid Mass",      "Show Grid Mass"},     showGridMass));         
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Active Nodes",   "Show Active Nodes"},  showActiveNodes));     
+		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Execution Time", "Show Execution Time"},showExecTime));   
 		
 		return initAllMPMPrivBtns_Indiv(tmpBtnNamesArray);
 	}//initAllPrivBtns
