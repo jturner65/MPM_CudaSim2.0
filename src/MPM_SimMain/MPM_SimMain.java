@@ -223,11 +223,7 @@ public class MPM_SimMain extends GUI_AppManager {
 			default : {	}
 		}//switch	
 	}
-	/**
-	 * gives multiplier based on whether shift, alt or cntl (or any combo) is pressed
-	 */
-	@Override
-	public double clickValModMult(){return ((altIsPressed() ? .1 : 1.0) * (shiftIsPressed() ? 10.0 : 1.0));}	
+	
 	@Override
 	public boolean isClickModUIVal() {
 		//TODO change this to manage other key settings for situations where multiple simultaneous key presses are not optimal or conventient
