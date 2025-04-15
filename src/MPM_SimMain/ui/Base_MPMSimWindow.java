@@ -26,8 +26,8 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	//////////////////////////////////
 	//initial values of simulation variables
 	//ints
-	protected final int initNumGridCellsPerDim = 200;
-	protected final int initSimStepsPerFrame = 5;
+	protected final int initNumGridCellsPerDim = 100;
+	protected final int initSimStepsPerFrame = 10;
 	protected final int initNumBalls = 2;
 	protected final int initNumParts = 100000;
 	protected final int initDrawPtIncr = 1;

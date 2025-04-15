@@ -331,6 +331,21 @@ public abstract class Base_MPMSim {
 	 * Intialize all grid-based values upon sim reset
 	 */
 	protected abstract void initValues_Grids();
+
+	//cube wall normals
+	protected final myVectorf[] wallNorms = new myVectorf[] {
+		new myVectorf( 1.0, 0.0, 0.0),new myVectorf(-1.0, 0.0, 0.0),
+		new myVectorf( 0.0, 1.0, 0.0),new myVectorf( 0.0,-1.0, 0.0),
+		new myVectorf( 0.0, 0.0, 1.0),new myVectorf( 0.0, 0.0,-1.0)
+	};	
+	
+	//collision detection for wall collisions, returns idx in wallNorms of collision
+	public int checkWallCollision(myVectorf pos) {
+		if(pos.x<=minSimBnds) {		return 0;	} else if(pos.x>=maxSimBnds) {	return 1;	}			
+		if(pos.y<=minSimBnds) {		return 2;	} else if(pos.y>=maxSimBnds) {	return 3;	}
+		if(pos.z<=minSimBnds) {		return 4;	} else if(pos.z>=maxSimBnds) {	return 5;	}
+		return -1;
+	}//checkWallCollision
 	
 	/**
 	 * Get a random location within +/- bound to place sphere. bound should 
@@ -574,44 +589,12 @@ public abstract class Base_MPMSim {
 		pa.popMatState();		
 	}
 	
+	public final float getCellSize() {return cellSize;}
 	
-	//////////////////////////////////////////
-	// Boolean flag handling
+	public final int getGridSideCount() {return gridSideCount;}
 	
-	/**
-	 * Returns the number of simulation flags in instanced simulation 
-	 * @return
-	 */
-//	protected abstract int getNumSimFlags();
-//	
-//	protected final void initSimFlags(){simFlagsOld = new int[1 + numSimFlags/32]; for(int i = 0; i<simFlagsOld.length; ++i){setSimFlags(i,false);}}
-//	public final boolean getSimFlags(int idx){int bitLoc = 1<<(idx%32);return (simFlagsOld[idx/32] & bitLoc) == bitLoc;}	
-//	public final void setSimFlags(int idx, boolean val) {
-//		boolean curVal = getSimFlags(idx);
-//		if(val == curVal) {return;}
-//		int flIDX = idx/32, mask = 1<<(idx%32);
-//		simFlagsOld[flIDX] = (val ?  simFlagsOld[flIDX] | mask : simFlagsOld[flIDX] & ~mask);
-//		switch(idx){
-//			case debugSimIDX 			: {break;}	
-//			case simIsBuiltIDX 			: {break;}			
-//			case showLocColors 			: {break;}
-//			case showCollider 			: {break;}
-//			case showParticles			: {break;}
-//			case showParticleVelArrows 	: {break;}
-//			case showGrid				: {break;}				
-//			case showGridVelArrows 		: {break;}		
-//			case showGridAccelArrows 	: {break;}
-//			case showGridMass  			: {break;}		
-//			case showActiveNodes  		: {break;}
-//			default :{
-//				setPrivFlags_Indiv(idx, val);
-//			}			
-//		}			
-//	}//setSimFlags
-//	/**
-//	 * set values for instancing class-specific boolean flags
-//	 * @param idx
-//	 * @param val
-//	 */
-//	protected abstract void setPrivFlags_Indiv(int idx, boolean val);
+	public final float getMinSimBnds() {return minSimBnds;}
+	public final float getMaxSimBnds() {return maxSimBnds;}
+	public final float getDeltaT() {return deltaT;}
+	
 }//class Base_MPMSim

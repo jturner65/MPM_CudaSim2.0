@@ -27,16 +27,16 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * CUDA kernel file name
 	 */
-	private String ptxFileName = "MPM_CUDA_Sim_New.ptx";	
+	private String ptxFileName = "data/MPM_CUDA_Sim_New.ptx";	
 	////////////////////////////////////////////////////
     // Maps holding CUDA function pointers and parameter pointers
 	// This facilitates CUDA calcs and access to appropriately configured CUDA args
-	protected TreeMap<String, Pointer> kernelParams;
-	protected TreeMap<String, CUfunction> cuFuncs;
+	private TreeMap<String, Pointer> kernelParams;
+	private TreeMap<String, CUfunction> cuFuncs;
 	/**
 	 * Lists of names of kernel functions to perform for MPM algorithm.   
 	 */
-	protected String[] CUFileFuncNames = new String[] {
+	private String[] CUFileFuncNames = new String[] {
 			"projectToGridandComputeForces",
 			"projectToGridInit",
 			"computeVol",
@@ -49,7 +49,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * These are the individual kernel functions to execute in order for initialization of simulation
 	 */
-	protected String[] initStepFuncKeys = new String[] {
+	private String[] initStepFuncKeys = new String[] {
 			"clearGrid",
 			"projectToGridInit",
 			"computeVol",
@@ -61,7 +61,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * These are the individual kernel functions to execute in order for each sim step
 	 */
-	protected String[] simStepFuncKeys = new String[] {
+	private String[] simStepFuncKeys = new String[] {
 			"clearGrid",
 			"projectToGridandComputeForces",
 			"compGridVelocities",
@@ -70,68 +70,68 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 			"updPartVelocities",
 			"partCollAndUpdPos"}; 
    
-	protected HashMap<String, int[][]> funcGridDimAndMemSize;
+	private HashMap<String, int[][]> funcGridDimAndMemSize;
 	
 	////////////////////////////////////////////////////
     // CUDA references
-    protected CUdevice dev;
-    protected CUcontext context;
-    protected CUmodule module;
-    protected CUgraphicsResource pCudaResource;
+	private CUdevice dev;
+	private CUcontext context;
+	private CUmodule module;
+	//private CUgraphicsResource pCudaResource;
 	// CUDA Device ptr constructions
-	protected CUdeviceptr partMass, partVolume;
-	protected CUdeviceptr[] partPos, partVel; 
-    protected CUdeviceptr[] gridVel, gridNewVel, gridForce;
-	protected CUdeviceptr[][] partElasticF, partPlasticF;    
-    protected CUdeviceptr gridMass;
+	private CUdeviceptr partMass, partVolume;
+	private CUdeviceptr[] partPos, partVel; 
+	private CUdeviceptr[] gridVel, gridNewVel, gridForce;
+    private CUdeviceptr[][] partElasticF, partPlasticF;    
+    private CUdeviceptr gridMass;
     // CUDA calc helper variables
 
     /**
      * # of cuda blocks to use for particles
      */
-    protected int numBlocksParticles;
+    private int numBlocksParticles;
     /**
      * # of cuda blocks to use for grid
      */
-    protected int numBlocksGrid;
+    private int numBlocksGrid;
     /**
      * # parts * size of float & num grid cells * size float 
      */
-	protected long numPartsFloatSz, numGridFloatSz;
+    protected long numPartsFloatSz, numGridFloatSz;
 	/**
 	 * # of cuda threads
 	 */
-    protected final int numCUDAThreads = 512;
-    protected final int[] blkThdDims = new int[] {numCUDAThreads, 1, 1};
-    protected int[] partGridDims;
-    protected int[] part4GridDims;
-    protected int[] gridGridDims;
-    protected int[] shrdMemSize = new int[] {0};
-    protected int[] partVelShrdMemSize = new int[] {numCUDAThreads*6*Sizeof.FLOAT};
+	private final int numCUDAThreads = 512;
+	private final int[] blkThdDims = new int[] {numCUDAThreads, 1, 1};
+	private int[] partGridDims;
+	private int[] part4GridDims;
+	private int[] gridGridDims;
+	private int[] shrdMemSize = new int[] {0};
+	private int[] partVelShrdMemSize = new int[] {numCUDAThreads*6*Sizeof.FLOAT};
     
     /**
      * Raw initial particle values
      */
-    TreeMap<String, ArrayList<float[]>> partVals;
+    private TreeMap<String, ArrayList<float[]>> partVals;
     
     ////////////////////////////////////////////////////
     //representations for rendering
     /**
      * local representation of particle vector quantities for rendering
      */
-    protected float[][] hostPartPos, hostPartVel;
+    private float[][] hostPartPos, hostPartVel;
     /**
      * local representation of grid vector quantities for rendering
      */
-    protected float [][] hostGridPos, hostGridVel, hostGridAccel;
+    private float [][] hostGridPos, hostGridVel, hostGridAccel;
     /**
      * local rep of grid scalars for rendering
      */
-	protected float[] hostGridMass;     
+    private float[] hostGridMass;     
 	/**
 	 * particle colors based on initial location
 	 */
-    protected int[][] hostPartClrAra, hostPartGreyAra;
+    private int[][] hostPartClrAra, hostPartGreyAra;
         
 	/**
 	 * 

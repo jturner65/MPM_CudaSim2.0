@@ -19,12 +19,9 @@ public class MPM_SimMain extends GUI_AppManager {
 	public final String prjNmLong = "MPM Snow Simulation Multi-Threaded CPU and CUDA 9.1"; 
 	public final String projDesc = "Simulate numerous snow balls colliding using Material Point Method solved via MT CPU solver or a CUDA 9.1 kernel.";
 	
-	//use sphere background for this program
-	private boolean useSphereBKGnd = true;
-	
 	private String bkSkyBox = "winter.jpg";
 	//bground color
-	private final int[] bground = new int[]{244,244,244,255};				
+	private final int[] bground = new int[]{0,0,0,255};				
 	
 	private final int gridDim = 1500;
 
@@ -34,12 +31,13 @@ public class MPM_SimMain extends GUI_AppManager {
 	 */
 	private static final int
 		dispMPMCudaWinIDX = 1,
-		dispMPMCPUWinIDX = 2;
+		dispMPMCudaWin2IDX = 2,
+		dispMPMCPUWinIDX = 3;
 	
 	/**
 	 * # of visible windows including side menu (always at least 1 for side menu)
 	 */
-	private static final int numVisWins = 3;
+	private static final int numVisWins = 4;
 	
 ///////////////
 //CODE STARTS
@@ -81,7 +79,7 @@ public class MPM_SimMain extends GUI_AppManager {
 		setDesired3DGridDims(gridDim);		
 	}
 	@Override
-	protected boolean getUseSkyboxBKGnd(int winIdx) {	return useSphereBKGnd;}
+	protected boolean getUseSkyboxBKGnd(int winIdx) {	return winIdx == dispMPMCudaWin2IDX;}
 	@Override
 	protected String getSkyboxFilename(int winIdx) {	return bkSkyBox;}
 	@Override
@@ -132,8 +130,8 @@ public class MPM_SimMain extends GUI_AppManager {
 	protected void initAllDispWindows() {
 		showInfo = true;
 		//titles and descs, need to be set before sidebar menu is defined
-		String[] _winTitles = new String[]{"","Snow Balls!","Snow Ball"},
-				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
+		String[] _winTitles = new String[]{"","Snow Balls!","Snow Balls In The Alps!","CPU Snow Ball"},
+				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
 
 		//instanced window dims when open and closed - only showing 1 open at a time - and init cam vals
 		float[][] _floatDims  = getDefaultWinAndCameraDims();	
@@ -149,7 +147,7 @@ public class MPM_SimMain extends GUI_AppManager {
 		String[] dbgBtnNames = new String[] {"Debug 0","Debug 1","Debug 2","Debug 3","Debug 4"};
 		buildSideBarMenu(_winTitles, menuBtnTitles, menuBtnNames, dbgBtnNames, true, false);
 
-		initXORWins(new int[]{dispMPMCudaWinIDX, dispMPMCPUWinIDX},new int[]{dispMPMCudaWinIDX, dispMPMCPUWinIDX});
+		initXORWins(new int[]{dispMPMCudaWinIDX, dispMPMCudaWin2IDX, dispMPMCPUWinIDX},new int[]{dispMPMCudaWinIDX, dispMPMCudaWin2IDX, dispMPMCPUWinIDX});
 		//define windows
 		/**
 		 *  _winIdx The index in the various window-descriptor arrays for the dispWindow being set
@@ -183,6 +181,15 @@ public class MPM_SimMain extends GUI_AppManager {
 					new int[]{0,0,0,200},new int[]{255,255,255,255}});
 
 		dispWinFrames[wIdx] = new MPM_CudaSimWindow(ri, this, wIdx);
+		
+		wIdx = dispMPMCudaWin2IDX;
+		//setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
+		setInitDispWinVals(wIdx, _winTitles[wIdx], _winDescr[wIdx], getDfltBoolAra(true), _floatDims,		
+				new int[][] {new int[]{255,245,255,255},new int[]{0,0,0,255},
+					new int[]{180,180,180,255},new int[]{100,100,100,255},
+					new int[]{0,0,0,200},new int[]{255,255,255,255}});
+
+		dispWinFrames[wIdx] = new MPM_CudaSimWindow(ri, this, wIdx);	
 		
 		wIdx = dispMPMCPUWinIDX;
 		//setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
@@ -238,6 +245,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	public float[] getUIRectVals_Indiv(int idx, float[] menuClickDim){
 		switch(idx){
 			case dispMPMCudaWinIDX 	: {return menuClickDim;}
+			case dispMPMCudaWin2IDX : {return menuClickDim;}
 			case dispMPMCPUWinIDX	: {return menuClickDim;}
 			default :  return menuClickDim;
 			}
@@ -283,6 +291,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	protected void setVisFlag_Indiv(int idx, boolean val ){
 		switch (idx){
 			case dispMPMCudaWinIDX		: {setWinFlagsXOR(dispMPMCudaWinIDX, val); break;}
+			case dispMPMCudaWin2IDX		: {setWinFlagsXOR(dispMPMCudaWin2IDX, val); break;}
 			case dispMPMCPUWinIDX		: {setWinFlagsXOR(dispMPMCPUWinIDX, val); break;}
 			default : {break;}
 		}

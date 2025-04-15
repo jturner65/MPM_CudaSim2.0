@@ -52,8 +52,7 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
 	protected void updateCudaSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
 		//radius will be function of how many particles are built and grid dimensions
 		sphereRad = (float)(3.0*Math.cbrt(numParts)/sclAmt);
-		//derive half-length of single dimension of grid based on count of grid boxes and size of each box edge
-		
+		//derive half-length of single dimension of grid based on count of grid boxes and size of each box edge		
         //max valid location for center dof without breaching collider on start
         maxCenterDim = maxSimBnds-sphereRad;
         
@@ -64,7 +63,7 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
 	/**
 	 * First instance of sim should be set to specified layout; subsequent instances are randomly synthesized
 	 */
-	static public boolean doRand = false;	
+	//static public boolean doRand = false;	
 	/**
 	 * build particle layout for cuda sim - use multiples of h as radius
 	 * @param partVals [OUT] map of particle locs, initial velocities and min/max vals being constructed
@@ -72,23 +71,8 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
 	@Override
 	protected void buildPartLayoutMap(TreeMap<String, ArrayList<float[]>> partVals) {	
 		win.getMsgObj().dispDebugMessage("MPM_CudaBalls("+simName+")", "buildPartLayoutMap", "Sphere Rad : " + sphereRad+ " | maxSimBnds : "+maxSimBnds);
-
-		if (!doRand){
-        	//first run default setup
-        	int numSpheres = 2;
-        	sphere_Ctrs = new myVectorf[numSpheres];
-        	sphere_Vels = new myVectorf[numSpheres];    
-        	sphere_Ctrs[0] = new myVectorf(.5f*maxSimBnds, .5f*maxSimBnds, .3f*maxSimBnds);
-        	sphere_Ctrs[1] = new myVectorf(-.3f*maxSimBnds, .5f*maxSimBnds, .6f* maxSimBnds);
-			sphere_Vels[0] = myVectorf._sub(sphere_Ctrs[1],sphere_Ctrs[0]);
-			sphere_Vels[0]._mult(initVel/sphere_Vels[0].magn);
-			sphere_Vels[0].z *=.5;
-			sphere_Vels[1] = myVectorf._mult(sphere_Vels[0], -1.0f);
-			sphere_Vels[1].z *=.5f;
-			doRand = true;
-        } else {
-        	buildSphereCtrsAndVels();
-        }
+		
+       	buildSphereCtrsAndVels();
         //build point clouds and assign initial velocities
         reinitSimObjects(partVals);
         
@@ -136,9 +120,11 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
 		
 		//use up extra particles, 1 per ball
         for (int i=0;i<numPartsLeftOver;++i) {
+        	//add 1 to each ball for the left-over particles
         	idxsForSpheres[i] = createSphere(partVals, sphereRad, numPartsPerSphere+1, sphere_Ctrs[i]);
         }
         for (int i=numPartsLeftOver;i<sphere_Ctrs.length;++i) {
+        	//make the balls without the extra points
         	idxsForSpheres[i] = createSphere(partVals, sphereRad, numPartsPerSphere, sphere_Ctrs[i]);
         }
 	}//buildSpherePoints
@@ -188,22 +174,13 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
 	 * @return
 	 */
 	@Override
-	public boolean simMeDebug(float modAmtMillis) {
-		//TODO any debugging that might be supportable here
-		return false;
-	}//simMeDebug
+	public boolean simMeDebug(float modAmtMillis) {		return false;	}//simMeDebug
 
 	@Override
-	protected Base_MPMSimFlags buildSimFlags() {
-		// TODO Auto-generated method stub
-		return new MPM_CudaSimFlags(this);
-	}
+	protected Base_MPMSimFlags buildSimFlags() {		return new MPM_CudaSimFlags(this);	}
 
 	@Override
-	public void handleSimFlagsDebug_Indiv(boolean val) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void handleSimFlagsDebug_Indiv(boolean val) {	}
 
 
 }//class MPM_Cuda2Balls

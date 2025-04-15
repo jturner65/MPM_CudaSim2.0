@@ -18,12 +18,10 @@ import base_UI_Objects.GUI_AppManager;
  *
  */
 public class MPM_CudaSimWindow extends Base_MPMSimWindow {
-
 	/**
 	 * # of private boolean flags for this window - expands upon those determined in SOM_AnimWorldWin
 	 */
-	private final int numPrivFlags = numBaseMPMWinUIPrivFlags;
-	
+	private final int numPrivFlags = numBaseMPMWinUIPrivFlags;	
 	
 	/**
 	 * @param _p

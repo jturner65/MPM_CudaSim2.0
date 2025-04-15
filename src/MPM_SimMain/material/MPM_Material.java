@@ -80,5 +80,13 @@ public class MPM_Material {
 	 */
 	public float[] getAlphaPicFlipPtr() {return alphaPicFlip;}      
 	
-	
+	//gets csv string of values used by particles in grid force calculation
+	public String toGridFrcCalcStrCSV(String fmt) {
+		return String.format(fmt, lambda0[0])+","+String.format(fmt, mu0[0])+","+String.format(fmt, hardeningCoeff[0]);
+		
+	}
+	public String toDefGradUpdCalcStrCSV(String fmt) {
+		return String.format(fmt, criticalCompression[0])+","+String.format(fmt, criticalStretch[0]);
+		
+	}
 }//MPM_Material
