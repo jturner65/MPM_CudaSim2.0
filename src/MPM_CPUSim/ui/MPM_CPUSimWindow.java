@@ -18,7 +18,6 @@ import base_UI_Objects.GUI_AppManager;
  *
  */
 public class MPM_CPUSimWindow extends Base_MPMSimWindow {
-
 	/**
 	 * # of private boolean flags for this window - expands upon those determined in SOM_AnimWorldWin
 	 */
@@ -36,9 +35,11 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 	}
 
 	@Override
-	protected void initDispFlags_Indiv() {}
+	protected void initDispFlags_Indiv() {	}
 	@Override
-	protected final void initMe_Indiv() {	}
+	protected final void initMe_Indiv() {
+		privFlags.setFlag(showCollider, true);
+	}
 	
 	@Override
 	protected int initAllMPMPrivBtns_Indiv(ArrayList<Object[]> tmpBtnNamesArray) {
@@ -47,7 +48,6 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 	
 	@Override
 	protected Base_MPMSim buildSim() {
-		// TODO Auto-generated method stub
 		return new SnowBallCPUSim(ri, this, (MPM_SimUpdateFromUIData) getUIDataUpdater());
 	}
 
@@ -72,7 +72,6 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 	@Override
 	protected void setupGUIObjsAras_Indiv(TreeMap<Integer, Object[]> tmpUIObjArray,
 			TreeMap<Integer, String[]> tmpListObjVals) {
-		// TODO Auto-generated method stub
 
 	}
 

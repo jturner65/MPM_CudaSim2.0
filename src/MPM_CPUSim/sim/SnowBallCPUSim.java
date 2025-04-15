@@ -8,6 +8,7 @@ import MPM_CPUSim.sim.base.MPM_CPUSimFlags;
 import MPM_SimMain.sim.Base_MPMSimFlags;
 import MPM_SimMain.ui.Base_MPMSimWindow;
 import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
+import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
 
 /**
@@ -24,7 +25,7 @@ public class SnowBallCPUSim extends Base_MPMCPUSim {
 	 * @param _currUIVals
 	 */
 	public SnowBallCPUSim(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
-		super(_pa, _win, "Snowball Fall", new float[] {0.0f, -9.8f, 0.0f}, _currUIVals);
+		super(_pa, _win, "Snowball Fall", _currUIVals);
 	}
 
 	@Override
@@ -55,5 +56,11 @@ public class SnowBallCPUSim extends Base_MPMCPUSim {
 	public void handleSimFlagsDebug_Indiv(boolean val) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public myVectorf checkColliderCollision(myVectorf pos) {
+		// TODO Auto-generated method stub
+		return pos;
 	}
 }//class SnowBallSim
