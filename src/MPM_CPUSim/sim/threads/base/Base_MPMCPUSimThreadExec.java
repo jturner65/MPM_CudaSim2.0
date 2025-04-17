@@ -2,18 +2,11 @@ package MPM_CPUSim.sim.threads.base;
 
 import java.util.concurrent.*;
 
-import org.jblas.FloatMatrix;
-
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
-import MPM_CPUSim.sim.grid.activeNodeAgg;
-import MPM_CPUSim.sim.grid.myGridNode;
-import MPM_CPUSim.sim.particles.myRndrdPart;
-import MPM_CPUSim.sim.particles.base.myParticle;
-import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
 //1 thread's worth of execution for executing work
-public abstract class mySimThreadExec implements Callable<Boolean> {
+public abstract class Base_MPMCPUSimThreadExec implements Callable<Boolean> {
 	//ref to owning sim
 	protected Base_MPMCPUSim sim;
 
@@ -22,7 +15,7 @@ public abstract class mySimThreadExec implements Callable<Boolean> {
 	//idxs in component array that this thread will map to
 	protected int stIDX, endIDX, thIDX;
 	
-	public mySimThreadExec(Base_MPMCPUSim _sim, int _thIDX, int _stIDX, int _endIDX) {
+	public Base_MPMCPUSimThreadExec(Base_MPMCPUSim _sim, int _thIDX, int _stIDX, int _endIDX) {
 		sim=_sim;stIDX = _stIDX; endIDX = _endIDX;thIDX = _thIDX;		
 		simStep=0;
 	}

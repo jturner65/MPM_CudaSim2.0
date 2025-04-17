@@ -6,7 +6,7 @@ package MPM_CudaSim.ui;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-import MPM_CudaSim.sim.MPM_CudaBalls;
+import MPM_CudaSim.sim.MPM_CudaSnowBalls;
 import MPM_SimMain.sim.Base_MPMSim;
 import MPM_SimMain.ui.Base_MPMSimWindow;
 import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
@@ -36,7 +36,7 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
 	
 	@Override
 	protected final Base_MPMSim buildSim() {
-		return new MPM_CudaBalls(ri, this, (MPM_SimUpdateFromUIData) getUIDataUpdater());
+		return new MPM_CudaSnowBalls(ri, this, (MPM_SimUpdateFromUIData) getUIDataUpdater());
 	}
 
 	@Override

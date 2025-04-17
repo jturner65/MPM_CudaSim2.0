@@ -7,7 +7,7 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
 
 //class holding a single node of the grid structure encapsulating the material.  this is projected to with each particle's quantities
-public class myGridNode {
+public class MPM_CPUGridNode {
 	public final int ID;
 	public static int IDgen = 0;
 	
@@ -20,7 +20,7 @@ public class myGridNode {
 	//position in world
 	public myPointf pos;
 	
-	public myGridNode(int[] _idxs, myPointf _pos) {
+	public MPM_CPUGridNode(int[] _idxs, myPointf _pos) {
 		ID = IDgen++;
 		idxs=_idxs;
 		pos =_pos;

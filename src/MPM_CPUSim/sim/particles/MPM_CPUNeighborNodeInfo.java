@@ -1,27 +1,27 @@
-package MPM_CPUSim.sim;
+package MPM_CPUSim.sim.particles;
 
 import org.jblas.FloatMatrix;
 
-import MPM_CPUSim.sim.grid.activeNodeAgg;
-import MPM_CPUSim.sim.grid.myGridNode;
-import MPM_CPUSim.sim.particles.base.myParticle;
+import MPM_CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
+import MPM_CPUSim.sim.grid.MPM_CPUGridNode;
+import MPM_CPUSim.sim.particles.base.Base_MPMCPUParticle;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
 /**
  * class to hold information regarding neighboring nodes to a particle, 
  * put in single struct-like object so only have single list of nghbrNodeInfos
  */
-public class nghbrNodeInfo {
+public class MPM_CPUNeighborNodeInfo {
 	//particle this node is a neighbor to
-	private myParticle p;
+	private Base_MPMCPUParticle p;
 	//neighbor node. howdy neighbor!
-	private myGridNode node;
+	private MPM_CPUGridNode node;
 	//this node's aggregator;
-	private activeNodeAgg agg;
+	private MPM_CPUActiveNodeAgg agg;
 	private float weightToNode;
 	private FloatMatrix dWeightToNode;
 	
-	public nghbrNodeInfo(myParticle _p, myGridNode _node, float _weightToNode, float dweightx, float dweighty, float dweightz, activeNodeAgg _agg) {
+	public MPM_CPUNeighborNodeInfo(Base_MPMCPUParticle _p, MPM_CPUGridNode _node, float _weightToNode, float dweightx, float dweighty, float dweightz, MPM_CPUActiveNodeAgg _agg) {
 		p=_p;node=_node;agg=_agg;
 		weightToNode=_weightToNode; 		
 		dWeightToNode= new FloatMatrix(new float[] {dweightx, dweighty, dweightz});

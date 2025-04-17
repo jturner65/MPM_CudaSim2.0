@@ -1,15 +1,15 @@
 package MPM_CPUSim.sim.threads;
 
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
-import MPM_CPUSim.sim.threads.base.mySimThdBldr;
+import MPM_CPUSim.sim.threads.base.Base_MPMCPUSimThdBldr;
 
 /**
  * class to build a sphere of particles of specified size, dispersed amongst specified # of threads
  */
 
-public class myPartBuilder extends mySimThdBldr {
+public class MPM_CPUPartBuilder extends Base_MPMCPUSimThdBldr {
 	
-	public myPartBuilder(Base_MPMCPUSim _sim, int _numThds) {super(_sim, _numThds);}
+	public MPM_CPUPartBuilder(Base_MPMCPUSim _sim, int _numThds) {super(_sim, _numThds);}
 	
 	@Override
 	public void initSimBuilder() {	

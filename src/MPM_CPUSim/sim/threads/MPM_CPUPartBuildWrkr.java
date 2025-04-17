@@ -4,27 +4,27 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.jblas.FloatMatrix;
 
-import MPM_CPUSim.sim.nghbrNodeInfo;
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
-import MPM_CPUSim.sim.grid.activeNodeAgg;
-import MPM_CPUSim.sim.grid.myGridNode;
-import MPM_CPUSim.sim.particles.myRndrdPart;
-import MPM_CPUSim.sim.particles.base.myParticle;
-import MPM_CPUSim.sim.threads.base.mySimThreadExec;
+import MPM_CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
+import MPM_CPUSim.sim.grid.MPM_CPUGridNode;
+import MPM_CPUSim.sim.particles.MPM_CPUNeighborNodeInfo;
+import MPM_CPUSim.sim.particles.MPM_CPURndrdPart;
+import MPM_CPUSim.sim.particles.base.Base_MPMCPUParticle;
+import MPM_CPUSim.sim.threads.base.Base_MPMCPUSimThreadExec;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
 
 //1 thread's worth of execution for building particles
-public class partThreadExec extends mySimThreadExec {
+public class MPM_CPUPartBuildWrkr extends Base_MPMCPUSimThreadExec {
 	//ref to particle array to be filled
-	myRndrdPart[] parts;
+	MPM_CPURndrdPart[] parts;
 	//center of sphere being built
 	myVectorf ctr;
 	//radius of sphere to be built
 	float rad;
 	
-	public partThreadExec(Base_MPMCPUSim _sim, int _thIDX, int _stIDX, int _endIDX, float _rad, myVectorf _ctr, myRndrdPart[] _parts) {
+	public MPM_CPUPartBuildWrkr(Base_MPMCPUSim _sim, int _thIDX, int _stIDX, int _endIDX, float _rad, myVectorf _ctr, MPM_CPURndrdPart[] _parts) {
 		super(_sim,_thIDX, _stIDX, _endIDX);
 		parts=_parts;	
 		ctr = new myVectorf(_ctr);
@@ -47,7 +47,7 @@ public class partThreadExec extends mySimThreadExec {
 	@Override
 	protected void execSimStep0() {
 		for(int i=stIDX; i<endIDX;++i) {
-			parts[i]= new myRndrdPart(getRandPosInSphere(rad, ctr));
+			parts[i]= new MPM_CPURndrdPart(getRandPosInSphere(rad, ctr));
 			parts[i].thdIDX = thIDX;
 		}
 	}
@@ -70,7 +70,7 @@ public class partThreadExec extends mySimThreadExec {
 	}//calcWtDerivWt	
 	
 	
-	private void findNeighborNodes(myRndrdPart p) {
+	private void findNeighborNodes(MPM_CPURndrdPart p) {
 		p.neighbors.clear();
 		float cellSize = sim.getCellSize();
 		int gridCount = sim.getGridSideCount();
@@ -92,15 +92,15 @@ public class partThreadExec extends mySimThreadExec {
 						float xyWt00 = x_wtVals[0] * y_wtVals[0], xyWt01 = x_wtVals[0] * y_wtVals[1], xyWt10 = x_wtVals[1] * y_wtVals[0];
 						for (int k = stIdxK; k <= endIdxK; ++k) {
 							if (0 <= k && k<gridCount) {
-								myGridNode node = sim.grid[i][j][k];
+								MPM_CPUGridNode node = sim.grid[i][j][k];
 								float[] z_wtVals = calcWtDerivWt(sim,posRelPreCalc[2] - k);	
 								//weights and differential weights/wrespect to each dir calculations
 								float weight = xyWt00 * z_wtVals[0]; 
 								float dweightx = xyWt10 * z_wtVals[0]; 
 								float dweighty = xyWt01 * z_wtVals[0];
 								float dweightz = xyWt00 * z_wtVals[1];								
-								activeNodeAgg agg = sim.addNodeToSet(node);	
-								nghbrNodeInfo tmp = new nghbrNodeInfo(p, node, weight, dweightx, dweighty, dweightz, agg);
+								MPM_CPUActiveNodeAgg agg = sim.addNodeToSet(node);	
+								MPM_CPUNeighborNodeInfo tmp = new MPM_CPUNeighborNodeInfo(p, node, weight, dweightx, dweighty, dweightz, agg);
 								p.neighbors.put(tmp, agg);
 							}//if k in bound
 						}//for k
@@ -116,7 +116,7 @@ public class partThreadExec extends mySimThreadExec {
 	protected void execSimStep1() {
 		for(int i=stIDX; i<endIDX;++i) {findNeighborNodes(parts[i]);}//parts[i].findNeighborNodes(sim, sim.grid);}			
 		//KEEP SEPARATED
-		for(int i=stIDX; i<endIDX;++i) {for (nghbrNodeInfo ndInfo : parts[i].neighbors.keySet()) {ndInfo.addMassVelToNode(myParticle.mass);}}
+		for(int i=stIDX; i<endIDX;++i) {for (MPM_CPUNeighborNodeInfo ndInfo : parts[i].neighbors.keySet()) {ndInfo.addMassVelToNode(Base_MPMCPUParticle.mass);}}
 		//NEED TO CALL AGGREGATOR ONCE ALL THREADS ARE DONE
 	}//execSimStep1
 	
@@ -151,7 +151,7 @@ public class partThreadExec extends mySimThreadExec {
 
 			//FloatMatrix cauchyStressWoJpn = (mat1.mul(scal1)).add(mat2.mul(scal2));
 			parts[i].cauchyStressWoJpnMVol = ((mat1.mul(scal1)).add(mat2)).mul(parts[i].vol);
-			for (nghbrNodeInfo ndInfo : parts[i].neighbors.keySet()) {
+			for (MPM_CPUNeighborNodeInfo ndInfo : parts[i].neighbors.keySet()) {
 				ndInfo.addPartForce(parts[i].cauchyStressWoJpnMVol);
 			}			//requires force aggregation in gridnode call
 			//NEED TO AGGREGATE ALL FORCES FOR ALL ACTIVE NODES AND SUBTRACT FROM EXISTING FORCES ONCE ALL THREADS ARE DONE

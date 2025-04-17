@@ -6,7 +6,7 @@ package MPM_CPUSim.ui;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-import MPM_CPUSim.sim.SnowBallCPUSim;
+import MPM_CPUSim.sim.MPM_CPUSnowBall;
 import MPM_SimMain.sim.Base_MPMSim;
 import MPM_SimMain.ui.Base_MPMSimWindow;
 import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
@@ -48,7 +48,7 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 	
 	@Override
 	protected Base_MPMSim buildSim() {
-		return new SnowBallCPUSim(ri, this, (MPM_SimUpdateFromUIData) getUIDataUpdater());
+		return new MPM_CPUSnowBall(ri, this, (MPM_SimUpdateFromUIData) getUIDataUpdater());
 	}
 
 	@Override

@@ -8,16 +8,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jblas.FloatMatrix;
 
-import MPM_CPUSim.sim.nghbrNodeInfo;
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
-import MPM_CPUSim.sim.grid.activeNodeAgg;
-import MPM_CPUSim.sim.grid.myGridNode;
+import MPM_CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
+import MPM_CPUSim.sim.grid.MPM_CPUGridNode;
+import MPM_CPUSim.sim.particles.MPM_CPUNeighborNodeInfo;
 import MPM_SimMain.material.MPM_Material;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
 
-public class myParticle {
+public class Base_MPMCPUParticle {
 	public final int ID;
 	public static int IDgen = 0;
 	
@@ -37,7 +37,7 @@ public class myParticle {
 	protected static final String strfmt = "%.5f";
 
 	
-	public ConcurrentHashMap<nghbrNodeInfo,activeNodeAgg> neighbors;
+	public ConcurrentHashMap<MPM_CPUNeighborNodeInfo,MPM_CPUActiveNodeAgg> neighbors;
 	
 	public FloatMatrix plasticDeformationGrad = new FloatMatrix(new float[][] {{1, 0, 0},
 		   																	   {0, 1, 0},
@@ -59,12 +59,12 @@ public class myParticle {
 	private FloatMatrix dvp;
 	
 		
-	public myParticle(myPointf _iPos) {
+	public Base_MPMCPUParticle(myPointf _iPos) {
 		ID = IDgen++;
 		pos = new myPointf(_iPos);
 		vel = new myVectorf(0.0,0.0,0.0);
 		frc = new myVectorf();
-		neighbors = new ConcurrentHashMap<nghbrNodeInfo,activeNodeAgg>();
+		neighbors = new ConcurrentHashMap<MPM_CPUNeighborNodeInfo,MPM_CPUActiveNodeAgg>();
 	}
 	
 	public void reset() {
@@ -107,7 +107,7 @@ public class myParticle {
 	
 	private static final float twoThirds = 2.0f/3.0f, fourThirds = 2.0f*twoThirds;
 	//find close gridnodes
-	public void findNeighborNodes(Base_MPMCPUSim sim, myGridNode[][][] grid){		
+	public void findNeighborNodes(Base_MPMCPUSim sim, MPM_CPUGridNode[][][] grid){		
 		neighbors.clear();
 		float cellSize = sim.getCellSize();
 		int gridCount = sim.getGridSideCount();
@@ -142,14 +142,14 @@ public class myParticle {
 				float xyWt00 = x_wtVals[idxI][0] * y_wtVals[idxJ][0], xyWt01 = x_wtVals[idxI][0] * y_wtVals[idxJ][1], xyWt10 = x_wtVals[idxI][1] * y_wtVals[idxJ][0];
 				idxK = 0;
 				for (int k = stIdxK; k <= endIdxK; ++k) {
-					myGridNode node = grid[i][j][k];
+					MPM_CPUGridNode node = grid[i][j][k];
 					//weights and differential weights w/respect to each dir calculations
 					float weight = xyWt00 * z_wtVals[idxK][0]; 
 					float dweightx = xyWt10 * z_wtVals[idxK][0]; 
 					float dweighty = xyWt01 * z_wtVals[idxK][0];
 					float dweightz = xyWt00 * z_wtVals[idxK][1];								
-					activeNodeAgg agg = sim.addNodeToSet(node);	
-					nghbrNodeInfo tmp = new nghbrNodeInfo(this, node, weight, dweightx, dweighty, dweightz, agg);
+					MPM_CPUActiveNodeAgg agg = sim.addNodeToSet(node);	
+					MPM_CPUNeighborNodeInfo tmp = new MPM_CPUNeighborNodeInfo(this, node, weight, dweightx, dweighty, dweightz, agg);
 					neighbors.put(tmp, agg);
 					++idxK;
 				}//for k
@@ -161,13 +161,13 @@ public class myParticle {
 	
 	
 	public void addMassVelToGrid() {
-		for (nghbrNodeInfo ndInfo : neighbors.keySet()) {ndInfo.addMassVelToNode(mass);}	
+		for (MPM_CPUNeighborNodeInfo ndInfo : neighbors.keySet()) {ndInfo.addMassVelToNode(mass);}	
 	}
 	
 	public void computePartVolumeAndDensity(float h3) {
 		//System.out.println("Compute particle volumes and densities during the first iteration");
 		float partDensity = 0;
-		for (nghbrNodeInfo ndInfo : neighbors.keySet()) {
+		for (MPM_CPUNeighborNodeInfo ndInfo : neighbors.keySet()) {
 			partDensity += (ndInfo.getWeightedNodeMass()) / h3;
 		}
 		vol = mass / partDensity;
@@ -201,7 +201,7 @@ public class myParticle {
 
 		cauchyStressWoJpnMVol = ((mat1.mul(scal1)).add(mat2)).mul(vol);
 		//distribute this quantity to all neighbor nodes
-		for (nghbrNodeInfo ndInfo : neighbors.keySet()) {
+		for (MPM_CPUNeighborNodeInfo ndInfo : neighbors.keySet()) {
 			ndInfo.addPartForce(cauchyStressWoJpnMVol);
 		}
 					
@@ -246,7 +246,7 @@ public class myParticle {
 	 */
 	public void updDeformationGradient(MPM_Material mat, float deltaT) {
 		dvp = FloatMatrix.zeros(3, 3);
-		for (nghbrNodeInfo ndInfo : neighbors.keySet()) {
+		for (MPM_CPUNeighborNodeInfo ndInfo : neighbors.keySet()) {
 			FloatMatrix toAdd = ndInfo.buildDVP();
 			dvp.addi(toAdd);
 		}			
@@ -267,7 +267,7 @@ public class myParticle {
 	public void calcPartVel(MPM_Material mat) {	
 		vPIC.clear();
 		myVectorf vFLIP = new myVectorf(vel);
-		for (nghbrNodeInfo ndInfo : neighbors.keySet()) {		
+		for (MPM_CPUNeighborNodeInfo ndInfo : neighbors.keySet()) {		
 			//the "calcPartVelPicFlip" function also updates this particle's vPIC
 			vFLIP._add(ndInfo.calcPartVelPicFlip());
 		}

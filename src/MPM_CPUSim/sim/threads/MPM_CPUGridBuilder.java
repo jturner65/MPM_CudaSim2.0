@@ -3,21 +3,21 @@ package MPM_CPUSim.sim.threads;
 import java.util.concurrent.ConcurrentHashMap;
 
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
-import MPM_CPUSim.sim.grid.activeNodeAgg;
-import MPM_CPUSim.sim.grid.myGridNode;
-import MPM_CPUSim.sim.threads.base.mySimThdBldr;
+import MPM_CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
+import MPM_CPUSim.sim.grid.MPM_CPUGridNode;
+import MPM_CPUSim.sim.threads.base.Base_MPMCPUSimThdBldr;
 
-public class myGridBuilder extends mySimThdBldr {
+public class MPM_CPUGridBuilder extends Base_MPMCPUSimThdBldr {
 	//array of hashsets of active nodes - reference to construct in sim
-	protected ConcurrentHashMap<myGridNode, activeNodeAgg>[] activeNodes;
+	protected ConcurrentHashMap<MPM_CPUGridNode, MPM_CPUActiveNodeAgg>[] activeNodes;
 	
-	public myGridBuilder(Base_MPMCPUSim _sim, int _numThds) {super(_sim, _numThds);}
+	public MPM_CPUGridBuilder(Base_MPMCPUSim _sim, int _numThds) {super(_sim, _numThds);}
 	
 	@Override
 	public void initSimBuilder() {
 		//rebuild sim grid
 		int gridCount = sim.getGridSideCount();
-		sim.grid = new myGridNode[gridCount][][];
+		sim.grid = new MPM_CPUGridNode[gridCount][][];
 		//initializes all worker-related variables like idxs for each worker to start/end in within grid array
 		initWrkrIDXs(gridCount, "GridBuilder");
 	}//initSimBuilder
@@ -30,7 +30,7 @@ public class myGridBuilder extends mySimThdBldr {
 		int gridCount = sim.getGridSideCount();
 		for(int i =0;i<numThds;++i) {
 			//System.out.println("i:"+i+" | start idx : " + stIDXs[i] + " | end : " + endIDXs[i]);
-			callExecs.add(new gridBuildWrkr(sim, i,stIDXs[i],endIDXs[i], sim.grid, gridCount, sim.getMinSimBnds(), sim.getMaxSimBnds(), sim.getCellSize()));
+			callExecs.add(new MPM_CPUGridBuildWrkr(sim, i,stIDXs[i],endIDXs[i], sim.grid, gridCount, sim.getMinSimBnds(), sim.getMaxSimBnds(), sim.getCellSize()));
 		}		
 	}//initWrkrs
 	

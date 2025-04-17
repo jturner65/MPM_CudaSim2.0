@@ -18,7 +18,7 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
  * @author John Turner
  *
  */
-public class MPM_CudaBalls extends Base_MPMCudaSim {
+public class MPM_CudaSnowBalls extends Base_MPMCudaSim {
 	/**
 	 * Centers of currently built spheres
 	 */
@@ -44,7 +44,7 @@ public class MPM_CudaBalls extends Base_MPMCudaSim {
 	 */
 	private int[][] idxsForSpheres;
 	
-	public MPM_CudaBalls(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
+	public MPM_CudaSnowBalls(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa,_win,"Snowball Slam!", _currUIVals);
 	}	
 	

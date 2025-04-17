@@ -10,8 +10,8 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
  * grid node class, particularly since the grid will be so sparse 
  * this object will be made and put in the active nodes conccurenthashmap array
  */
-public class activeNodeAgg {
-	public myGridNode node;
+public class MPM_CPUActiveNodeAgg {
+	public MPM_CPUGridNode node;
 	//aggregate force array(per thd for each _particle thread_) for a particular thread's worth of weighted particle forces
 	private FloatMatrix[] aggForces;
 	//aggregate force(per thd for each _particle thread_) for a particular thread's worth of weighted particle masses
@@ -24,7 +24,7 @@ public class activeNodeAgg {
 	//DO NOT NEED TO CLEAR THESE VALUES BECAUSE THIS OBJECT IS TOSSED AFTER 1 USE
 	
 	//# threads here is making space for each -particle- thread. should always be the same as # of grid threads
-	public activeNodeAgg(myGridNode _node, int numThds) {
+	public MPM_CPUActiveNodeAgg(MPM_CPUGridNode _node, int numThds) {
 		node = _node;araSz = numThds;
 		aggForces = new FloatMatrix[araSz];
 		aggMass = new float[araSz];

@@ -15,7 +15,7 @@ import base_Render_Interface.IRenderInterface;
  * @author John Turner
  *
  */
-public class SnowBallCPUSim extends Base_MPMCPUSim {
+public class MPM_CPUSnowBall extends Base_MPMCPUSim {
 
 	/**
 	 * @param _pa
@@ -24,7 +24,7 @@ public class SnowBallCPUSim extends Base_MPMCPUSim {
 	 * @param _gravity
 	 * @param _currUIVals
 	 */
-	public SnowBallCPUSim(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
+	public MPM_CPUSnowBall(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa, _win, "Snowball Fall", _currUIVals);
 	}
 

@@ -7,11 +7,11 @@ import java.util.concurrent.Executors;
 
 import org.jblas.FloatMatrix;
 
-import MPM_CPUSim.sim.grid.activeNodeAgg;
-import MPM_CPUSim.sim.grid.myGridNode;
-import MPM_CPUSim.sim.particles.myRndrdPart;
-import MPM_CPUSim.sim.threads.myGridBuilder;
-import MPM_CPUSim.sim.threads.myPartBuilder;
+import MPM_CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
+import MPM_CPUSim.sim.grid.MPM_CPUGridNode;
+import MPM_CPUSim.sim.particles.MPM_CPURndrdPart;
+import MPM_CPUSim.sim.threads.MPM_CPUGridBuilder;
+import MPM_CPUSim.sim.threads.MPM_CPUPartBuilder;
 import MPM_SimMain.sim.Base_MPMSim;
 import MPM_SimMain.sim.SimResetProcess;
 import MPM_SimMain.ui.Base_MPMSimWindow;
@@ -30,14 +30,14 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	public int numThreadsAvail;	
 	
 	//runnable to launch threads to manage particle minipulations
-	public myPartBuilder partThdMgr;
+	public MPM_CPUPartBuilder partThdMgr;
 	//runnable to build and manage grid manipulations
-	public myGridBuilder gridThdMgr;
+	public MPM_CPUGridBuilder gridThdMgr;
 	
 	//all particles representing the material in this simulation
-	public myRndrdPart[] parts;
+	public MPM_CPURndrdPart[] parts;
 	//all grid nodes
-	public myGridNode[][][] grid;	
+	public MPM_CPUGridNode[][][] grid;	
 	
 	//friction coefficients of colliders
 	public static float wallFric = 1.0f, collFric = 1.0f;
@@ -50,7 +50,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 * all grid nodes needing updates - using concurrent hashmap
 	 * because there's no concurrent hash set in java, but the keys of CHM will work
 	 */
-	public ConcurrentHashMap<myGridNode,activeNodeAgg>[] activeNodes;
+	public ConcurrentHashMap<MPM_CPUGridNode,MPM_CPUActiveNodeAgg>[] activeNodes;
 	/**
 	 * @param _pa
 	 * @param _win
@@ -65,9 +65,9 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 		numThreadsAvail = win.getNumThreadsAvailable() - 2;
 
 		//set up threads to be used to build the grid
-		gridThdMgr = new myGridBuilder(this, numThreadsAvail);
+		gridThdMgr = new MPM_CPUGridBuilder(this, numThreadsAvail);
 		//set up thread builders to be used to build particles
-		partThdMgr = new myPartBuilder(this, numThreadsAvail);		
+		partThdMgr = new MPM_CPUPartBuilder(this, numThreadsAvail);		
 	}
 	
 	/**
@@ -85,12 +85,12 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	
 	
 	//add node to active set of nodes
-	public activeNodeAgg addNodeToSet(myGridNode n) {	
+	public MPM_CPUActiveNodeAgg addNodeToSet(MPM_CPUGridNode n) {	
 		//build node aggregator whenever addded to set
 		int nIdx = n.ID%numThreadsAvail;
-		activeNodeAgg nodeAgg = activeNodes[nIdx].get(n);
+		MPM_CPUActiveNodeAgg nodeAgg = activeNodes[nIdx].get(n);
 		if(null == nodeAgg) {//not in map, put in map
-			nodeAgg = new activeNodeAgg(n, numThreadsAvail);
+			nodeAgg = new MPM_CPUActiveNodeAgg(n, numThreadsAvail);
 			activeNodes[nIdx].put(n, nodeAgg);
 		}
 		return nodeAgg;

@@ -7,13 +7,13 @@ import java.util.concurrent.*;
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
 
 //class to hold all necessary shared functionality used by sim thread manager/executors
-public abstract class mySimThdBldr implements Runnable {
+public abstract class Base_MPMCPUSimThdBldr implements Runnable {
 	//ref to owning sim
 	protected Base_MPMCPUSim sim;
 	//# of threads to spawn off - do this based on threads supported on machine
 	protected int numThds;
 	//structs to hold lists of callables to execute
-	protected List<mySimThreadExec> callExecs;
+	protected List<Base_MPMCPUSimThreadExec> callExecs;
 	protected List<Future<Boolean>> callExecsFtrs;	
 	//values changed since reinitialization
 	protected boolean newSimVals;	
@@ -22,14 +22,14 @@ public abstract class mySimThdBldr implements Runnable {
 	//array of thread start and end indexes for objects being distributed to all threads
 	protected int[] stIDXs, endIDXs;
 	
-	public mySimThdBldr(Base_MPMCPUSim _sim, int _numThds) {
+	public Base_MPMCPUSimThdBldr(Base_MPMCPUSim _sim, int _numThds) {
 		sim=_sim;
 		numThds = _numThds;
 		//array idxs to be 
 		stIDXs = new int[numThds];
 		endIDXs = new int[numThds];
 		newSimVals = true;
-		callExecs = new ArrayList<mySimThreadExec>();
+		callExecs = new ArrayList<Base_MPMCPUSimThreadExec>();
 		callExecsFtrs = new ArrayList<Future<Boolean>>();
 	}//ctor	
 	
@@ -62,7 +62,7 @@ public abstract class mySimThdBldr implements Runnable {
 	public void setSimStep(int _s) {
 		simStep=_s;
 		//set step for all workers
-		for(mySimThreadExec sthd : callExecs) {sthd.setSimStep(_s);	}		
+		for(Base_MPMCPUSimThreadExec sthd : callExecs) {sthd.setSimStep(_s);	}		
 	}
 	
 	//call whenever simulation values that impact building the simulation change (# of particles, grid dimensions, etc) - this will force sim step to be 0
