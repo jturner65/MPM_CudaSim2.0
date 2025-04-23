@@ -1,6 +1,7 @@
 package MPM_SimMain.sim;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.ArrayList;
 
 import MPM_SimMain.material.MPM_Material;
 import MPM_SimMain.ui.Base_MPMSimWindow;
@@ -55,7 +56,7 @@ public abstract class Base_MPMSim {
 	 */
     protected int simStepsPerFrame;	
     /**
-     * # of cells per side - cube so same in all 3 dims; # of particles in sim
+     * # of cells per side - cube so same in all 3 dims
      */
 	protected int gridSideCount;
     /**
@@ -108,6 +109,16 @@ public abstract class Base_MPMSim {
 	 * const gravity vector for calculations
 	 */
 	protected final float[] gravity;
+	
+	/**
+	 * Every 10th grid line should be drawn
+	 */
+	private final int gridIncr = 10;
+	/**
+	 * Holds precomputed gridlines for rendering grid
+	 * gridLines[0,1,2 for i-j, i-k, j-k][first idx][second idx][0: start, 1: end]
+	 */
+	protected ArrayList<ArrayList<ArrayList<myVectorf[]>>> gridLines;
 	
 	/**
 	 * Constructor
@@ -188,6 +199,8 @@ public abstract class Base_MPMSim {
 		//Build the particle layout for this simulation
 		initPartArrays();     
 		
+		// build initial grid vis structure
+		_buildGrid();
 		//determine sim-specific particle layouts
 		if (rebuildSim == SimResetProcess.RebuildSim) {
 			//call this if we wish to rebuild simulation layout
@@ -229,7 +242,11 @@ public abstract class Base_MPMSim {
 		// SimResetProcess.RebuildSim
 		
 		//# of grid cells per side of cube
+		int oldGridSideCount = gridSideCount;
 		gridSideCount = upd.getGridCellsPerSide();
+		if (oldGridSideCount != gridSideCount) {
+			_buildGrid();
+		}
 		//# of snowballs to make
 		numSnowballs = upd.getNumSnowballs();
 		//cell size
@@ -508,34 +525,56 @@ public abstract class Base_MPMSim {
 	 */
 	protected abstract void _drawGridMass(float animTimeMod);
 	
-	/**
-	 * Every 10th grid line should be drawn
-	 */
-	private final int gridIncr = 10;
+	
+	protected final void _buildGrid() {
+		gridLines = new ArrayList<ArrayList<ArrayList<myVectorf[]>>>();
+		
+		ArrayList<ArrayList<myVectorf[]>> ijGrid = new ArrayList<ArrayList<myVectorf[]>>(); 
+		ArrayList<ArrayList<myVectorf[]>> ikGrid = new ArrayList<ArrayList<myVectorf[]>>(); 
+		ArrayList<ArrayList<myVectorf[]>> jkGrid = new ArrayList<ArrayList<myVectorf[]>>(); 
+		
+
+		for (int i=0; i<=gridSideCount;i+=gridIncr) {
+			ArrayList<myVectorf[]> jLines = new ArrayList<myVectorf[]>(); 
+			float iLoc = i*cellSize;
+			for(int j=0;j<=gridSideCount;j+=gridIncr) {
+				myVectorf startPos=new myVectorf(iLoc,j*cellSize,0.0f);
+				jLines.add(new myVectorf[] {startPos, new myVectorf(iLoc, startPos.y,gridDim)});
+			}
+			ijGrid.add(jLines);
+			ArrayList<myVectorf[]> kLines = new ArrayList<myVectorf[]>(); 
+			for(int k=0;k<=gridSideCount;k+=gridIncr) {
+				myVectorf startPos=new myVectorf(iLoc,0.0f, k*cellSize);
+				kLines.add(new myVectorf[] {startPos, new myVectorf(iLoc,gridDim,startPos.z)});
+			}
+			ikGrid.add(kLines);
+		}
+		for(int j=0;j<=gridSideCount;j+=gridIncr) {
+			float jLoc = j*cellSize;
+			ArrayList<myVectorf[]> kLines = new ArrayList<myVectorf[]>(); 
+			for(int k=0;k<=gridSideCount;k+=gridIncr) {
+				myVectorf startPos=new myVectorf(0.0f,jLoc,k*cellSize);
+				kLines.add(new myVectorf[] {startPos, new myVectorf(gridDim,jLoc,startPos.z)});
+			}
+			jkGrid.add(kLines);
+		}
+		gridLines.add(ijGrid);
+		gridLines.add(ikGrid);
+		gridLines.add(jkGrid);
+	}//_buildGrid
+	
+	
+	
+	
 	protected final void _drawGrid() {
 		pa.pushMatState();		
 			pa.setStroke(255,255,255,20);
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
-			//shows every "incr" gridcells
-			for (int i=0; i<=gridSideCount;i+=gridIncr) {
-				float iLoc = i*cellSize;
-				for(int j=0;j<=gridSideCount;j+=gridIncr) {
-					myVectorf startPos=new myVectorf(iLoc,j*cellSize,0.0f);
-					myVectorf endPos=new myVectorf(iLoc, startPos.y,gridDim);
-					pa.drawLine(startPos,endPos);
-				}
-				for(int k=0;k<=gridSideCount;k+=gridIncr) {
-					myVectorf startPos=new myVectorf(iLoc,0.0f, k*cellSize);
-					myVectorf endPos=new myVectorf(iLoc,gridDim,startPos.z);
-					pa.drawLine(startPos,endPos);
-				}
-			}
-			for(int j=0;j<=gridSideCount;j+=gridIncr) {
-				float jLoc = j*cellSize;
-				for(int k=0;k<=gridSideCount;k+=gridIncr) {
-					myVectorf startPos=new myVectorf(0.0f,jLoc,k*cellSize);
-					myVectorf endPos=new myVectorf(gridDim,jLoc,startPos.z);
-					pa.drawLine(startPos,endPos);
+			for(var gridAra : gridLines) {
+				for (var gridLinesAra : gridAra) {
+					for(myVectorf[] lineAra : gridLinesAra) {
+						pa.drawLine(lineAra[0],lineAra[1]);
+					}					
 				}
 			}
 		pa.popMatState();		
