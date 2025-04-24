@@ -8,11 +8,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jblas.FloatMatrix;
 
+import MPM_BaseSim.material.MPM_Material;
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
 import MPM_CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
 import MPM_CPUSim.sim.grid.MPM_CPUGridNode;
 import MPM_CPUSim.sim.particles.MPM_CPUNeighborNodeInfo;
-import MPM_SimMain.material.MPM_Material;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
@@ -112,7 +112,7 @@ public class Base_MPMCPUParticle {
 		float cellSize = sim.getCellSize();
 		int gridCount = sim.getGridSideCount();
 		//precalculate to prevent repeated calcs in loops
-		float[] posRelPreCalc = {(pos.x - sim.getMinSimBnds())/ cellSize, (pos.y - sim.getMinSimBnds() )/ cellSize,(pos.z - sim.getMinSimBnds())/ cellSize};
+		float[] posRelPreCalc = {(pos.x - sim.getMinSimBnds().x)/ cellSize, (pos.y - sim.getMinSimBnds().y)/ cellSize,(pos.z - sim.getMinSimBnds().z)/ cellSize};
 		//no need to calculate end index - will always be 3 higher than start index
 		int stIdxI  = (int) (posRelPreCalc[0]) - 1,endIdxI = stIdxI + 3,
 			stIdxJ  = (int) (posRelPreCalc[1]) - 1,endIdxJ = stIdxJ + 3,
@@ -190,7 +190,7 @@ public class Base_MPMCPUParticle {
 		FloatMatrix[] svd = org.jblas.Singular.fullSVD(elasticDeformationGrad);
 		FloatMatrix Re = svd[0].mmul(svd[2].transpose());
 
-		//Compute the determinent of Fe and Fp
+		//Compute the determinant of Fe and Fp
 		float Je = calcDet(elasticDeformationGrad),  Jp = calcDet(plasticDeformationGrad);	
 		
 		float hc1mJp = (float) Math.exp(hardeningCoeff * (1-Jp));
@@ -208,36 +208,36 @@ public class Base_MPMCPUParticle {
 	}//compGridForces
 
 	
-	//FloatMatrix toString results are in ROW MAJOR order - across each row first, then to next row - need transpose so values will be in correct order for matlab 
-//	e.g. this function used on tmpDbgMat = new FloatMatrix(new float[][] {{1, 2, 3},
-//		   															      {4, 5, 6},
-//																	      {7, 8, 9}});]
-//	gives output 1,4,7,2,5,8,3,6,9
-	private String getMatStr(FloatMatrix m, String fmt) {
-		//jblas FloatMatrix toString args : (String fmt, String open, String close, String colSep, String rowSep)
-		return m.transpose().toString(fmt, "","",",",",");
-	}
-	
-	//returns a string holding the format of the matrices that is used for the csv strings - all mats are assumed to be 9 element
-	public static String getMatHdrStr(String matName) {
-		String res = "";
-		for(int c=0;c<3;++c) {for(int r=0;r<3;++r) {res += matName+"_r"+r+"_c"+c+",";}}
-		return res;		
-	}
-	
-	//this method will retrieve the values used by the grid force calculation, and the result generated.
-	//they will be formatted in a comma-separated string to be saved to a file to be used of the matlab verification process
-	//call this right after compGridForces is calculated
-	public String getGridFrcCalcStrCSV(MPM_Material mat) {
-		return ""+mat.toGridFrcCalcStrCSV(strfmt)+","+getMatStr(elasticDeformationGrad, strfmt)+","+getMatStr(plasticDeformationGrad,strfmt) + getMatStr(cauchyStressWoJpnMVol,strfmt);	
-	}	
-	
-	//this method will retrieve the values used by the deformation gradient calculation, and the result generated.
-	//they will be formatted in a comma-separated string to be saved to a file to be used of the matlab verification process
-	//call this right after updDeformationGradient is calculated
-	public String getUpdDefGradStrCSV(MPM_Material mat, float deltaT) {
-		return ""+String.format(strfmt,  deltaT)+","+mat.toDefGradUpdCalcStrCSV(strfmt)+"," + getMatStr(dvp, strfmt)+ "," +getMatStr(elasticDeformationGrad, strfmt)+","+getMatStr(plasticDeformationGrad,strfmt);		
-	}
+//	//FloatMatrix toString results are in ROW MAJOR order - across each row first, then to next row - need transpose so values will be in correct order for matlab 
+////	e.g. this function used on tmpDbgMat = new FloatMatrix(new float[][] {{1, 2, 3},
+////		   															      {4, 5, 6},
+////																	      {7, 8, 9}});]
+////	gives output 1,4,7,2,5,8,3,6,9
+//	private String getMatStr(FloatMatrix m, String fmt) {
+//		//jblas FloatMatrix toString args : (String fmt, String open, String close, String colSep, String rowSep)
+//		return m.transpose().toString(fmt, "","",",",",");
+//	}
+//	
+//	//returns a string holding the format of the matrices that is used for the csv strings - all mats are assumed to be 9 element
+//	public static String getMatHdrStr(String matName) {
+//		String res = "";
+//		for(int c=0;c<3;++c) {for(int r=0;r<3;++r) {res += matName+"_r"+r+"_c"+c+",";}}
+//		return res;		
+//	}
+//	
+//	//this method will retrieve the values used by the grid force calculation, and the result generated.
+//	//they will be formatted in a comma-separated string to be saved to a file to be used of the matlab verification process
+//	//call this right after compGridForces is calculated
+//	public String getGridFrcCalcStrCSV(MPM_Material mat) {
+//		return ""+mat.toGridFrcCalcStrCSV(strfmt)+","+getMatStr(elasticDeformationGrad, strfmt)+","+getMatStr(plasticDeformationGrad,strfmt) + getMatStr(cauchyStressWoJpnMVol,strfmt);	
+//	}	
+//	
+//	//this method will retrieve the values used by the deformation gradient calculation, and the result generated.
+//	//they will be formatted in a comma-separated string to be saved to a file to be used of the matlab verification process
+//	//call this right after updDeformationGradient is calculated
+//	public String getUpdDefGradStrCSV(MPM_Material mat, float deltaT) {
+//		return ""+String.format(strfmt,  deltaT)+","+mat.toDefGradUpdCalcStrCSV(strfmt)+"," + getMatStr(dvp, strfmt)+ "," +getMatStr(elasticDeformationGrad, strfmt)+","+getMatStr(plasticDeformationGrad,strfmt);		
+//	}
 	
 	/**
 	 * update this particle's deformation structures based on neighboring node state	

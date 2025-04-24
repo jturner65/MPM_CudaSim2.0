@@ -5,10 +5,10 @@ import static jcuda.driver.JCudaDriver.*;
 import java.io.*;
 import java.util.*;
 
-import MPM_SimMain.sim.SimResetProcess;
-import MPM_SimMain.sim.Base_MPMSim;
-import MPM_SimMain.ui.Base_MPMSimWindow;
-import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
+import MPM_BaseSim.sim.Base_MPMSim;
+import MPM_BaseSim.sim.SimResetProcess;
+import MPM_BaseSim.ui.Base_MPMSimWindow;
+import MPM_BaseSim.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_Math_Objects.MyMathUtils;
@@ -18,9 +18,9 @@ import jcuda.driver.*;
 import jcuda.runtime.JCuda;
 
 /**
- * abstract class describing a simulation world. Called by sim window to 
- * execute simulation and render results. Instancing classes can hold 
- * different configurations/initialization setups
+ * abstract class describing a world for a CUDA-driven MPM simulation.
+ * Called by sim window to execute simulation and render results.
+ * Instancing classes can hold different configurations/initialization setups
  */
 public abstract class Base_MPMCudaSim extends Base_MPMSim{	
 	
@@ -101,7 +101,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * # of cuda threads
 	 */
-	private final int numCUDAThreads = 512;
+	private final int numCUDAThreads = 1024;
 	private final int[] blkThdDims = new int[] {numCUDAThreads, 1, 1};
 	private int[] partGridDims;
 	private int[] part4GridDims;
@@ -195,7 +195,8 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		
 		//rebuild cuda kernel configurations
 		cudaSetup();  	    
-    }//resetSim_Indiv    
+		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "resetSim_Indiv","Finished resetting sim");
+   }//resetSim_Indiv    
 
 	/**
 	 * Initialize environmental layout particle holders/arrays -  Reinitialize partVals map, called before sim environment is built
@@ -535,12 +536,13 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         Pointer[] gridVelPtrAra = new Pointer[]{Pointer.to(gridVel[0]),Pointer.to(gridVel[1]),Pointer.to(gridVel[2])};
         Pointer[] gridNewVelPtrAra = new Pointer[]{Pointer.to(gridNewVel[0]),Pointer.to(gridNewVel[1]),Pointer.to(gridNewVel[2])};
         Pointer[] gridFrcPtrAra = new Pointer[]{Pointer.to(gridForce[0]),Pointer.to(gridForce[1]),Pointer.to(gridForce[2])};
+        float[] gravity = getGravity().asArray();
         Pointer[] gravPtrAra = new Pointer[] {Pointer.to(new float[] {gravity[0]}),Pointer.to(new float[] {gravity[1]}),Pointer.to(new float[] {gravity[2]})};
         
         Pointer minSimBndsPtr = Pointer.to(new float[] {minSimBnds});
         Pointer maxSimBndsPtr = Pointer.to(new float[] {maxSimBnds});
         Pointer deltaTPtr = Pointer.to(new float[] {deltaT});
-        Pointer wallFricPtr = Pointer.to(new float[] {wallFric});
+        Pointer wallFricPtr = Pointer.to(new float[] {getWallFric()});
         
 
         kernelParams.put("projectToGridandComputeForces",Pointer.to(

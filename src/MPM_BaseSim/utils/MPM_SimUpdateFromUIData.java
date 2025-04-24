@@ -1,9 +1,9 @@
-package MPM_SimMain.utils;
+package MPM_BaseSim.utils;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import MPM_SimMain.ui.Base_MPMSimWindow;
+import MPM_BaseSim.ui.Base_MPMSimWindow;
 import base_UI_Objects.windowUI.uiData.UIDataUpdater;
 
 public class MPM_SimUpdateFromUIData extends UIDataUpdater {

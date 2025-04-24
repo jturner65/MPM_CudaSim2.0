@@ -5,17 +5,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.jblas.FloatMatrix;
-
+import MPM_BaseSim.sim.Base_MPMSim;
+import MPM_BaseSim.sim.SimResetProcess;
+import MPM_BaseSim.ui.Base_MPMSimWindow;
+import MPM_BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM_CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
 import MPM_CPUSim.sim.grid.MPM_CPUGridNode;
 import MPM_CPUSim.sim.particles.MPM_CPURndrdPart;
 import MPM_CPUSim.sim.threads.MPM_CPUGridBuilder;
 import MPM_CPUSim.sim.threads.MPM_CPUPartBuilder;
-import MPM_SimMain.sim.Base_MPMSim;
-import MPM_SimMain.sim.SimResetProcess;
-import MPM_SimMain.ui.Base_MPMSimWindow;
-import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
 
@@ -25,18 +23,28 @@ import base_Render_Interface.IRenderInterface;
  */
 public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	
-	//for multithreading 
+	/**
+	 * for multithreading 
+	 */
 	public ExecutorService th_exec;
 	public int numThreadsAvail;	
 	
-	//runnable to launch threads to manage particle minipulations
+	/**
+	 * runnable to launch threads to manage particle manipulations
+	 */
 	public MPM_CPUPartBuilder partThdMgr;
-	//runnable to build and manage grid manipulations
+	/**
+	 * runnable to build and manage grid manipulations
+	 */
 	public MPM_CPUGridBuilder gridThdMgr;
 	
-	//all particles representing the material in this simulation
+	/**
+	 * all particles representing the material in this simulation
+	 */
 	public MPM_CPURndrdPart[] parts;
-	//all grid nodes
+	/**
+	 * all grid nodes
+	 */
 	public MPM_CPUGridNode[][][] grid;	
 	
 	//friction coefficients of colliders

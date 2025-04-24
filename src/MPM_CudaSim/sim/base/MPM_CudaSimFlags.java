@@ -1,6 +1,6 @@
 package MPM_CudaSim.sim.base;
 
-import MPM_SimMain.sim.Base_MPMSimFlags;
+import MPM_BaseSim.sim.Base_MPMSimFlags;
 
 public class MPM_CudaSimFlags extends Base_MPMSimFlags {
 	

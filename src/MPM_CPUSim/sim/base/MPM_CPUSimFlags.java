@@ -1,6 +1,6 @@
 package MPM_CPUSim.sim.base;
 
-import MPM_SimMain.sim.Base_MPMSimFlags;
+import MPM_BaseSim.sim.Base_MPMSimFlags;
 
 /**
  * @author John Turner

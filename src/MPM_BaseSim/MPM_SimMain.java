@@ -1,5 +1,6 @@
 package MPM_BaseSim;
 
+
 import java.util.HashMap;
 
 import MPM_CPUSim.ui.MPM_CPUSimWindow;
@@ -305,4 +306,4 @@ public class MPM_SimMain extends GUI_AppManager {
 		ri.setSmoothing(0);		
 	}
 
-}//class MPM_SimMain
+}//class MPM_BaseSim

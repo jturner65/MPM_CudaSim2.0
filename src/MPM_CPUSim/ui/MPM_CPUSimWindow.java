@@ -6,10 +6,10 @@ package MPM_CPUSim.ui;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
+import MPM_BaseSim.sim.Base_MPMSim;
+import MPM_BaseSim.ui.Base_MPMSimWindow;
+import MPM_BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM_CPUSim.sim.MPM_CPUSnowBall;
-import MPM_SimMain.sim.Base_MPMSim;
-import MPM_SimMain.ui.Base_MPMSimWindow;
-import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
 import base_UI_Objects.GUI_AppManager;
 

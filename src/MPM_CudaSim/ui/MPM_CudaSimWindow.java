@@ -6,10 +6,10 @@ package MPM_CudaSim.ui;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
+import MPM_BaseSim.sim.Base_MPMSim;
+import MPM_BaseSim.ui.Base_MPMSimWindow;
+import MPM_BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM_CudaSim.sim.MPM_CudaSnowBalls;
-import MPM_SimMain.sim.Base_MPMSim;
-import MPM_SimMain.ui.Base_MPMSimWindow;
-import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
 import base_UI_Objects.GUI_AppManager;
 
@@ -42,7 +42,9 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
 	@Override
 	protected void initDispFlags_Indiv() {}
 	@Override
-	protected final void initMe_Indiv() {}
+	protected final void initMe_Indiv() {
+		//properly initialize gui objs
+	}
 	
 	@Override
 	protected final int initAllMPMPrivBtns_Indiv(ArrayList<Object[]> tmpBtnNamesArray) {

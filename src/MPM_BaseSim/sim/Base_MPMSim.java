@@ -1,11 +1,13 @@
-package MPM_SimMain.sim;
+package MPM_BaseSim.sim;
 
 import java.util.concurrent.ThreadLocalRandom;
+
+import MPM_BaseSim.material.MPM_Material;
+import MPM_BaseSim.ui.Base_MPMSimWindow;
+import MPM_BaseSim.utils.MPM_SimUpdateFromUIData;
+
 import java.util.ArrayList;
 
-import MPM_SimMain.material.MPM_Material;
-import MPM_SimMain.ui.Base_MPMSimWindow;
-import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
@@ -85,17 +87,22 @@ public abstract class Base_MPMSim {
 	 */
 	protected float cellSize;
 	/**
+	 * Volume of a grid cell
+	 */
+	protected float cellVolume;
+	/**
 	 * simulation boundaries - symmetric cube, only need min and max, grid length per dim
 	 */
+	//TODO handle non-cube/non-symmetric
 	protected float minSimBnds, maxSimBnds, gridDim;
 	/**
 	 * friction coefficients of wall
 	 */
-    protected float wallFric;
+    private float wallFric;
     /**
      * TODO: friction coefficients of colliders
      */
-    protected float collFric;
+    private float collFric;
     /**
      * Scaling value to scale drawn vectors
      */
@@ -108,18 +115,17 @@ public abstract class Base_MPMSim {
 	/**
 	 * const gravity vector for calculations
 	 */
-	protected final float[] gravity;
+	private final myVectorf gravity;
 	
+	/**
+	 * Holds precomputed gridlines for rendering grid
+	 * dispGridLines[0,1,2 for i-j, i-k, j-k][first idx][second idx][0: start, 1: end]
+	 */
+	protected ArrayList<ArrayList<ArrayList<myVectorf[]>>> dispGridLines;
 	/**
 	 * Every 10th grid line should be drawn
 	 */
 	private final int gridIncr = 10;
-	/**
-	 * Holds precomputed gridlines for rendering grid
-	 * gridLines[0,1,2 for i-j, i-k, j-k][first idx][second idx][0: start, 1: end]
-	 */
-	protected ArrayList<ArrayList<ArrayList<myVectorf[]>>> gridLines;
-	
 	/**
 	 * Constructor
 	 * @param _pa
@@ -131,8 +137,7 @@ public abstract class Base_MPMSim {
 	public Base_MPMSim(IRenderInterface _pa, Base_MPMSimWindow _win, String _simName, float[] _gravity, MPM_SimUpdateFromUIData _currUIVals) {
 		pa=_pa;win=_win;simName = _simName;		
 		currUIVals = new MPM_SimUpdateFromUIData(win);
-		gravity = new float[_gravity.length];
-		System.arraycopy(_gravity, 0, gravity, 0, gravity.length);
+		gravity = new myVectorf(_gravity[0],_gravity[1],_gravity[2]);
 		//mat's quantities are managed by UI - only need to instance once
 		mat = new MPM_Material(_currUIVals);
 		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
@@ -200,7 +205,7 @@ public abstract class Base_MPMSim {
 		initPartArrays();     
 		
 		// build initial grid vis structure
-		_buildGrid();
+		buildGridVis();
 		//determine sim-specific particle layouts
 		if (rebuildSim == SimResetProcess.RebuildSim) {
 			//call this if we wish to rebuild simulation layout
@@ -245,12 +250,14 @@ public abstract class Base_MPMSim {
 		int oldGridSideCount = gridSideCount;
 		gridSideCount = upd.getGridCellsPerSide();
 		if (oldGridSideCount != gridSideCount) {
-			_buildGrid();
+			buildGridVis();
 		}
 		//# of snowballs to make
 		numSnowballs = upd.getNumSnowballs();
 		//cell size
 		cellSize = upd.getGridCellSize();	
+		//cell volume
+		cellVolume = cellSize*cellSize*cellSize;
 		
 		////////////////////////////
 		// Require remaking objects, but can retain # of objects, centers and base velocities
@@ -523,16 +530,16 @@ public abstract class Base_MPMSim {
 	 * @param animTimeMod
 	 * @param pincr
 	 */
-	protected abstract void _drawGridMass(float animTimeMod);
+	protected abstract void _drawGridMass(float animTimeMod);	
 	
-	
-	protected final void _buildGrid() {
-		gridLines = new ArrayList<ArrayList<ArrayList<myVectorf[]>>>();
-		
-		ArrayList<ArrayList<myVectorf[]>> ijGrid = new ArrayList<ArrayList<myVectorf[]>>(); 
-		ArrayList<ArrayList<myVectorf[]>> ikGrid = new ArrayList<ArrayList<myVectorf[]>>(); 
-		ArrayList<ArrayList<myVectorf[]>> jkGrid = new ArrayList<ArrayList<myVectorf[]>>(); 
-		
+	/**
+	 * Build a graphical representation of the computational grid, for rendering.
+	 */
+	protected final void buildGridVis() {
+		dispGridLines = new ArrayList<ArrayList<ArrayList<myVectorf[]>>>();		
+		ArrayList<ArrayList<myVectorf[]>> ijGrid = new ArrayList<ArrayList<myVectorf[]>>(),
+				ikGrid = new ArrayList<ArrayList<myVectorf[]>>(),
+				jkGrid = new ArrayList<ArrayList<myVectorf[]>>(); 		
 
 		for (int i=0; i<=gridSideCount;i+=gridIncr) {
 			ArrayList<myVectorf[]> jLines = new ArrayList<myVectorf[]>(); 
@@ -551,28 +558,28 @@ public abstract class Base_MPMSim {
 		}
 		for(int j=0;j<=gridSideCount;j+=gridIncr) {
 			float jLoc = j*cellSize;
-			ArrayList<myVectorf[]> kLines = new ArrayList<myVectorf[]>(); 
+			ArrayList<myVectorf[]> jkLines = new ArrayList<myVectorf[]>(); 
 			for(int k=0;k<=gridSideCount;k+=gridIncr) {
 				myVectorf startPos=new myVectorf(0.0f,jLoc,k*cellSize);
-				kLines.add(new myVectorf[] {startPos, new myVectorf(gridDim,jLoc,startPos.z)});
+				jkLines.add(new myVectorf[] {startPos, new myVectorf(gridDim,jLoc,startPos.z)});
 			}
-			jkGrid.add(kLines);
+			jkGrid.add(jkLines);
 		}
-		gridLines.add(ijGrid);
-		gridLines.add(ikGrid);
-		gridLines.add(jkGrid);
-	}//_buildGrid
+		dispGridLines.add(ijGrid);
+		dispGridLines.add(ikGrid);
+		dispGridLines.add(jkGrid);
+	}//buildGrid
 	
-	
-	
-	
+	/**
+	 * Draw a representation of the eulerian grid
+	 */
 	protected final void _drawGrid() {
 		pa.pushMatState();		
 			pa.setStroke(255,255,255,20);
 			pa.translate(minSimBnds,minSimBnds,minSimBnds);
-			for(var gridAra : gridLines) {
-				for (var gridLinesAra : gridAra) {
-					for(myVectorf[] lineAra : gridLinesAra) {
+			for(var dispGridAra : dispGridLines) {
+				for (var dispGridLinesAra : dispGridAra) {
+					for(myVectorf[] lineAra : dispGridLinesAra) {
 						pa.drawLine(lineAra[0],lineAra[1]);
 					}					
 				}
@@ -614,11 +621,11 @@ public abstract class Base_MPMSim {
 	protected final void _drawGridScalar(int[] clr, float[] xVal, float[][] grid_pos) {
 		float minMag = MyMathUtils.EPS_F/vecLengthScale;
 		pa.pushMatState();	
-		pa.setSphereDetail(4);
+		pa.setSphereDetail(3);
 		pa.setStroke(clr,20);
 		pa.translate(minSimBnds,minSimBnds,minSimBnds);
 		for (int i=0; i<ttlGridCount;++i) {			
-			if(		(Math.abs(xVal[i]) > minMag)) {
+			if((Math.abs(xVal[i]) > minMag)) {
 				pa.pushMatState();	
 				pa.translate(grid_pos[0][i], grid_pos[1][i], grid_pos[2][i]);
 				pa.drawSphere(xVal[i]*vecLengthScale);
@@ -629,11 +636,43 @@ public abstract class Base_MPMSim {
 	}
 	
 	public final float getCellSize() {return cellSize;}
-	
+	/**
+	 * Number of grid cells per side of euler projection grid
+	 * @return
+	 */
 	public final int getGridSideCount() {return gridSideCount;}
-	
-	public final float getMinSimBnds() {return minSimBnds;}
-	public final float getMaxSimBnds() {return maxSimBnds;}
+	/**
+	 * Minimum dimension of cube centered at origin serving as wall boundary
+	 * @return
+	 */
+	public final myVectorf getMinSimBnds() {return new myVectorf(minSimBnds,minSimBnds,minSimBnds);}
+	/**
+	 * Maximum dimension of cube centered at origin serving as wall boundary
+	 * @return
+	 */
+	public final myVectorf getMaxSimBnds() {return new myVectorf(maxSimBnds,maxSimBnds,maxSimBnds);}
+	/**
+	 * Sim Boundary wall friction
+	 * @return
+	 */
+	public float getWallFric() {		return wallFric;	}
+
+	/**
+	 * Current timestep
+	 * @return
+	 */
 	public final float getDeltaT() {return deltaT;}
+	
+	/**
+	 * Constant gravity vector
+	 * @return
+	 */
+	public myVectorf getGravity() {		return gravity;	}
+	/**
+	 * Collider friction. TODO support multiple colliders
+	 * @return
+	 */
+	public float getCollFric() {		return collFric;	}
+
 	
 }//class Base_MPMSim

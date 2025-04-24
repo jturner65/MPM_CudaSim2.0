@@ -1,6 +1,6 @@
-package MPM_SimMain.material;
+package MPM_BaseSim.material;
 
-import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
+import MPM_BaseSim.utils.MPM_SimUpdateFromUIData;
 
 /**
  * class for the material that the simulation consists of

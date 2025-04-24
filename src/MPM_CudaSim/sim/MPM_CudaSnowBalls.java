@@ -3,11 +3,11 @@ package MPM_CudaSim.sim;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
+import MPM_BaseSim.sim.Base_MPMSimFlags;
+import MPM_BaseSim.ui.Base_MPMSimWindow;
+import MPM_BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM_CudaSim.sim.base.Base_MPMCudaSim;
 import MPM_CudaSim.sim.base.MPM_CudaSimFlags;
-import MPM_SimMain.sim.Base_MPMSimFlags;
-import MPM_SimMain.ui.Base_MPMSimWindow;
-import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_Math_Objects.vectorObjs.floats.myPointf;
