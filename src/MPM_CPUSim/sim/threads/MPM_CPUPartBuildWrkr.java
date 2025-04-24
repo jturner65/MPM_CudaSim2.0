@@ -18,17 +18,17 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
 //1 thread's worth of execution for building particles
 public class MPM_CPUPartBuildWrkr extends Base_MPMCPUSimThreadExec {
 	//ref to particle array to be filled
-	MPM_CPURndrdPart[] parts;
-	//center of sphere being built
-	myVectorf ctr;
-	//radius of sphere to be built
-	float rad;
-	
-	public MPM_CPUPartBuildWrkr(Base_MPMCPUSim _sim, int _thIDX, int _stIDX, int _endIDX, float _rad, myVectorf _ctr, MPM_CPURndrdPart[] _parts) {
-		super(_sim,_thIDX, _stIDX, _endIDX);
-		parts=_parts;	
-		ctr = new myVectorf(_ctr);
-		rad = _rad;
+	protected MPM_CPURndrdPart[] parts;
+	//center of snowball sphere being built
+	protected myVectorf snowBallCtr;
+	//radius of sphere of particles to be built
+	protected float snowBallRad;
+		
+	public MPM_CPUPartBuildWrkr(Base_MPMCPUSim _sim, int _stIDX, int _endIDX, int _thIDX) {
+		super(_sim, _stIDX, _endIDX, _thIDX);
+		parts=sim.parts;	
+//		snowBallCtr = new myVectorf(_ctr);
+//		snowBallRad = _rad;
 	}	
 	
 	private static final double lcl_third = 1.0/3.0;
@@ -43,11 +43,13 @@ public class MPM_CPUPartBuildWrkr extends Base_MPMCPUSimThreadExec {
 		pos._add(ctr);
 		return pos;
 	}	
-	//initialization - build particles
+	/**
+	 * initialization - build particles
+	 */
 	@Override
 	protected void execSimStep0() {
 		for(int i=stIDX; i<endIDX;++i) {
-			parts[i]= new MPM_CPURndrdPart(getRandPosInSphere(rad, ctr));
+			parts[i]= new MPM_CPURndrdPart(getRandPosInSphere(snowBallRad, snowBallCtr));
 			parts[i].thdIDX = thIDX;
 		}
 	}
@@ -75,7 +77,7 @@ public class MPM_CPUPartBuildWrkr extends Base_MPMCPUSimThreadExec {
 		float cellSize = sim.getCellSize();
 		int gridCount = sim.getGridSideCount();
 		//precalculate to prevent repeated calcs in loops
-		float[] posRelPreCalc = {(p.pos.x - sim.getMinSimBnds())/ cellSize, (p.pos.y - sim.getMinSimBnds() )/ cellSize,(p.pos.z - sim.getMinSimBnds())/ cellSize};
+		float[] posRelPreCalc = {(p.pos.x - minSimBnds.x)/ cellSize, (p.pos.y - minSimBnds.y)/ cellSize,(p.pos.z - minSimBnds.z)/ cellSize};
 		//no need to calculate end index - will always be 3 higher than start index
 		int stIdxI  = (int) (posRelPreCalc[0]) - 1,endIdxI = stIdxI + 3,
 			stIdxJ  = (int) (posRelPreCalc[1]) - 1,endIdxJ = stIdxJ + 3,
@@ -140,13 +142,14 @@ public class MPM_CPUPartBuildWrkr extends Base_MPMCPUSimThreadExec {
 			FloatMatrix[] svd = org.jblas.Singular.fullSVD(parts[i].elasticDeformationGrad);
 			FloatMatrix Re = svd[0].mmul(svd[2].transpose());
 
-			//Compute the determinent of Fe and Fp
+			//Compute the determinant of Fe and Fp
 			float Je = calcDet(parts[i].elasticDeformationGrad),  Jp = calcDet(parts[i].plasticDeformationGrad);	
 			
 			float hc1mJp = (float) Math.exp(sim.mat.getHardeningCoeffPtr()[0] * (1-Jp));
 			float scal1 = 2.0f * mu0 * (hc1mJp);
 			float scal2 = lambda0 * (hc1mJp) * (Je - 1);
-			FloatMatrix mat1 = (parts[i].elasticDeformationGrad.sub(Re)).mmul(parts[i].elasticDeformationGrad.transpose());
+			var elastDefGrad = parts[i].elasticDeformationGrad.dup();
+			FloatMatrix mat1 = (elastDefGrad.sub(Re)).mmul(parts[i].elasticDeformationGrad.transpose());
 			FloatMatrix mat2 = FloatMatrix.eye(3).mul((Je * scal2));
 
 			//FloatMatrix cauchyStressWoJpn = (mat1.mul(scal1)).add(mat2.mul(scal2));

@@ -1,13 +1,11 @@
-/**
- * 
- */
 package MPM_CPUSim.sim;
 
+import MPM_BaseSim.sim.Base_MPMSimFlags;
+import MPM_BaseSim.ui.Base_MPMSimWindow;
+import MPM_BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM_CPUSim.sim.base.Base_MPMCPUSim;
 import MPM_CPUSim.sim.base.MPM_CPUSimFlags;
-import MPM_SimMain.sim.Base_MPMSimFlags;
-import MPM_SimMain.ui.Base_MPMSimWindow;
-import MPM_SimMain.utils.MPM_SimUpdateFromUIData;
+import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
 
@@ -16,7 +14,17 @@ import base_Render_Interface.IRenderInterface;
  *
  */
 public class MPM_CPUSnowBall extends Base_MPMCPUSim {
-
+	
+	//collider to demonstrate behavior
+	/**
+	 * location of spherical collider
+	 */
+	protected myVectorf colLocation;
+	/**
+	 * radius of sphere collider
+	 */
+	protected float colRad, colSqRad;
+	
 	/**
 	 * @param _pa
 	 * @param _win
@@ -28,12 +36,35 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
 		super(_pa, _win, "Snowball Fall", _currUIVals);
 	}
 
+
+	@Override
+	protected void initPartArrays() {
+		
+	}
+
+	@Override
+	protected void buildPartLayouts() {
+		
+	}
+
+	@Override
+	protected void reinitSimObjects() {
+		
+	}
+
+	
 	@Override
 	protected void updateCPUSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
 	}//updateCPUSimVals_FromUI_Indiv
 
 	@Override
-	protected void drawColliders_Indiv(float animTimeMod) {}
+	protected void drawColliders_Indiv(float animTimeMod) {
+		pa.pushMatState();	
+		pa.setSphereDetail(20);
+		pa.translate(colLocation);
+		pa.drawSphere(this.colRad);
+		pa.popMatState();	
+	}
 
 	/**
 	 * sim method to show execution time and debug information for each sim step
@@ -58,9 +89,15 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
 		
 	}
 
+	//check central floating collider - return 0 vec if no collision, otherwise return normal of collision
 	@Override
 	public myVectorf checkColliderCollision(myVectorf pos) {
-		// TODO Auto-generated method stub
-		return pos;
+		if(myPointf._SqrDist(pos, colLocation) <= colSqRad) {
+			myVectorf tmp = new myVectorf(pos);
+			tmp._sub(colLocation);
+			return tmp._normalize();
+		}
+		return new myVectorf(0,0,0);
 	}
+
 }//class SnowBallSim

@@ -14,10 +14,31 @@ public abstract class Base_MPMCPUSimThreadExec implements Callable<Boolean> {
 	protected int simStep;
 	//idxs in component array that this thread will map to
 	protected int stIDX, endIDX, thIDX;
+	/**
+	 * Wall friction for collision against sim bounds
+	 */
+	protected float wallFriction;
+	/**
+	 * Collider friction
+	 */
+	protected float colFriction;
 	
-	public Base_MPMCPUSimThreadExec(Base_MPMCPUSim _sim, int _thIDX, int _stIDX, int _endIDX) {
+	/**
+	 * Min sim bounds in x,y,z
+	 */
+	protected myVectorf minSimBnds;
+	/**
+	 * Max sim bounds in x,y,z
+	 */
+	protected myVectorf maxSimBnds;
+	
+	public Base_MPMCPUSimThreadExec(Base_MPMCPUSim _sim, int _stIDX, int _endIDX, int _thIDX) {
 		sim=_sim;stIDX = _stIDX; endIDX = _endIDX;thIDX = _thIDX;		
 		simStep=0;
+		wallFriction = sim.getWallFric();
+		colFriction = sim.getCollFric();
+		minSimBnds = sim.getMinSimBnds();
+		maxSimBnds = sim.getMaxSimBnds();
 	}
 	//set what step of sim is being executed
 	public void setSimStep(int _s) {simStep = _s;}	
@@ -74,9 +95,9 @@ public abstract class Base_MPMCPUSimThreadExec implements Callable<Boolean> {
 	
 	//collision detection for wall collisions, returns idx in wallNorms of collision
 	protected int checkWallCollision(myVectorf pos) {
-		if(pos.x<=sim.getMinSimBnds()) {		return 0;	} else if(pos.x>=sim.getMaxSimBnds()) {	return 1;	}			
-		if(pos.y<=sim.getMinSimBnds()) {		return 2;	} else if(pos.y>=sim.getMaxSimBnds()) {	return 3;	}
-		if(pos.z<=sim.getMinSimBnds()) {		return 4;	} else if(pos.z>=sim.getMaxSimBnds()) {	return 5;	}
+		if(pos.x<=minSimBnds.x) {		return 0;	} else if(pos.x>=maxSimBnds.x) {	return 1;	}			
+		if(pos.y<=minSimBnds.y) {		return 2;	} else if(pos.y>=maxSimBnds.y) {	return 3;	}
+		if(pos.z<=minSimBnds.z) {		return 4;	} else if(pos.z>=maxSimBnds.z) {	return 5;	}
 		return -1;
 	}//checkWallCollision
 	
@@ -85,14 +106,14 @@ public abstract class Base_MPMCPUSimThreadExec implements Callable<Boolean> {
 		//check collider collisions
 		myVectorf sphereColNorm = sim.checkColliderCollision(pos);
 		if(sphereColNorm.magn != 0) {//colliding with central collider			
-			return calcCollVel(Base_MPMCPUSim.collFric, velocity, sphereColNorm);
+			return calcCollVel(colFriction, velocity, sphereColNorm);
 			
 		} else {//not colliding with sphere collider, check walls	
 			//check wall collisions
 			int colType = checkWallCollision(pos);
 			if(-1==colType) {return velocity;}
 			//calc collision velocity if collision is going to occur
-			return calcCollVel(Base_MPMCPUSim.wallFric, velocity, wallNorms[colType]);
+			return calcCollVel(wallFriction, velocity, wallNorms[colType]);
 		}
 	}//applyCollisions
 

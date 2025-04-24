@@ -1,7 +1,5 @@
 package MPM_CPUSim.sim.grid;
 
-import org.jblas.FloatMatrix;
-
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 /**
  * Class to hold an active node's aggregation construct - there should be 1 of these per node.
@@ -13,7 +11,7 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
 public class MPM_CPUActiveNodeAgg {
 	public MPM_CPUGridNode node;
 	//aggregate force array(per thd for each _particle thread_) for a particular thread's worth of weighted particle forces
-	private FloatMatrix[] aggForces;
+	private myVectorf[] aggForces;
 	//aggregate force(per thd for each _particle thread_) for a particular thread's worth of weighted particle masses
 	private float[] aggMass;
 	//aggregate force(per thd for each _particle thread_) for a particular thread's worth of weighted particle velocity contributions (really momentum)
@@ -26,16 +24,16 @@ public class MPM_CPUActiveNodeAgg {
 	//# threads here is making space for each -particle- thread. should always be the same as # of grid threads
 	public MPM_CPUActiveNodeAgg(MPM_CPUGridNode _node, int numThds) {
 		node = _node;araSz = numThds;
-		aggForces = new FloatMatrix[araSz];
+		aggForces = new myVectorf[araSz];
 		aggMass = new float[araSz];
 		aggVel = new myVectorf[araSz];
 		for(int i=0;i<araSz;++i) {
-			aggForces[i] = FloatMatrix.zeros(3);
+			aggForces[i] = new myVectorf();
 			aggVel[i] = new myVectorf();
 		}
 	}
 	
-	public void addPartFrc(FloatMatrix _frc, int _thd) {aggForces[_thd] = aggForces[_thd].dup().addi(_frc);}
+	public void addPartFrc(myVectorf _frc, int _thd) {aggForces[_thd]._add(_frc);}
 	//thd is particle thread id
 	public void addPartMassAndWtdVel(float _m, myVectorf _vel, int _thd) {
 		aggMass[_thd] += _m;
@@ -44,12 +42,12 @@ public class MPM_CPUActiveNodeAgg {
 	
 	//aggregate the collected forces for this node
 	public void aggregateForces() {
-		FloatMatrix tmpFrces = FloatMatrix.zeros(3);
+		myVectorf tmpFrces = new myVectorf();
 		for(int i=0;i<aggForces.length;++i) {
-			tmpFrces.addi(aggForces[i].dup());
+			tmpFrces._add(aggForces[i]);
 		}
 		//we subtract the aggregated forces from the existing force in the node.
-		node.forces.subi(tmpFrces);
+		node.forces._sub(tmpFrces);
 	}
 	
 	public void aggregateMassAndVel() {

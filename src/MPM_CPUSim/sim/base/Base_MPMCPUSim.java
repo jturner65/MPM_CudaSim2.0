@@ -46,19 +46,16 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 * all grid nodes
 	 */
 	public MPM_CPUGridNode[][][] grid;	
-	
-	//friction coefficients of colliders
-	public static float wallFric = 1.0f, collFric = 1.0f;
-
-	//gravity 
-	public final float gGravity = -9.8f;
-	//const matrix for calculations
-	public final FloatMatrix gravityMat = new FloatMatrix(new float[] {0, 0, gGravity});
 	/**
 	 * all grid nodes needing updates - using concurrent hashmap
 	 * because there's no concurrent hash set in java, but the keys of CHM will work
 	 */
 	public ConcurrentHashMap<MPM_CPUGridNode,MPM_CPUActiveNodeAgg>[] activeNodes;
+	
+	/**
+	 * 
+	 */
+	
 	/**
 	 * @param _pa
 	 * @param _win
@@ -66,12 +63,16 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 * @param _gravity
 	 * @param _currUIVals
 	 */
+	@SuppressWarnings("unchecked")
 	public Base_MPMCPUSim(IRenderInterface _pa, Base_MPMSimWindow _win, String _simName, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa, _win, _simName, new float[] {0, 0, -9.8f}, _currUIVals);
-		//for multithreading - do not use instanced version in PApplet - we may not use processing-based build to run simulation
+		
 		th_exec = Executors.newCachedThreadPool();	
 		numThreadsAvail = win.getNumThreadsAvailable() - 2;
-
+		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
+		//might not be balanced, but worst case all nodes in single thread.  not many nodes, and minimal calculation is node-specific ConcurrentHashMap<myGridNode,Boolean>[]
+		activeNodes = new ConcurrentHashMap[numThreadsAvail];
+		for(int i=0;i<this.numThreadsAvail;++i) {activeNodes[i] = new ConcurrentHashMap<MPM_CPUGridNode, MPM_CPUActiveNodeAgg>();}		
 		//set up threads to be used to build the grid
 		gridThdMgr = new MPM_CPUGridBuilder(this, numThreadsAvail);
 		//set up thread builders to be used to build particles
@@ -84,11 +85,13 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 */
 	@Override
 	protected final void resetSim_Indiv(SimResetProcess rebuildSim) {
-		
+		win.getMsgObj().dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Start resetting sim");
+	
 		initValues_Parts();
 		
 		
 		initValues_Grids() ;
+		win.getMsgObj().dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Finished resetting sim");
 	}
 	
 	
@@ -104,30 +107,6 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 		return nodeAgg;
 	}//addNodeToSet
 
-	/**
-	 * Initialize environmental layout particle holders/arrays
-	 */
-	protected final void initPartArrays() {		
-	}
-	
-	/**
-	 * build initial layout for particles for this simulation
-	 * @param partVals [OUT] map of particle locs, initial velocities and min/max vals being constructed
-	 */
-	@Override
-	protected final void buildPartLayouts() {
-		// call instance class to build layout
-
-	}
-	/**
-	 * Reinitialize existing sim - will resynthesize sample points but will not rederive locations of sim objs.
-	 * @param partVals
-	 */
-	@Override
-	protected final void reinitSimObjects() {
-		// call instance class to re-init layout
-
-	}
 		
 	@Override
 	protected final void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
@@ -142,9 +121,19 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	protected abstract void updateCPUSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd);
 
 	@Override
-	protected final void initValues_Parts() {}
+	protected final void initValues_Parts() {
+		
+		
+	}
+	
+	
 	@Override
-	protected final void initValues_Grids() {}
+	protected final void initValues_Grids() {
+		
+		
+	}
+	
+	
 	@Override
 	protected final boolean simMe_Indiv(float modAmtMillis) {		return false;	}
 	@Override

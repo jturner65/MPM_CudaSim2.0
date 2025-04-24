@@ -39,8 +39,10 @@ public class MPM_CPUNeighborNodeInfo {
 	//add forces from stress/strain calc to node
 	public void addPartForce(FloatMatrix cauchyStressWoJpnMVol) {
 		//add weighted particle force to aggregator
-		//FloatMatrix res = (cauchyStressWoJpnMVol).mmul(dWeightToNode);
-		agg.addPartFrc((cauchyStressWoJpnMVol).mmul(dWeightToNode), p.thdIDX);
+		FloatMatrix res = (cauchyStressWoJpnMVol).mmul(dWeightToNode);
+		myVectorf resVec = new myVectorf(res.data[0],res.data[1],res.data[2]);
+		//System.out.println("nghbrNodeInfo : addPartForce : " + res.transpose().toString("%.5f", "","",",",",")+" res size ["+res.columns+","+res.rows+"]");
+		agg.addPartFrc(resVec, p.thdIDX);
 	}
 	
 	public FloatMatrix buildDVP() {

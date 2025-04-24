@@ -1,7 +1,5 @@
 package MPM_CPUSim.sim.grid;
 
-import org.jblas.FloatMatrix;
-
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
@@ -14,7 +12,7 @@ public class MPM_CPUGridNode {
 	public float mass;
 	public myVectorf velocity;
 	public myVectorf newvelocity, accels;
-	public FloatMatrix forces;	
+	public myVectorf forces;	
 	//indices
 	public int[] idxs;
 	//position in world
@@ -26,7 +24,7 @@ public class MPM_CPUGridNode {
 		pos =_pos;
 		velocity = new myVectorf();
 		newvelocity = new myVectorf();
-		forces = FloatMatrix.zeros(3);
+		forces = new myVectorf();
 		accels = new myVectorf();
 		reset();
 	}//myGridNode
@@ -35,7 +33,7 @@ public class MPM_CPUGridNode {
 	public void reset() {
 		mass = 0;
 		accels.set(0,0,0);
-		forces = FloatMatrix.zeros(3);//new float[] {0,0,0};
+		forces.set(0,0,0);
 		velocity.set(0,0,0);
 		newvelocity.set(0,0,0);
 	}//reset	
@@ -61,17 +59,14 @@ public class MPM_CPUGridNode {
 	}
 	
 	//calculate grid velocity
-	public void calcVel(float deltaT, FloatMatrix gravBase) {
-		//FloatMatrix gravity = gravBase.mul(mass);
-		forces.addi(gravBase.mul(mass));
-		FloatMatrix toAdd = forces.mul(deltaT / mass);
-		myVectorf toAddV = new myVectorf(toAdd.get(0), toAdd.get(1), toAdd.get(2));
+	public void calcVel(float deltaT, myVectorf gravBase) {
+		forces._add(myVectorf._mult(gravBase, mass));
+		myVectorf toAddV = myVectorf._mult(forces, deltaT / mass);
 		accels = myVectorf._div(toAddV,deltaT);
 		velocity._div(mass);
 		newvelocity = myVectorf._add(velocity, toAddV);		
 	}//calcVel
 		
-	
 	public void drawMe(IRenderInterface pa) {
 		pa.pushMatState();
 		pa.translate(pos);

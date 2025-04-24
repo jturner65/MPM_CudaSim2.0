@@ -23,7 +23,7 @@ public class MPM_CPUPartBuilder extends Base_MPMCPUSimThdBldr {
 		for(int i =0;i<numThds;++i) {
 			//System.out.println("i:"+i+" | start idx : " + stIDXs[i] + " | end : " + endIDXs[i]);
 			// TODO Finish this conversion
-			//callExecs.add(new partThreadExec(sim, i,stIDXs[i],endIDXs[i], sim.snoBallRad, sim.snoBallCtr, sim.parts));
+			callExecs.add(new MPM_CPUPartBuildWrkr(sim, stIDXs[i],endIDXs[i], i));
 		}	
 	}//initWrkrs
 
