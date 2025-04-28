@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jblas.FloatMatrix;
 
-import MPM.BaseSim.material.MPM_Material;
+import MPM.BaseSim.material.Base_MPMMaterial;
 import MPM.CPUSim.sim.base.Base_MPMCPUSim;
 import MPM.CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
 import MPM.CPUSim.sim.grid.MPM_CPUGridNode;
@@ -228,14 +228,14 @@ public class Base_MPMCPUParticle {
 //	//this method will retrieve the values used by the grid force calculation, and the result generated.
 //	//they will be formatted in a comma-separated string to be saved to a file to be used of the matlab verification process
 //	//call this right after compGridForces is calculated
-//	public String getGridFrcCalcStrCSV(MPM_Material mat) {
+//	public String getGridFrcCalcStrCSV(Base_MPMMaterial mat) {
 //		return ""+mat.toGridFrcCalcStrCSV(strfmt)+","+getMatStr(elasticDeformationGrad, strfmt)+","+getMatStr(plasticDeformationGrad,strfmt) + getMatStr(cauchyStressWoJpnMVol,strfmt);	
 //	}	
 //	
 //	//this method will retrieve the values used by the deformation gradient calculation, and the result generated.
 //	//they will be formatted in a comma-separated string to be saved to a file to be used of the matlab verification process
 //	//call this right after updDeformationGradient is calculated
-//	public String getUpdDefGradStrCSV(MPM_Material mat, float deltaT) {
+//	public String getUpdDefGradStrCSV(Base_MPMMaterial mat, float deltaT) {
 //		return ""+String.format(strfmt,  deltaT)+","+mat.toDefGradUpdCalcStrCSV(strfmt)+"," + getMatStr(dvp, strfmt)+ "," +getMatStr(elasticDeformationGrad, strfmt)+","+getMatStr(plasticDeformationGrad,strfmt);		
 //	}
 	
@@ -244,7 +244,7 @@ public class Base_MPMCPUParticle {
 	 * @param mat
 	 * @param deltaT
 	 */
-	public void updDeformationGradient(MPM_Material mat, float deltaT) {
+	public void updDeformationGradient(Base_MPMMaterial mat, float deltaT) {
 		dvp = FloatMatrix.zeros(3, 3);
 		for (MPM_CPUNeighborNodeInfo ndInfo : neighbors.keySet()) {
 			FloatMatrix toAdd = ndInfo.buildDVP();
@@ -264,7 +264,7 @@ public class Base_MPMCPUParticle {
 	}//updDeformationGradient	
 	
 	public myVectorf vPIC = new myVectorf();
-	public void calcPartVel(MPM_Material mat) {	
+	public void calcPartVel(Base_MPMMaterial mat) {	
 		vPIC.clear();
 		myVectorf vFLIP = new myVectorf(vel);
 		for (MPM_CPUNeighborNodeInfo ndInfo : neighbors.keySet()) {		

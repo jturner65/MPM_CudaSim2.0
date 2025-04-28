@@ -33,7 +33,12 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 		super(_p, _AppMgr, _winIdx);
 		super.initThisWin(false);
 	}
+	
+	@Override
+	protected double[] getMinMaxModParts() {return new double[]{100, 100000, 1000};}
 
+	@Override
+	protected double getInitNumParts() {return 1000;}
 	@Override
 	protected void initDispFlags_Indiv() {	}
 	@Override

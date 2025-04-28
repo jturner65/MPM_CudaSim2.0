@@ -7,8 +7,8 @@ import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
  * @author John Turner
  *
  */
-public class MPM_Material {
-	//Set as ptrs(aras) to facilitate consumption
+public class Base_MPMMaterial {
+	//Set as ptrs(aras) to facilitate consumption by jCUDA
 	private float[] initYoungMod,
 					poissonRatio,
 					hardeningCoeff, 
@@ -18,7 +18,7 @@ public class MPM_Material {
 					lambda0, 
 					mu0;
 		
-	public MPM_Material(MPM_SimUpdateFromUIData _currUIVals) {
+	public Base_MPMMaterial(MPM_SimUpdateFromUIData _currUIVals) {
 		initYoungMod = new float[1];
 		poissonRatio = new float[1];
 		hardeningCoeff = new float[1];
@@ -28,8 +28,7 @@ public class MPM_Material {
 		lambda0 = new float[1];
 		mu0 = new float[1];
 		updateMatVals_FromUI(_currUIVals);
-	}//ctor
-		
+	}//ctor		
 
 	//recalc lambda0 and mu0 when young mod or poisson ratio changes
 	private void recalcParams() {
@@ -89,4 +88,4 @@ public class MPM_Material {
 		return String.format(fmt, criticalCompression[0])+","+String.format(fmt, criticalStretch[0]);
 		
 	}
-}//MPM_Material
+}//Base_MPMMaterial

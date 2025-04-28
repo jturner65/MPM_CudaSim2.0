@@ -38,6 +38,14 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
 	protected final Base_MPMSim buildSim() {
 		return new MPM_CudaSnowBalls(ri, this, (MPM_SimUpdateFromUIData) getUIDataUpdater());
 	}
+	
+	@Override
+	protected double[] getMinMaxModParts() {return new double[]{1000, 1000000, 10000};}
+
+	@Override
+	protected double getInitNumParts() {return 1.0*initNumParts;}
+
+
 
 	@Override
 	protected void initDispFlags_Indiv() {}
@@ -83,6 +91,5 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
 	protected final boolean setUI_FloatValsCustom_Indiv(int UIidx, float ival, float oldVal) {
 		return false;
 	}
-
 
 }//class MPM_CudaSimWindow

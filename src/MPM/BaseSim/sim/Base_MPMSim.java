@@ -2,7 +2,7 @@ package MPM.BaseSim.sim;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import MPM.BaseSim.material.MPM_Material;
+import MPM.BaseSim.material.Base_MPMMaterial;
 import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 
@@ -33,8 +33,9 @@ public abstract class Base_MPMSim {
 	public final String simName;
 	/**
 	 * Material quantities of particle matter
+	 * TODO : support multiple materials?
 	 */
-	public MPM_Material mat;		
+	public Base_MPMMaterial mat;		
 	/**
 	 * Current ui values describing variables used in the simulation
 	 */
@@ -108,9 +109,13 @@ public abstract class Base_MPMSim {
      */
 	protected float vecLengthScale;	
 	/**
-	 * Scale amount for visualization to fill cube frame in 3d world
+	 * Minimum scale amount for visualization to fill cube frame in 3d world
 	 */
-	protected float sclAmt;
+	protected float minSclAmt;
+	/**
+	 * Scaling array based on dimensions of enclosing cube
+	 */
+	protected float[] sclAmt;
 
 	/**
 	 * const gravity vector for calculations
@@ -139,7 +144,7 @@ public abstract class Base_MPMSim {
 		currUIVals = new MPM_SimUpdateFromUIData(win);
 		gravity = new myVectorf(_gravity[0],_gravity[1],_gravity[2]);
 		//mat's quantities are managed by UI - only need to instance once
-		mat = new MPM_Material(_currUIVals);
+		mat = new Base_MPMMaterial(_currUIVals);
 		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
 		//setup flag array
 		simFlags = buildSimFlags();	
@@ -298,8 +303,11 @@ public abstract class Base_MPMSim {
 		gridDim = maxSimBnds - minSimBnds;	
 		//total grid size       
         ttlGridCount=gridSideCount*gridSideCount*gridSideCount;
-		//scale amount to fill 1500 x 1500 x 1500 visualization cube
-		sclAmt = Base_DispWindow.AppMgr.gridDimX/(gridSideCount * cellSize);
+		//scale amount to fill gridX x gridY x gridZ visualization cube        
+        sclAmt = Base_DispWindow.AppMgr.getScaled3dGridDims(1.0f/(gridSideCount * cellSize));
+        
+        //The minimum of all scaled grid dimensions
+		minSclAmt = MyMathUtils.min(sclAmt);
 		//Sim specific values
 		updateSimVals_FromUI_Indiv(upd);
 		//copy UI data to local var - copy to local last so that values that have changed can be observed
@@ -354,7 +362,7 @@ public abstract class Base_MPMSim {
 	/**
 	 * Intialize all grid-based values upon sim reset
 	 */
-	protected abstract void initValues_Grids();
+	protected abstract void initValues_Grid();
 
 	//cube wall normals
 	protected final myVectorf[] wallNorms = new myVectorf[] {
@@ -473,8 +481,8 @@ public abstract class Base_MPMSim {
 		//render all particles - TODO determine better rendering method
 		pa.pushMatState();
 		//set stroke values and visual scale
-			pa.setStrokeWt(2.0f/sclAmt);
-			pa.scale(sclAmt);	
+			pa.setStrokeWt(2.0f/minSclAmt);
+			pa.scale(sclAmt[0], sclAmt[1], sclAmt[2]);	
 			
 			//point-based rendering
 			if(simFlags.getShowParticles()){	_drawParts(animTimeMod, simFlags.getShowLocColors());}			

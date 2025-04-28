@@ -286,7 +286,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	protected final void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){		
 		tmpUIObjArray.put(gIDX_TimeStep , uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
 		tmpUIObjArray.put(gIDX_SimStepsPerFrame, uiObjInitAra_Int(new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame"));//gIDX_simStepsPerFrame  init 5
-		tmpUIObjArray.put(gIDX_NumParticles, uiObjInitAra_Int(new double[]{1000, 1000000, 1000}, 1.0*initNumParts, "# of Particles"));//number of particles
+		tmpUIObjArray.put(gIDX_NumParticles, uiObjInitAra_Int(getMinMaxModParts(), getInitNumParts(), "# of Particles"));//number of particles
 		tmpUIObjArray.put(gIDX_NumSnowballs, uiObjInitAra_Int(new double[]{2, 10, 1}, 1.0*initNumBalls, "# of Snowballs"));//number of snowballs
 		tmpUIObjArray.put(gIDX_InitVel, uiObjInitAra_Float(new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed"));//initial speed of collisions
 		tmpUIObjArray.put(gIDX_PartMass, uiObjInitAra_Float(new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass"));//particle mass
@@ -306,6 +306,20 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		// populate instancing application objects
 		setupGUIObjsAras_Indiv(tmpUIObjArray, tmpListObjVals);
 	}//setupGUIObjsAras	
+	
+	/**
+	 * Return an array holding [min, max, mod] for particle count. This is simulation dependent due
+	 * to the vast disparity in capabilities between the cpu and cuda implementations.
+	 * @return
+	 */
+	protected abstract double[] getMinMaxModParts();  
+	
+	/**
+	 * Return the initial number of particles to build. This is simulation dependent due 
+	 * to the vast disparity in capabilities between the cpu and cuda implementations.
+	 * @return
+	 */
+	protected abstract double getInitNumParts();
 	
 	/**
 	 * Instancing class-specific (application driven) UI objects should be defined
@@ -402,10 +416,6 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		
 	@Override
 	public void initDrwnTraj_Indiv(){}
-	
-	//overrides function in base class mseClkDisp
-	@Override
-	public void drawTraj3D(float animTimeMod,myPoint trans){}//drawTraj3D	
 
 	@Override
 	protected void setCamera_Indiv(float[] camVals) {
