@@ -79,11 +79,11 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	private CUmodule module;
 	//private CUgraphicsResource pCudaResource;
 	// CUDA Device ptr constructions
-	private CUdeviceptr partMass, partVolume;
-	private CUdeviceptr[] partPos, partVel; 
-	private CUdeviceptr[] gridVel, gridNewVel, gridForce;
-    private CUdeviceptr[][] partElasticF, partPlasticF;    
-    private CUdeviceptr gridMass;
+	private CUdeviceptr dvcPtrPartMass, devPtrPartVolume;
+	private CUdeviceptr[] devPtrPartPos, devPtrPartVel; 
+	private CUdeviceptr[] devPtrGridVel, devPtrGridNewVel, devPtrGridForce;
+    private CUdeviceptr[][] devPtrPartElasticF, devPtrPartPlasticF;    
+    private CUdeviceptr devPtrGridMass;
     // CUDA calc helper variables
 
     /**
@@ -151,7 +151,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		buildCudaDeviceConstructs();
 		//set up grid and initialize sim with UI values and reset sim
 		updateSimVals_FromUI(_currUIVals);
-	}//MPM_ABS_Sim
+	}//Base_MPMCudaSim ctor
 	
 	/**
 	 * Instance-specific reset code
@@ -160,19 +160,19 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
     @Override
     protected final void resetSim_Indiv(SimResetProcess rebuildSim) {	
 		//reset active ptrs
-		JCuda.cudaFree(partMass);		  
-        JCuda.cudaFree(partVolume); 
-        JCuda.cudaFree(gridMass); 
-        for(int i=0;i<partPos.length;++i) {
-        	JCuda.cudaFree(partPos[i]);
-        	JCuda.cudaFree(partVel[i]);
-	        JCuda.cudaFree(gridVel[i]); 
-	        JCuda.cudaFree(gridNewVel[i]);
-	        JCuda.cudaFree(gridForce[i]);
+		JCuda.cudaFree(dvcPtrPartMass);		  
+        JCuda.cudaFree(devPtrPartVolume); 
+        JCuda.cudaFree(devPtrGridMass); 
+        for(int i=0;i<devPtrPartPos.length;++i) {
+        	JCuda.cudaFree(devPtrPartPos[i]);
+        	JCuda.cudaFree(devPtrPartVel[i]);
+	        JCuda.cudaFree(devPtrGridVel[i]); 
+	        JCuda.cudaFree(devPtrGridNewVel[i]);
+	        JCuda.cudaFree(devPtrGridForce[i]);
 	        
-	        for(int j=0;j<partElasticF[0].length;++j) {
-	        	JCuda.cudaFree(partElasticF[i][j]);                    
-	        	JCuda.cudaFree(partPlasticF[i][j]);		        	
+	        for(int j=0;j<devPtrPartElasticF[0].length;++j) {
+	        	JCuda.cudaFree(devPtrPartElasticF[i][j]);                    
+	        	JCuda.cudaFree(devPtrPartPlasticF[i][j]);		        	
 	        }
         }
 		//sim start time - time from when sim object was first instanced
@@ -191,7 +191,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         //init ptrs to particle-based arrays - numparts and numPartsFloatSz need to be initialized by here
 		initValues_Parts();		
         //init local reps of grid values and pointers to grid-based arrays
-		initValues_Grids();
+		initValues_Grid();
 		
 		//rebuild cuda kernel configurations
 		cudaSetup();  	    
@@ -260,7 +260,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		
 		//update instancing sim values
 		updateCudaSimVals_FromUI_Indiv(upd);		
-	}//updateSimVals_FromUI
+	}//updateSimVals_FromUI_Indiv
 	
 	/**
 	 * Update instancing class variables based on potential UI changes
@@ -307,7 +307,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		}
     
         ((MPM_CudaSimFlags) simFlags).setCudaDevInit(true);
-	}//loadModuleAndSetFuncPtrs
+	}//initCUDAModuleSetup
 	
 	/**
 	 * allocate dev mem for all objects based on number of particles
@@ -322,8 +322,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         for(int i=0;i<hostPartPos.length;++i) {
         	hostPartPos[i] = new float[numParts];
         	hostPartVel[i] = new float[numParts];
-        }
-       
+        }       
         
         float[] minVals = partVals.get("minMaxVals").get(0);
         float[] maxVals = partVals.get("minMaxVals").get(1);       
@@ -349,36 +348,36 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         }
         
         //Allocate memory for particle-related cuda pointers
-        cuMemAlloc(partVolume, numPartsFloatSz); 
-        cuMemsetD32(partVolume, 0, numParts);	//part_vol is a calculated quantity
-        cuMemAlloc(partMass, numPartsFloatSz);  
-        cuMemcpyHtoD(partMass, Pointer.to(h_part_mass), numPartsFloatSz);
-        
-        for(int i=0;i<partPos.length;++i) {
-           	cuMemAlloc(partPos[i], numPartsFloatSz); 
-           	cuMemAlloc(partVel[i], numPartsFloatSz);
-            cuMemcpyHtoD(partPos[i], Pointer.to(hostPartPos[i]), numPartsFloatSz);
-            cuMemcpyHtoD(partVel[i], Pointer.to(hostPartVel[i]), numPartsFloatSz);
-            for(int j=0;j<partElasticF[0].length;++j) {		//build identity mats for this
-                cuMemAlloc(partElasticF[i][j], numPartsFloatSz);
-                cuMemAlloc(partPlasticF[i][j], numPartsFloatSz); 
+        cuMemAlloc(devPtrPartVolume, numPartsFloatSz); 
+        cuMemsetD32(devPtrPartVolume, 0, numParts);	//part_vol is a calculated quantity
+        cuMemAlloc(dvcPtrPartMass, numPartsFloatSz);  
+        cuMemcpyHtoD(dvcPtrPartMass, Pointer.to(h_part_mass), numPartsFloatSz);
+        //allocate for all particle constructs
+        for(int i=0;i<devPtrPartPos.length;++i) {
+           	cuMemAlloc(devPtrPartPos[i], numPartsFloatSz); 
+           	cuMemAlloc(devPtrPartVel[i], numPartsFloatSz);
+            cuMemcpyHtoD(devPtrPartPos[i], Pointer.to(hostPartPos[i]), numPartsFloatSz);
+            cuMemcpyHtoD(devPtrPartVel[i], Pointer.to(hostPartVel[i]), numPartsFloatSz);
+            for(int j=0;j<devPtrPartElasticF[0].length;++j) {		//build identity mats for this
+                cuMemAlloc(devPtrPartElasticF[i][j], numPartsFloatSz);
+                cuMemAlloc(devPtrPartPlasticF[i][j], numPartsFloatSz); 
                 if(i==j) {
-                    cuMemcpyHtoD(partElasticF[i][j],	Pointer.to(h_part_eye), numPartsFloatSz);                    
-                    cuMemcpyHtoD(partPlasticF[i][j],	Pointer.to(h_part_eye), numPartsFloatSz);             	       	
+                    cuMemcpyHtoD(devPtrPartElasticF[i][j], Pointer.to(h_part_eye), numPartsFloatSz);                    
+                    cuMemcpyHtoD(devPtrPartPlasticF[i][j], Pointer.to(h_part_eye), numPartsFloatSz);             	       	
                 } else {
-                    cuMemsetD32(partElasticF[i][j], 0, numParts);                    
-                    cuMemsetD32(partPlasticF[i][j], 0, numParts);             	
+                    cuMemsetD32(devPtrPartElasticF[i][j], 0, numParts);                    
+                    cuMemsetD32(devPtrPartPlasticF[i][j], 0, numParts);             	
                 }        	
             }    	        	
         }
         
-    }//initCUDAMemPtrs_Parts
+    }//initValues_Parts
 	
 	/**
 	 * allocate dev mem for all objects based on number of grid cells
 	 */
 	@Override
-	protected final void initValues_Grids() {
+	protected final void initValues_Grid() {
 		hostGridPos = new float[3][];
 		hostGridVel = new float[3][];
 		hostGridAccel = new float[3][];
@@ -408,16 +407,16 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		}			
 		
 		//Allocate memory and initialize values for cuda grid pointers
-        cuMemAlloc(gridMass, numGridFloatSz); 
-		cuMemsetD32(gridMass, 0, ttlGridCount);
-		for(int i=0;i<gridVel.length;++i) {
-            cuMemAlloc(gridVel[i], numGridFloatSz);  
-            cuMemAlloc(gridNewVel[i], numGridFloatSz);
-            cuMemAlloc(gridForce[i], numGridFloatSz);
+        cuMemAlloc(devPtrGridMass, numGridFloatSz); 
+		cuMemsetD32(devPtrGridMass, 0, ttlGridCount);
+		for(int i=0;i<devPtrGridVel.length;++i) {
+            cuMemAlloc(devPtrGridVel[i], numGridFloatSz);  
+            cuMemAlloc(devPtrGridNewVel[i], numGridFloatSz);
+            cuMemAlloc(devPtrGridForce[i], numGridFloatSz);
             
-            cuMemsetD32(gridVel[i], 0, ttlGridCount);  
-            cuMemsetD32(gridNewVel[i], 0, ttlGridCount);
-            cuMemsetD32(gridForce[i], 0, ttlGridCount);           	
+            cuMemsetD32(devPtrGridVel[i], 0, ttlGridCount);  
+            cuMemsetD32(devPtrGridNewVel[i], 0, ttlGridCount);
+            cuMemsetD32(devPtrGridForce[i], 0, ttlGridCount);           	
         }
 	}//initValues_Grids
 	
@@ -425,25 +424,25 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 * Only performed from ctor
 	 */
 	private final void buildCudaDeviceConstructs() {
-		partMass = new CUdeviceptr();   		partVolume = new CUdeviceptr();   
-		gridMass = new CUdeviceptr();    
-		partPos = new CUdeviceptr[3];			partVel = new CUdeviceptr[3];
-		gridVel = new CUdeviceptr[3];			gridNewVel = new CUdeviceptr[3];			gridForce = new CUdeviceptr[3];
-		partElasticF = new CUdeviceptr[3][];
-		partPlasticF = new CUdeviceptr[3][];
-		for(int i=0;i<partPos.length;++i) {			
-			partPos[i] = new CUdeviceptr(); 
-			partVel[i] = new CUdeviceptr();		
+		dvcPtrPartMass = new CUdeviceptr();   		devPtrPartVolume = new CUdeviceptr();   
+		devPtrGridMass = new CUdeviceptr();    
+		devPtrPartPos = new CUdeviceptr[3];			devPtrPartVel = new CUdeviceptr[3];
+		devPtrGridVel = new CUdeviceptr[3];			devPtrGridNewVel = new CUdeviceptr[3];			devPtrGridForce = new CUdeviceptr[3];
+		devPtrPartElasticF = new CUdeviceptr[3][];
+		devPtrPartPlasticF = new CUdeviceptr[3][];
+		for(int i=0;i<devPtrPartPos.length;++i) {			
+			devPtrPartPos[i] = new CUdeviceptr(); 
+			devPtrPartVel[i] = new CUdeviceptr();		
 		
-			gridVel[i] = new CUdeviceptr(); 		   
-			gridNewVel[i] = new CUdeviceptr();  	   
-			gridForce[i] = new CUdeviceptr();
-			partElasticF[i] = new CUdeviceptr[3];
-			partPlasticF[i] = new CUdeviceptr[3];
+			devPtrGridVel[i] = new CUdeviceptr(); 		   
+			devPtrGridNewVel[i] = new CUdeviceptr();  	   
+			devPtrGridForce[i] = new CUdeviceptr();
+			devPtrPartElasticF[i] = new CUdeviceptr[3];
+			devPtrPartPlasticF[i] = new CUdeviceptr[3];
 			
-			for(int j=0;j<partPos.length;++j) {
-				partElasticF[i][j] = new CUdeviceptr();
-				partPlasticF[i][j] = new CUdeviceptr();
+			for(int j=0;j<devPtrPartPos.length;++j) {
+				devPtrPartElasticF[i][j] = new CUdeviceptr();
+				devPtrPartPlasticF[i][j] = new CUdeviceptr();
 			}
 		}		
 	}//buildCudaDeviceConstructs	
@@ -524,18 +523,18 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         kernelParams = new TreeMap<String, Pointer>();
         funcGridDimAndMemSize = new HashMap<String, int[][]>();
         Pointer numPartsPtr = Pointer.to(new int[] {numParts});
-        Pointer partMassPtr = Pointer.to(partMass);
-        Pointer partVolPtr = Pointer.to(partVolume);
-        Pointer gridMassPtr = Pointer.to(gridMass);
-        Pointer[] partPosPtrAra = new Pointer[]{Pointer.to(partPos[0]),Pointer.to(partPos[1]),Pointer.to(partPos[2])};
-        Pointer[] partVelPtrAra = new Pointer[]{Pointer.to(partVel[0]),Pointer.to(partVel[1]),Pointer.to(partVel[2])};
+        Pointer partMassPtr = Pointer.to(dvcPtrPartMass);
+        Pointer partVolPtr = Pointer.to(devPtrPartVolume);
+        Pointer gridMassPtr = Pointer.to(devPtrGridMass);
+        Pointer[] partPosPtrAra = new Pointer[]{Pointer.to(devPtrPartPos[0]),Pointer.to(devPtrPartPos[1]),Pointer.to(devPtrPartPos[2])};
+        Pointer[] partVelPtrAra = new Pointer[]{Pointer.to(devPtrPartVel[0]),Pointer.to(devPtrPartVel[1]),Pointer.to(devPtrPartVel[2])};
         
         Pointer cellSizePtr = Pointer.to(new float[] {cellSize});
         Pointer numGridSidePtr = Pointer.to(new int[]{gridSideCount});
         Pointer ttlGridCountPtr = Pointer.to(new int[] {ttlGridCount});
-        Pointer[] gridVelPtrAra = new Pointer[]{Pointer.to(gridVel[0]),Pointer.to(gridVel[1]),Pointer.to(gridVel[2])};
-        Pointer[] gridNewVelPtrAra = new Pointer[]{Pointer.to(gridNewVel[0]),Pointer.to(gridNewVel[1]),Pointer.to(gridNewVel[2])};
-        Pointer[] gridFrcPtrAra = new Pointer[]{Pointer.to(gridForce[0]),Pointer.to(gridForce[1]),Pointer.to(gridForce[2])};
+        Pointer[] gridVelPtrAra = new Pointer[]{Pointer.to(devPtrGridVel[0]),Pointer.to(devPtrGridVel[1]),Pointer.to(devPtrGridVel[2])};
+        Pointer[] gridNewVelPtrAra = new Pointer[]{Pointer.to(devPtrGridNewVel[0]),Pointer.to(devPtrGridNewVel[1]),Pointer.to(devPtrGridNewVel[2])};
+        Pointer[] gridFrcPtrAra = new Pointer[]{Pointer.to(devPtrGridForce[0]),Pointer.to(devPtrGridForce[1]),Pointer.to(devPtrGridForce[2])};
         float[] gravity = getGravity().asArray();
         Pointer[] gravPtrAra = new Pointer[] {Pointer.to(new float[] {gravity[0]}),Pointer.to(new float[] {gravity[1]}),Pointer.to(new float[] {gravity[2]})};
         
@@ -552,13 +551,13 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 				partPosPtrAra[0], partPosPtrAra[1], partPosPtrAra[2],
 				partVelPtrAra[0], partVelPtrAra[1], partVelPtrAra[2],
     			//elastic matrix
-				Pointer.to(partElasticF[0][0]), Pointer.to(partElasticF[0][1]), Pointer.to(partElasticF[0][2]),
-				Pointer.to(partElasticF[1][0]), Pointer.to(partElasticF[1][1]), Pointer.to(partElasticF[1][2]),
-				Pointer.to(partElasticF[2][0]), Pointer.to(partElasticF[2][1]), Pointer.to(partElasticF[2][2]),
+				Pointer.to(devPtrPartElasticF[0][0]), Pointer.to(devPtrPartElasticF[0][1]), Pointer.to(devPtrPartElasticF[0][2]),
+				Pointer.to(devPtrPartElasticF[1][0]), Pointer.to(devPtrPartElasticF[1][1]), Pointer.to(devPtrPartElasticF[1][2]),
+				Pointer.to(devPtrPartElasticF[2][0]), Pointer.to(devPtrPartElasticF[2][1]), Pointer.to(devPtrPartElasticF[2][2]),
 				//plastic matrix
-				Pointer.to(partPlasticF[0][0]), Pointer.to(partPlasticF[0][1]), Pointer.to(partPlasticF[0][2]),
-				Pointer.to(partPlasticF[1][0]), Pointer.to(partPlasticF[1][1]), Pointer.to(partPlasticF[1][2]),
-				Pointer.to(partPlasticF[2][0]), Pointer.to(partPlasticF[2][1]), Pointer.to(partPlasticF[2][2]),
+				Pointer.to(devPtrPartPlasticF[0][0]), Pointer.to(devPtrPartPlasticF[0][1]), Pointer.to(devPtrPartPlasticF[0][2]),
+				Pointer.to(devPtrPartPlasticF[1][0]), Pointer.to(devPtrPartPlasticF[1][1]), Pointer.to(devPtrPartPlasticF[1][2]),
+				Pointer.to(devPtrPartPlasticF[2][0]), Pointer.to(devPtrPartPlasticF[2][1]), Pointer.to(devPtrPartPlasticF[2][2]),
 
 				gridMassPtr,
 				gridVelPtrAra[0], gridVelPtrAra[1], gridVelPtrAra[2],
@@ -616,13 +615,13 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         		Pointer.to(mat.getCriticalCompressionPtr()), Pointer.to(mat.getCriticalStretchPtr()),
 				partPosPtrAra[0], partPosPtrAra[1], partPosPtrAra[2],
     			//elastic matrix
-				Pointer.to(partElasticF[0][0]), Pointer.to(partElasticF[0][1]), Pointer.to(partElasticF[0][2]),
-				Pointer.to(partElasticF[1][0]), Pointer.to(partElasticF[1][1]), Pointer.to(partElasticF[1][2]),
-				Pointer.to(partElasticF[2][0]), Pointer.to(partElasticF[2][1]), Pointer.to(partElasticF[2][2]),
+				Pointer.to(devPtrPartElasticF[0][0]), Pointer.to(devPtrPartElasticF[0][1]), Pointer.to(devPtrPartElasticF[0][2]),
+				Pointer.to(devPtrPartElasticF[1][0]), Pointer.to(devPtrPartElasticF[1][1]), Pointer.to(devPtrPartElasticF[1][2]),
+				Pointer.to(devPtrPartElasticF[2][0]), Pointer.to(devPtrPartElasticF[2][1]), Pointer.to(devPtrPartElasticF[2][2]),
 				//plastic matrix
-				Pointer.to(partPlasticF[0][0]), Pointer.to(partPlasticF[0][1]), Pointer.to(partPlasticF[0][2]),
-				Pointer.to(partPlasticF[1][0]), Pointer.to(partPlasticF[1][1]), Pointer.to(partPlasticF[1][2]),
-				Pointer.to(partPlasticF[2][0]), Pointer.to(partPlasticF[2][1]), Pointer.to(partPlasticF[2][2]),
+				Pointer.to(devPtrPartPlasticF[0][0]), Pointer.to(devPtrPartPlasticF[0][1]), Pointer.to(devPtrPartPlasticF[0][2]),
+				Pointer.to(devPtrPartPlasticF[1][0]), Pointer.to(devPtrPartPlasticF[1][1]), Pointer.to(devPtrPartPlasticF[1][2]),
+				Pointer.to(devPtrPartPlasticF[2][0]), Pointer.to(devPtrPartPlasticF[2][1]), Pointer.to(devPtrPartPlasticF[2][2]),
 				//results
 				gridNewVelPtrAra[0], gridNewVelPtrAra[1], gridNewVelPtrAra[2]));     
         putFuncGridMemSize("updDeformationGradient", partGridDims, blkThdDims, shrdMemSize);
@@ -719,19 +718,19 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "simMePost_Indiv","Start copy relevant device buffers to host.");
 		//copy from device data to host particle position or velocity arrays
  		if(simFlags.getShowParticles() || simFlags.getShowPartVels()) {
- 			for(int i=0;i<hostPartPos.length;++i) {			cuMemcpyDtoH(Pointer.to(hostPartPos[i]), partPos[i], numPartsFloatSz);}
+ 			for(int i=0;i<hostPartPos.length;++i) {			cuMemcpyDtoH(Pointer.to(hostPartPos[i]), devPtrPartPos[i], numPartsFloatSz);}
  		} 			
  		if(simFlags.getShowPartVels()) {
- 			for(int i=0;i<hostPartVel.length;++i) { 		cuMemcpyDtoH(Pointer.to(hostPartVel[i]), partVel[i], numPartsFloatSz);}
+ 			for(int i=0;i<hostPartVel.length;++i) { 		cuMemcpyDtoH(Pointer.to(hostPartVel[i]), devPtrPartVel[i], numPartsFloatSz);}
  		}
  		//copy from device data to host grid velocity, accel or mass arrays
 		if(simFlags.getShowGridVel()) {
- 			for(int i=0;i<hostGridVel.length;++i) { 		cuMemcpyDtoH(Pointer.to(hostGridVel[i]), gridNewVel[i], numGridFloatSz);}
+ 			for(int i=0;i<hostGridVel.length;++i) { 		cuMemcpyDtoH(Pointer.to(hostGridVel[i]), devPtrGridNewVel[i], numGridFloatSz);}
 		}
 		if(simFlags.getShowGridAccel()) {
- 			for(int i=0;i<hostGridAccel.length;++i) { 		cuMemcpyDtoH(Pointer.to(hostGridAccel[i]), gridForce[i], numGridFloatSz);}		
+ 			for(int i=0;i<hostGridAccel.length;++i) { 		cuMemcpyDtoH(Pointer.to(hostGridAccel[i]), devPtrGridForce[i], numGridFloatSz);}		
 		}		
-		if(simFlags.getShowGridMass()) {					cuMemcpyDtoH(Pointer.to(hostGridMass), gridMass, numGridFloatSz);}
+		if(simFlags.getShowGridMass()) {					cuMemcpyDtoH(Pointer.to(hostGridMass), devPtrGridMass, numGridFloatSz);}
 		win.getMsgObj().dispDebugMessage("Base_MPMCudaSim("+simName+")", "simMePost_Indiv","End copy relevant device buffers to host.");
 		return false;
 	}

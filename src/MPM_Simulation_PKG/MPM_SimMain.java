@@ -125,7 +125,8 @@ public class MPM_SimMain extends GUI_AppManager {
 		setBaseFlagToShow_saveAnim(true); 
 		setBaseFlagToShow_runSim(true);
 		setBaseFlagToShow_singleStep(true);
-		setBaseFlagToShow_showRtSideMenu(true);
+		setBaseFlagToShow_showRtSideMenu(true);	
+		setBaseFlagToShow_showStatusBar(true);
 		setBaseFlagToShow_showDrawableCanvas(false);
 	}
 	@Override
@@ -207,7 +208,8 @@ public class MPM_SimMain extends GUI_AppManager {
 	@Override
 	protected void initOnce_Indiv() {
 		//which objects to initially show
-		setWinVisFlag(dispMPMCudaWinIDX, true);		
+		setWinVisFlag(dispMPMCudaWinIDX, true);	
+		setShowStatusBar(true);	
 	}
 	
 	@Override

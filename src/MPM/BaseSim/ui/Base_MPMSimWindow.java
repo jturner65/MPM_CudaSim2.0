@@ -291,7 +291,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		tmpUIObjArray.put(gIDX_InitVel, uiObjInitAra_Float(new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed"));//initial speed of collisions
 		tmpUIObjArray.put(gIDX_PartMass, uiObjInitAra_Float(new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass"));//particle mass
 		tmpUIObjArray.put(gIDX_GridCellSize, uiObjInitAra_Float(new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size"));//grid cell size
-		tmpUIObjArray.put(gIDX_GridCount, uiObjInitAra_Int(new double[]{50, 300, 1}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side")); //# of grid cells per side
+		tmpUIObjArray.put(gIDX_GridCount, uiObjInitAra_Int(new double[]{50.0f, 300.0f, 10.0f}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side")); //# of grid cells per side
 		tmpUIObjArray.put(gIDX_InitYoungMod, uiObjInitAra_Float(new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Initial Young's Modulus"));//gIDX_InitYoungMod init 4.8e4f, 
 		tmpUIObjArray.put(gIDX_PoissonRatio, uiObjInitAra_Float(new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio"));//gIDX_PoissonRatio init 0.2f,  
 		tmpUIObjArray.put(gIDX_HardeningCoeff , uiObjInitAra_Float(new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient"));//gIDX_HardeningCoeff init 15.0f, 

@@ -51,7 +51,7 @@ public class MPM_CudaSnowBalls extends Base_MPMCudaSim {
 	@Override
 	protected void updateCudaSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
 		//radius will be function of how many particles are built and grid dimensions
-		sphereRad = (float)(3.0*Math.cbrt(numParts)/sclAmt);
+		sphereRad = (float)(3.0*Math.cbrt(numParts)/minSclAmt);
 		//derive half-length of single dimension of grid based on count of grid boxes and size of each box edge		
         //max valid location for center dof without breaching collider on start
         maxCenterDim = maxSimBnds-sphereRad;
