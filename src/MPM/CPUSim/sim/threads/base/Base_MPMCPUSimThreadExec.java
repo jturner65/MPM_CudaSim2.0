@@ -3,6 +3,7 @@ package MPM.CPUSim.sim.threads.base;
 import java.util.concurrent.*;
 
 import MPM.CPUSim.sim.base.Base_MPMCPUSim;
+import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
 //1 thread's worth of execution for executing work
@@ -94,7 +95,7 @@ public abstract class Base_MPMCPUSimThreadExec implements Callable<Boolean> {
 	}//calcCollVel
 	
 	//collision detection for wall collisions, returns idx in wallNorms of collision
-	protected int checkWallCollision(myVectorf pos) {
+	protected int checkWallCollision(myPointf pos) {
 		if(pos.x<=minSimBnds.x) {		return 0;	} else if(pos.x>=maxSimBnds.x) {	return 1;	}			
 		if(pos.y<=minSimBnds.y) {		return 2;	} else if(pos.y>=maxSimBnds.y) {	return 3;	}
 		if(pos.z<=minSimBnds.z) {		return 4;	} else if(pos.z>=maxSimBnds.z) {	return 5;	}
@@ -102,9 +103,9 @@ public abstract class Base_MPMCPUSimThreadExec implements Callable<Boolean> {
 	}//checkWallCollision
 	
 	//looking ahead at position, to return new velocity that responds to collision if position has collided
-	protected myVectorf applyCollisions(myVectorf pos, myVectorf velocity) {
+	protected myVectorf applyCollisions(myPointf pos, myVectorf velocity) {
 		//check collider collisions
-		myVectorf sphereColNorm = sim.checkColliderCollision(pos);
+		myVectorf sphereColNorm = sim.checkColliderCollision(pos); 
 		if(sphereColNorm.magn != 0) {//colliding with central collider			
 			return calcCollVel(colFriction, velocity, sphereColNorm);
 			

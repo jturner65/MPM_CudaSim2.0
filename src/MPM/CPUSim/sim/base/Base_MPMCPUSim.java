@@ -14,6 +14,7 @@ import MPM.CPUSim.sim.grid.MPM_CPUGridNode;
 import MPM.CPUSim.sim.particles.MPM_CPURndrdPart;
 import MPM.CPUSim.sim.threads.MPM_CPUGridBuilder;
 import MPM.CPUSim.sim.threads.MPM_CPUPartBuilder;
+import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
 
@@ -90,7 +91,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 		initValues_Parts();
 		
 		
-		initValues_Grids() ;
+		initValues_Grid() ;
 		win.getMsgObj().dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Finished resetting sim");
 	}
 	
@@ -128,7 +129,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	
 	
 	@Override
-	protected final void initValues_Grids() {
+	protected final void initValues_Grid() {
 		
 		
 	}
@@ -173,5 +174,5 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 * @param pos
 	 * @return
 	 */
-	public abstract myVectorf checkColliderCollision(myVectorf pos);
+	public abstract myVectorf checkColliderCollision(myPointf pos);
 }//class Base_MPMCPUSim

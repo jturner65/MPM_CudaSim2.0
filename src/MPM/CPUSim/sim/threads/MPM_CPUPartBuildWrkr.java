@@ -4,6 +4,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.jblas.FloatMatrix;
 
+import MPM.BaseSim.material.Base_MPMMaterial;
 import MPM.CPUSim.sim.base.Base_MPMCPUSim;
 import MPM.CPUSim.sim.grid.MPM_CPUActiveNodeAgg;
 import MPM.CPUSim.sim.grid.MPM_CPUGridNode;
@@ -17,16 +18,27 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
 
 //1 thread's worth of execution for building particles
 public class MPM_CPUPartBuildWrkr extends Base_MPMCPUSimThreadExec {
-	//ref to particle array to be filled
+	/**
+	 * ref to particle array to be filled
+	 */
 	protected MPM_CPURndrdPart[] parts;
-	//center of snowball sphere being built
+	/**
+	 * center of snowball sphere being built
+	 */
 	protected myVectorf snowBallCtr;
-	//radius of sphere of particles to be built
+	/**
+	 * radius of sphere of particles to be built
+	 */
 	protected float snowBallRad;
+	/**
+	 * Material quantities of particles
+	 */
+	protected Base_MPMMaterial mat;
 		
 	public MPM_CPUPartBuildWrkr(Base_MPMCPUSim _sim, int _stIDX, int _endIDX, int _thIDX) {
 		super(_sim, _stIDX, _endIDX, _thIDX);
-		parts=sim.parts;	
+		parts=sim.parts;
+		mat = sim.mat;
 //		snowBallCtr = new myVectorf(_ctr);
 //		snowBallRad = _rad;
 	}	
@@ -170,7 +182,7 @@ public class MPM_CPUPartBuildWrkr extends Base_MPMCPUSimThreadExec {
 		for(int i=stIDX; i<endIDX;++i) {		parts[i].calcPartVel(sim.mat);	}
 		
 		for(int i=stIDX; i<endIDX;++i) {		
-			myVectorf pos=new myVectorf(parts[i].pos);
+			myPointf pos=new myPointf(parts[i].pos);
 			pos._add(myVectorf._mult(parts[i].vel,deltaT));
 			parts[i].vel=applyCollisions(pos,parts[i].vel);
 		}

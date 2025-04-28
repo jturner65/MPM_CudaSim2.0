@@ -34,6 +34,7 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
 	 */
 	public MPM_CPUSnowBall(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
 		super(_pa, _win, "Snowball Fall", _currUIVals);
+		colLocation = new myVectorf();
 	}
 
 
@@ -91,7 +92,7 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
 
 	//check central floating collider - return 0 vec if no collision, otherwise return normal of collision
 	@Override
-	public myVectorf checkColliderCollision(myVectorf pos) {
+	public myVectorf checkColliderCollision(myPointf pos) {
 		if(myPointf._SqrDist(pos, colLocation) <= colSqRad) {
 			myVectorf tmp = new myVectorf(pos);
 			tmp._sub(colLocation);
