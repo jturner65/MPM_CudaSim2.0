@@ -12,6 +12,7 @@ import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
+import base_Utils_Objects.io.messaging.MessageObject;
 
 /**
  * Base class holding shared MPM simulation functionality regardless of solve method
@@ -27,6 +28,10 @@ public abstract class Base_MPMSim {
 	 * Owning window
 	 */
 	protected Base_MPMSimWindow win;
+	/**
+	 * Message object for logging
+	 */
+	protected MessageObject msgObj;
 	/**
 	 * Name of instancing sim
 	 */
@@ -140,7 +145,8 @@ public abstract class Base_MPMSim {
 	 * @param _currUIVals
 	 */
 	public Base_MPMSim(IRenderInterface _pa, Base_MPMSimWindow _win, String _simName, float[] _gravity, MPM_SimUpdateFromUIData _currUIVals) {
-		pa=_pa;win=_win;simName = _simName;		
+		pa=_pa;win=_win;simName = _simName;	
+		msgObj = win.getMsgObj();
 		currUIVals = new MPM_SimUpdateFromUIData(win);
 		gravity = new myVectorf(_gravity[0],_gravity[1],_gravity[2]);
 		//mat's quantities are managed by UI - only need to instance once
@@ -174,7 +180,7 @@ public abstract class Base_MPMSim {
 		resetSim_Indiv(rebuildSim);
 
 		simFlags.setSimIsBuilt(true);
-		win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "resetSim","Finished resetting/rebuilding sim");
+		msgObj.dispDebugMessage("Base_MPMSim:"+simName, "resetSim","Finished resetting/rebuilding sim");
 	}//resetSim
 	
 	/**
@@ -332,25 +338,25 @@ public abstract class Base_MPMSim {
 	protected SimResetProcess checkValuesForChanges(MPM_SimUpdateFromUIData upd) {
 		boolean rebuildSim = upd.checkSimRebuild(currUIVals);
 		if(rebuildSim) {
-			win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RebuildSim");
+			msgObj.dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RebuildSim");
 			return SimResetProcess.RebuildSim;
 		}
 		boolean resetSim = upd.checkSimReset(currUIVals);
 		if(resetSim) {
-			win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.ResetSim");
+			msgObj.dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.ResetSim");
 			return SimResetProcess.ResetSim;
 		}
 		boolean matsHaveChanged = upd.haveMaterialValsChanged(currUIVals);
 		if(matsHaveChanged) {
-			win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Materials have changed; Specifying SimResetProcess.RemakeKernel");
+			msgObj.dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Materials have changed; Specifying SimResetProcess.RemakeKernel");
 			return SimResetProcess.RemakeKernel;			
 		}	
 		boolean remakeKernel = upd.checkSimKernelRebuilt(currUIVals);
 		if(remakeKernel) {
-			win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RemakeKernel");
+			msgObj.dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.RemakeKernel");
 			return SimResetProcess.RemakeKernel;
 		}
-		win.getMsgObj().dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing - nothing pertinent has changed.");
+		msgObj.dispDebugMessage("Base_MPMSim:"+simName, "checkValuesForChanges","Specifying SimResetProcess.DoNothing - nothing pertinent has changed.");
 		return SimResetProcess.DoNothing;
 	}
 	

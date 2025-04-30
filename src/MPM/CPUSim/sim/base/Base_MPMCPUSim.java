@@ -86,13 +86,13 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 */
 	@Override
 	protected final void resetSim_Indiv(SimResetProcess rebuildSim) {
-		win.getMsgObj().dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Start resetting sim");
+		msgObj.dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Start resetting sim");
 	
 		initValues_Parts();
 		
 		
 		initValues_Grid() ;
-		win.getMsgObj().dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Finished resetting sim");
+		msgObj.dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Finished resetting sim");
 	}
 	
 	

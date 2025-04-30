@@ -70,13 +70,13 @@ public class MPM_CudaSnowBalls extends Base_MPMCudaSim {
 	 */
 	@Override
 	protected void buildPartLayoutMap(TreeMap<String, ArrayList<float[]>> partVals) {	
-		win.getMsgObj().dispDebugMessage("MPM_CudaBalls("+simName+")", "buildPartLayoutMap", "Sphere Rad : " + sphereRad+ " | maxSimBnds : "+maxSimBnds);
+		msgObj.dispDebugMessage("MPM_CudaBalls("+simName+")", "buildPartLayoutMap", "Sphere Rad : " + sphereRad+ " | maxSimBnds : "+maxSimBnds);
 		
        	buildSphereCtrsAndVels();
         //build point clouds and assign initial velocities
         reinitSimObjects(partVals);
         
-        win.getMsgObj().dispDebugMessage("MPM_CudaBalls("+simName+")", "buildPartLayoutMap","Total # of particles in simulation : " + numParts+ " # parts float sz :"+numPartsFloatSz);
+        msgObj.dispDebugMessage("MPM_CudaBalls("+simName+")", "buildPartLayoutMap","Total # of particles in simulation : " + numParts+ " # parts float sz :"+numPartsFloatSz);
         //end create particle layout	
 	}//buildPartLayout
 	
