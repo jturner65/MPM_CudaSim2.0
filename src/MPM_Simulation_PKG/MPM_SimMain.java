@@ -18,8 +18,8 @@ import base_Utils_Objects.io.messaging.MsgCodes;
 public class MPM_SimMain extends GUI_AppManager {
 	
 	public final String prjNmShrt = "MPM_SnowSim_cpu_cuda";
-	public final String prjNmLong = "MPM Snow Simulation Multi-Threaded CPU and CUDA 9.1"; 
-	public final String projDesc = "Simulate numerous snow balls colliding using Material Point Method solved via MT CPU solver or a CUDA 9.1 kernel.";
+	public final String prjNmLong = "MPM Snow Simulation Multi-Threaded CPU and CUDA/JCUDA 9.2"; 
+	public final String projDesc = "Simulate numerous snow balls colliding using Material Point Method solved via MT CPU solver or a CUDA kernel.";
 	
 	private String bkSkyBox = "winter.jpg";
 	//bground color
