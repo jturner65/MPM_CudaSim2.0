@@ -287,7 +287,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		tmpUIObjArray.put(gIDX_TimeStep , uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
 		tmpUIObjArray.put(gIDX_SimStepsPerFrame, uiObjInitAra_Int(new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame"));//gIDX_simStepsPerFrame  init 5
 		tmpUIObjArray.put(gIDX_NumParticles, uiObjInitAra_Int(getMinMaxModParts(), getInitNumParts(), "# of Particles"));//number of particles
-		tmpUIObjArray.put(gIDX_NumSnowballs, uiObjInitAra_Int(new double[]{2, 10, 1}, 1.0*initNumBalls, "# of Snowballs"));//number of snowballs
+		tmpUIObjArray.put(gIDX_NumSnowballs, uiObjInitAra_Int(new double[]{2, 20, 1}, 1.0*initNumBalls, "# of Snowballs"));//number of snowballs
 		tmpUIObjArray.put(gIDX_InitVel, uiObjInitAra_Float(new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed"));//initial speed of collisions
 		tmpUIObjArray.put(gIDX_PartMass, uiObjInitAra_Float(new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass"));//particle mass
 		tmpUIObjArray.put(gIDX_GridCellSize, uiObjInitAra_Float(new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size"));//grid cell size
@@ -425,14 +425,13 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	
 	@Override
 	//modAmtMillis is time passed per frame in milliseconds
-	protected boolean simMe(float modAmtMillis) {//run simulation
+	protected final boolean simMe(float modAmtMillis) {//run simulation
 		boolean done = false;
 		if (privFlags.getFlag(showExecTime)){
 			done = currSim.simMeDebug(modAmtMillis);
 		} else {
 			done = currSim.simMe(modAmtMillis);	
 		}
-		
 		return done;	
 	}//simMe		
 	

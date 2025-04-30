@@ -6,7 +6,9 @@ import java.util.concurrent.*;
 
 import MPM.CPUSim.sim.base.Base_MPMCPUSim;
 
-//class to hold all necessary shared functionality used by sim thread manager/executors
+/**
+ * class to hold all necessary shared functionality used by sim thread manager/executors
+ */
 public abstract class Base_MPMCPUSimThdBldr implements Runnable {
 	//ref to owning sim
 	protected Base_MPMCPUSim sim;

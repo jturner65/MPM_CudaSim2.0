@@ -101,7 +101,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * # of cuda threads per block
 	 */
-	private final int numCUDAThreads = 256;
+	private final int numCUDAThreads = 1024;
 	private final int[] blkThdDims = new int[] {numCUDAThreads, 1, 1};
 	private int[] partGridDims;
 	private int[] part4GridDims;
