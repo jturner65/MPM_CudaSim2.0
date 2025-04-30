@@ -128,9 +128,9 @@ public abstract class Base_MPMSim {
 	 */
 	protected ArrayList<ArrayList<ArrayList<myVectorf[]>>> dispGridLines;
 	/**
-	 * Every 10th grid line should be drawn
+	 * Every gridIncr'th grid line should be drawn
 	 */
-	private final int gridIncr = 10;
+	private final int gridIncr = 1;
 	/**
 	 * Constructor
 	 * @param _pa
@@ -294,7 +294,7 @@ public abstract class Base_MPMSim {
 		//every x'th point to draw - use higher values to draw fewer points
 		drawPointIncr = upd.getDrawPtIncr();
 		//drawn vector/scalar quantities scaling
-		vecLengthScale = upd.getDrawnVecScale();		
+		vecLengthScale = upd.getDrawnVecScale() * gridSideCount/100.0f;		
 		
 		////////////////////////////
 		// calculated derived values dependent on UI values
@@ -606,7 +606,7 @@ public abstract class Base_MPMSim {
 	protected final void _drawGridVec(int[] clr, float[][] val, float[][] grid_pos) {
 		float minMag = MyMathUtils.EPS_F/vecLengthScale;
 		pa.pushMatState();	
-		pa.setStroke(clr,20);
+		pa.setStroke(clr,180);
 		pa.translate(minSimBnds,minSimBnds,minSimBnds);
 		for (int i=0; i<ttlGridCount;++i) {			
 			if(		(Math.abs(val[0][i]) > minMag) || 
@@ -630,7 +630,7 @@ public abstract class Base_MPMSim {
 		float minMag = MyMathUtils.EPS_F/vecLengthScale;
 		pa.pushMatState();	
 		pa.setSphereDetail(3);
-		pa.setStroke(clr,20);
+		pa.setStroke(clr,111);
 		pa.translate(minSimBnds,minSimBnds,minSimBnds);
 		for (int i=0; i<ttlGridCount;++i) {			
 			if((Math.abs(xVal[i]) > minMag)) {

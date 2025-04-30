@@ -99,9 +99,9 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
      */
     protected long numPartsFloatSz, numGridFloatSz;
 	/**
-	 * # of cuda threads
+	 * # of cuda threads per block
 	 */
-	private final int numCUDAThreads = 1024;
+	private final int numCUDAThreads = 256;
 	private final int[] blkThdDims = new int[] {numCUDAThreads, 1, 1};
 	private int[] partGridDims;
 	private int[] part4GridDims;
@@ -247,14 +247,14 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	protected final void updateSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
 		//float size of particle arrays, for malloc
 		numPartsFloatSz = numParts * Sizeof.FLOAT; 
-		//# cuda grid dims for particle functions
+		//# cuda block/grid dims for particle functions
 		numBlocksParticles = (numParts + numCUDAThreads -1)/numCUDAThreads;
 	    partGridDims = new int[] {numBlocksParticles, 1, 1};
 	    part4GridDims = new int[] {numBlocksParticles*4, 1, 1};
 
 	    //float size of grid arrays, for malloc       
         numGridFloatSz = ttlGridCount * Sizeof.FLOAT;
-        //# cuda grid dims for grid based functions			
+        //# cuda block/grid dims for grid based functions			
 		numBlocksGrid = (ttlGridCount + numCUDAThreads -1)/numCUDAThreads;	
 	    gridGridDims = new int[] {numBlocksGrid, 1, 1};
 		
