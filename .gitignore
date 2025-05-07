@@ -4,7 +4,7 @@
 /bin/
 
 src/Cuda/
-
+src/MPM/CudaKernels/
 newLibs/
 
 cuda8/
