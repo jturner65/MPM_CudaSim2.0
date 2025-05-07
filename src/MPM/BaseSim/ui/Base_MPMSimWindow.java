@@ -297,7 +297,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		tmpUIObjArray.put(gIDX_HardeningCoeff , uiObjInitAra_Float(new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient"));//gIDX_HardeningCoeff init 15.0f, 
 		tmpUIObjArray.put(gIDX_CriticalCompression, uiObjInitAra_Float(new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression"));//gIDX_CriticalCompression  init .019f, 
 		tmpUIObjArray.put(gIDX_CriticalStretch , uiObjInitAra_Float(new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch"));//gIDX_CriticalStretch init .0075f, 
-		tmpUIObjArray.put(gIDX_AlphaPicFlip, uiObjInitAra_Float(new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "Particle PIC/FLIP Vel Ratio"));//gIDX_AlphaPicFlip init 0.95f, 
+		tmpUIObjArray.put(gIDX_AlphaPicFlip, uiObjInitAra_Float(new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "PIC/FLIP Mix Slider (0==PIC, 1== FLIP)"));//gIDX_AlphaPicFlip init 0.95f, 
 		tmpUIObjArray.put(gIDX_wallFricCoeff, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient"));//gIDX_wallfricCoeffinit 1.0f  
 		tmpUIObjArray.put(gIDX_CollFricCoeff, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient"));//gIDX_CollfricCoeffinit 1.0f  
 		tmpUIObjArray.put(gIDX_DrawnValScale, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors"));//gIDX_CollfricCoeffinit 1.0f  

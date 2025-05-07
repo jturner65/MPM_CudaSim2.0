@@ -5,6 +5,7 @@ import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM.CPUSim.sim.base.Base_MPMCPUSim;
 import MPM.CPUSim.sim.base.MPM_CPUSimFlags;
+import MPM.CPUSim.sim.particles.MPM_CPURndrdPart;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
@@ -36,28 +37,25 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
 		super(_pa, _win, "Snowball Fall", _currUIVals);
 		colLocation = new myVectorf();
 	}
-
-
-	@Override
-	protected void initPartArrays() {
-		
-	}
-
-	@Override
-	protected void buildPartLayouts() {
-		
-	}
-
-	@Override
-	protected void reinitSimObjects() {
-		
-	}
-
 	
 	@Override
 	protected void updateCPUSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd) {
 	}//updateCPUSimVals_FromUI_Indiv
 
+
+	@Override
+	protected void buildPartLayoutArray(MPM_CPURndrdPart[] parts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void reinitSimObjects(MPM_CPURndrdPart[] parts) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	
 	@Override
 	protected void drawColliders_Indiv(float animTimeMod) {
 		pa.pushMatState();	
@@ -79,10 +77,7 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
 	}
 
 	@Override
-	protected Base_MPMSimFlags buildSimFlags() {
-		// TODO Auto-generated method stub
-		return new MPM_CPUSimFlags(this);
-	}
+	protected Base_MPMSimFlags buildSimFlags() {return new MPM_CPUSimFlags(this);	}
 
 	@Override
 	public void handleSimFlagsDebug_Indiv(boolean val) {
@@ -100,5 +95,6 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
 		}
 		return new myVectorf(0,0,0);
 	}
+
 
 }//class SnowBallSim

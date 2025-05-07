@@ -20,9 +20,9 @@ import base_Math_Objects.vectorObjs.floats.myVectorf;
  */
 public class MPM_CudaSnowBalls extends Base_MPMCudaSim {
 	/**
-	 * Centers of currently built spheres
+	 * Centers of currently built spheres of particles
 	 */
-	private myVectorf[] sphere_Ctrs;
+	private myPointf[] sphere_Ctrs;
 	
 	/**
 	 * Initial Velocities of currently built spheres
@@ -84,13 +84,13 @@ public class MPM_CudaSnowBalls extends Base_MPMCudaSim {
 	 * For when sphere counts have, or locations should, change. Rebuilds sphere centers and sphere velocities
 	 */
 	protected void buildSphereCtrsAndVels() {
-    	sphere_Ctrs = new myVectorf[numSnowballs];
+    	sphere_Ctrs = new myPointf[numSnowballs];
     	for (int i=0;i<sphere_Ctrs.length;++i) {
 			sphere_Ctrs[i] = getRandSphereCenter(maxCenterDim);
 		}
         //Find centralized location between spheres, to use as mutual target
     	myVectorf ctrTarget = new myVectorf();
-        for (myVectorf vec : sphere_Ctrs) {
+        for (myPointf vec : sphere_Ctrs) {
         	ctrTarget._add(vec);
         }
         //absolute target - vary individual target by random radius amt to give glancing blows

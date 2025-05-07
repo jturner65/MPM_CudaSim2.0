@@ -1,6 +1,5 @@
 package MPM.CPUSim.sim.base;
 
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,6 +43,10 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 */
 	public MPM_CPURndrdPart[] parts;
 	/**
+	 * Radius for drawn MPM points
+	 */
+	protected float partRad;
+	/**
 	 * all grid nodes
 	 */
 	public MPM_CPUGridNode[][][] grid;	
@@ -52,11 +55,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 * because there's no concurrent hash set in java, but the keys of CHM will work
 	 */
 	public ConcurrentHashMap<MPM_CPUGridNode,MPM_CPUActiveNodeAgg>[] activeNodes;
-	
-	/**
-	 * 
-	 */
-	
+		
 	/**
 	 * @param _pa
 	 * @param _win
@@ -73,11 +72,15 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
 		//might not be balanced, but worst case all nodes in single thread.  not many nodes, and minimal calculation is node-specific ConcurrentHashMap<myGridNode,Boolean>[]
 		activeNodes = new ConcurrentHashMap[numThreadsAvail];
+		// a map of active nodes, keyed by grid node, for each thread
 		for(int i=0;i<this.numThreadsAvail;++i) {activeNodes[i] = new ConcurrentHashMap<MPM_CPUGridNode, MPM_CPUActiveNodeAgg>();}		
 		//set up threads to be used to build the grid
 		gridThdMgr = new MPM_CPUGridBuilder(this, numThreadsAvail);
 		//set up thread builders to be used to build particles
-		partThdMgr = new MPM_CPUPartBuilder(this, numThreadsAvail);		
+		partThdMgr = new MPM_CPUPartBuilder(this, numThreadsAvail);	
+		
+		//set up grid and initialize sim with UI values and reset sim
+		updateSimVals_FromUI(_currUIVals);
 	}
 	
 	/**
@@ -88,13 +91,45 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	protected final void resetSim_Indiv(SimResetProcess rebuildSim) {
 		msgObj.dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Start resetting sim");
 	
-		initValues_Parts();
+		initValues_Parts();		
+		initValues_Grid();
 		
-		
-		initValues_Grid() ;
+		//notify gridbuilder that we have a new grid
+		gridThdMgr.setNewSimVals();
+		partThdMgr.setNewSimVals();
 		msgObj.dispDebugMessage("Base_MPMCPUSim("+simName+")", "resetSim_Indiv","Finished resetting sim");
+	}//resetSim_Indiv
+	
+
+	@Override
+	protected final void initPartArrays() {
+		//build array of particles. UI has been updated by here
+		parts = new MPM_CPURndrdPart[numParts];		
+		//radius of drawn particles
+		partRad = 10.0f/this.minSclAmt;
+	}
+
+	@Override
+	protected final void buildPartLayouts() {
+		buildPartLayoutArray(parts);
+	}
+
+	@Override
+	protected final void reinitSimObjects() {
+		reinitSimObjects(parts);
 	}
 	
+	/**
+	 * build initial layout for particles for this simulation
+	 * @param partVals [OUT] array of particles
+	 */
+	protected abstract void buildPartLayoutArray(MPM_CPURndrdPart[] parts);	
+	
+	/**
+	 * Reinitialize existing sim - will resynthesize sample points but will not rederive locations of sim objs.
+	 * @param partVals
+	 */
+	protected abstract void reinitSimObjects(MPM_CPURndrdPart[] parts);	
 	
 	//add node to active set of nodes
 	public MPM_CPUActiveNodeAgg addNodeToSet(MPM_CPUGridNode n) {	
@@ -120,7 +155,10 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 * @param upd
 	 */
 	protected abstract void updateCPUSimVals_FromUI_Indiv(MPM_SimUpdateFromUIData upd);
-
+	
+	/**
+	 * Initialize values based on particle positions, if any
+	 */
 	@Override
 	protected final void initValues_Parts() {
 		
@@ -129,10 +167,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	
 	
 	@Override
-	protected final void initValues_Grid() {
-		
-		
-	}
+	protected final void initValues_Grid() {}
 	
 	
 	@Override
@@ -140,9 +175,16 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	@Override
 	protected final boolean simMePost_Indiv(float modAmtMillis) {	return false;	}
 	@Override
-	protected final void _drawParts(float animTimeMod, boolean showLocColors) {}
+	protected final void _drawParts(float animTimeMod, boolean showLocColors) {
+		
+		
+		
+	}
 	@Override
-	protected final void _drawPartVel(float animTimeMod, int pincr) {}
+	protected final void _drawPartVel(float animTimeMod, int pincr) {
+		
+		
+	}
 	/**
 	 * Draw any colliders if they exist
 	 * @param animTimeMod

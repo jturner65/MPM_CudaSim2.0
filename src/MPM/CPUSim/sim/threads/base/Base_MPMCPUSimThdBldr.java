@@ -45,15 +45,18 @@ public abstract class Base_MPMCPUSimThdBldr implements Runnable {
 	protected void initWrkrIDXs(int numObjs, String ownr) {
 		callExecs.clear();
 		callExecsFtrs.clear();
-		int numPartsPerThd= (numObjs > numThds ? (1 + (numObjs - 1)/numThds) : 1);
-		endIDXs[0]=numPartsPerThd;
+		int numObjsPerThd= (numObjs > numThds ? (1 + (numObjs - 1)/numThds) : 1);
+		stIDXs[0]=0;
+		endIDXs[0]=numObjsPerThd;
 		for(int i=1;i<numThds;++i) {
 			stIDXs[i]=endIDXs[i-1];
-			endIDXs[i]=stIDXs[i]+numPartsPerThd;
+			endIDXs[i]=stIDXs[i]+numObjsPerThd;
 		}
 		if(endIDXs[numThds-1] >= numObjs) {endIDXs[numThds-1]=numObjs;}
-		else {System.out.println("mySimBuilder::initSimBuilder : Error initializing end idxs : not all objects are getting mapped to a thread in "+ ownr +" mySimBuilder : endIDXs[numThds-1] == "+endIDXs[numThds-1]);}
-		//for(int i=0;i<stIDXs.length;++i) {System.out.println(ownr + " : IDX : " + i + " StIDX : " + stIDXs[i]+ " | EndIDX : " + endIDXs[i]);}
+		else {
+			sim.getMsgObj().dispErrorMessage(ownr, "initWrkrIDXs", "Error initializing end idxs : not all objects are getting mapped to a thread in "+ ownr +" mySimBuilder : endIDXs[numThds-1] == "+endIDXs[numThds-1]);   
+		}
+
 		//build workers specific to the instancing mySimThdBldr obj
 		initWrkrs();
 		//next call is initialization step for this sim builder

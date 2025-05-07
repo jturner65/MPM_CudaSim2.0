@@ -28,7 +28,6 @@ public class MPM_CPUGridBuilder extends Base_MPMCPUSimThdBldr {
 		activeNodes = sim.activeNodes;
 		//build thread list structure - this won't change unless simulation structure will change, so on reinitialization should reuse these
 		for(int i =0;i<numThds;++i) {
-			//System.out.println("i:"+i+" | start idx : " + stIDXs[i] + " | end : " + endIDXs[i]);
 			callExecs.add(new MPM_CPUGridBuildWrkr(sim, stIDXs[i],endIDXs[i], i));
 		}		
 	}//initWrkrs

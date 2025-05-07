@@ -60,7 +60,9 @@ public class MPM_CPUGridNode {
 	
 	//calculate grid velocity
 	public void calcVel(float deltaT, myVectorf gravBase) {
+		// add force due to gravity
 		forces._add(myVectorf._mult(gravBase, mass));
+		// find velocity by multiplying accel by time
 		myVectorf toAddV = myVectorf._mult(forces, deltaT / mass);
 		accels = myVectorf._div(toAddV,deltaT);
 		velocity._div(mass);

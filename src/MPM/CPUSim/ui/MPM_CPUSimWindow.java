@@ -43,6 +43,7 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 	protected void initDispFlags_Indiv() {	}
 	@Override
 	protected final void initMe_Indiv() {
+		//Show sphere collider
 		privFlags.setFlag(showCollider, true);
 	}
 	

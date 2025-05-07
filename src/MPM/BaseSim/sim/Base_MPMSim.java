@@ -9,6 +9,7 @@ import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import java.util.ArrayList;
 
 import base_Math_Objects.MyMathUtils;
+import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 import base_Render_Interface.IRenderInterface;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
@@ -44,7 +45,7 @@ public abstract class Base_MPMSim {
 	/**
 	 * Current ui values describing variables used in the simulation
 	 */
-	public MPM_SimUpdateFromUIData currUIVals;
+	protected MPM_SimUpdateFromUIData currUIVals;
 	
 	public Base_MPMSimFlags simFlags; 
 	
@@ -65,6 +66,7 @@ public abstract class Base_MPMSim {
     protected int simStepsPerFrame;	
     /**
      * # of cells per side - cube so same in all 3 dims
+     * TODO : handle non-cube
      */
 	protected int gridSideCount;
     /**
@@ -151,7 +153,6 @@ public abstract class Base_MPMSim {
 		gravity = new myVectorf(_gravity[0],_gravity[1],_gravity[2]);
 		//mat's quantities are managed by UI - only need to instance once
 		mat = new Base_MPMMaterial(_currUIVals);
-		//initialize active nodes set - array of sets, array membership is node ID % numThreadsAvail
 		//setup flag array
 		simFlags = buildSimFlags();	
 	}//ctor
@@ -172,7 +173,7 @@ public abstract class Base_MPMSim {
 		//stop simulation and reset
 		Base_DispWindow.AppMgr.setSimIsRunning(false);
 		simFlags.setSimIsBuilt(false);	
-		//if only simulation parameters, don't rebuild simulation environment
+		//if only simulation/kernel parameters, don't rebuild simulation environment
 		if (rebuildSim != SimResetProcess.RemakeKernel) {
 			buildSimEnvironment(rebuildSim);
 		}       
@@ -193,9 +194,7 @@ public abstract class Base_MPMSim {
 	 * Called by simFlags structure, when debug is set or cleared
 	 * @param val
 	 */
-	public final void handleSimFlagsDebug(boolean val) {
-		
-		
+	public final void handleSimFlagsDebug(boolean val) {	
 		handleSimFlagsDebug_Indiv(val);
 	}
 	
@@ -391,9 +390,9 @@ public abstract class Base_MPMSim {
 	 * @param bound furthest +/- value per axis to locate center of sphere.
 	 * @return a 3D center coord
 	 */
-	protected myVectorf getRandSphereCenter(float bound) {
+	protected myPointf getRandSphereCenter(float bound) {
 		var randGen = ThreadLocalRandom.current();
-		myVectorf ctr = new myVectorf(
+		myPointf ctr = new myPointf(
 				randGen.nextDouble(-1,1), 
 				randGen.nextDouble(-1,1),
 				randGen.nextDouble(-1,1));
@@ -688,5 +687,10 @@ public abstract class Base_MPMSim {
 	 */
 	public float getCollFric() {		return collFric;	}
 
+	/**
+	 * Retrieve message object
+	 * @return
+	 */
+	public MessageObject getMsgObj() {return msgObj;}
 	
 }//class Base_MPMSim
