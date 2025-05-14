@@ -484,6 +484,8 @@ public abstract class Base_MPMSim {
 	public final void drawMe(float animTimeMod) {
 		if(!simFlags.getSimIsBuilt()) {return;}//if not built yet, don't try to draw anything
 		//render all particles - TODO determine better rendering method
+		//minimum magnitude to use for rendering cutoff
+		float minMag = MyMathUtils.EPS_F/vecLengthScale;
 		pa.pushMatState();
 		//set stroke values and visual scale
 			pa.setStrokeWt(2.0f/minSclAmt);
@@ -491,16 +493,16 @@ public abstract class Base_MPMSim {
 			
 			//point-based rendering
 			if(simFlags.getShowParticles()){	_drawParts(animTimeMod, simFlags.getShowLocColors());}			
-			if(simFlags.getShowPartVels()){		_drawPartVel(animTimeMod, drawPointIncr);}
+			if(simFlags.getShowPartVels()){		_drawPartVel(animTimeMod, minMag, drawPointIncr);}
 			
 			//draw colliders, if exist
 			if(simFlags.getShowCollider()){		_drawColliders(animTimeMod);}
 			
 			//Grid-based rendering
 			if(simFlags.getShowGrid()) {		_drawGrid();}
-			if(simFlags.getShowGridVel()) {		_drawGridVel(animTimeMod);}
-			if(simFlags.getShowGridAccel()){	_drawGridAccel(animTimeMod);}
-			if(simFlags.getShowGridMass()) {	_drawGridMass(animTimeMod);}
+			if(simFlags.getShowGridVel()) {		_drawGridVel(animTimeMod, minMag);}
+			if(simFlags.getShowGridAccel()){	_drawGridAccel(animTimeMod, minMag);}
+			if(simFlags.getShowGridMass()) {	_drawGridMass(animTimeMod, minMag);}
 		pa.popMatState();
 	}//drawMe
 	
@@ -514,9 +516,10 @@ public abstract class Base_MPMSim {
 	/**
 	 * Draw instance class particle velocities
 	 * @param animTimeMod
+	 * @param minMag minimum magnitude per axis to draw vector
 	 * @param pincr
 	 */
-	protected abstract void _drawPartVel(float animTimeMod, int pincr);
+	protected abstract void _drawPartVel(float animTimeMod, float minMag, int pincr);
 	
 	/**
 	 * draw internal-to-sim colliders, if they exist
@@ -527,23 +530,23 @@ public abstract class Base_MPMSim {
 	/**
 	 * Draw instance class grid velocities - use _drawGridVec method
 	 * @param animTimeMod
-	 * @param pincr
+	 * @param minMag minimum magnitude per axis to draw vector
 	 */
-	protected abstract void _drawGridVel(float animTimeMod);
+	protected abstract void _drawGridVel(float animTimeMod, float minMag);
 
 	/**
 	 * Draw instance class grid accelerations - use _drawGridVec method
 	 * @param animTimeMod
-	 * @param pincr
+	 * @param minMag minimum magnitude per axis to draw vector
 	 */
-	protected abstract void _drawGridAccel(float animTimeMod);
+	protected abstract void _drawGridAccel(float animTimeMod, float minMag);
 	
 	/**
 	 * Draw instance class grid masses - use _drawGridScalar method
 	 * @param animTimeMod
-	 * @param pincr
+	 * @param minMag minimum magnitude to draw scalar mass
 	 */
-	protected abstract void _drawGridMass(float animTimeMod);	
+	protected abstract void _drawGridMass(float animTimeMod, float minMag);	
 	
 	/**
 	 * Build a graphical representation of the computational grid, for rendering.
@@ -607,9 +610,9 @@ public abstract class Base_MPMSim {
 	 * @param yVal y dim value to draw
 	 * @param zVal z dim value to draw
 	 * @param grid_pos 2d array of grid positions w/ first idx is x/y/z and 2nd is quantity
+	 * @param minMag minimum magnitude in any direction to display vector
 	 */
-	protected final void _drawGridVec(int[] clr, float[][] val, float[][] grid_pos) {
-		float minMag = MyMathUtils.EPS_F/vecLengthScale;
+	protected final void _drawGridVec(int[] clr, float[][] val, float[][] grid_pos, float minMag) {
 		pa.pushMatState();	
 		pa.setStroke(clr,180);
 		pa.translate(minSimBnds,minSimBnds,minSimBnds);
@@ -630,9 +633,9 @@ public abstract class Base_MPMSim {
 	 * @param clr
 	 * @param xVal value to draw
 	 * @param grid_pos 2d array of grid positions w/ first idx is x/y/z and 2nd is quantity
+	 * @param minMag minimum magnitude in any direction to display scalar quanatity
 	 */
-	protected final void _drawGridScalar(int[] clr, float[] xVal, float[][] grid_pos) {
-		float minMag = MyMathUtils.EPS_F/vecLengthScale;
+	protected final void _drawGridScalar(int[] clr, float[] xVal, float[][] grid_pos, float minMag) {
 		pa.pushMatState();	
 		pa.setSphereDetail(3);
 		pa.setStroke(clr,111);

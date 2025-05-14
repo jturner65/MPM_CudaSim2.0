@@ -791,16 +791,16 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * Draw instance class particle velocities
 	 * @param animTimeMod
-	 * @param pincr how many particles to skip for each draw (1 draws all particles)
+	 * @param minMag minimum magnitude per axis to draw vector
+	 * @param pincr
 	 */
 	@Override
-	protected final void _drawPartVel(float animTimeMod, int pincr) {
-		pa.pushMatState();
-		float minMag = MyMathUtils.EPS_F/vecLengthScale;
+	protected final void _drawPartVel(float animTimeMod, float vecScale, int pincr) {
+		pa.pushMatState();		
 		for(int i=0;i<=hostPartVel[0].length-pincr;i+=pincr) {					
-			if(		(Math.abs(hostPartVel[0][i]) > minMag) || 
-					(Math.abs(hostPartVel[1][i]) > minMag) || 
-					(Math.abs(hostPartVel[2][i]) > minMag)) {
+			if(		(Math.abs(hostPartVel[0][i]) > vecScale) || 
+					(Math.abs(hostPartVel[1][i]) > vecScale) || 
+					(Math.abs(hostPartVel[2][i]) > vecScale)) {
 				pa.pushMatState();
 				pa.setStroke(hostPartClrAra[i], 255);
 				pa.translate(hostPartPos[0][i], hostPartPos[1][i], hostPartPos[2][i]);
@@ -814,24 +814,26 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * Draw instance class grid velocities - use _drawGridVec method
 	 * @param animTimeMod
-	 * @param pincr
+	 * @param minMag minimum magnitude per axis to draw vector
 	 */
 	@Override
-	protected final void _drawGridVel(float animTimeMod) {		_drawGridVec(gridVelClr, hostGridVel, hostGridPos);}
+	protected final void _drawGridVel(float animTimeMod, float minMag) {		_drawGridVec(gridVelClr, hostGridVel, hostGridPos, minMag);}
 
 	/**
 	 * Draw instance class grid accelerations - use _drawGridVec method
 	 * @param animTimeMod
-	 * @param pincr
+	 * @param minMag minimum magnitude per axis to draw vector
 	 */
-	protected final void _drawGridAccel(float animTimeMod) {	_drawGridVec(gridAccelClr, hostGridAccel, hostGridPos);}
+	@Override
+	protected final void _drawGridAccel(float animTimeMod, float minMag) {	_drawGridVec(gridAccelClr, hostGridAccel, hostGridPos, minMag);}
 	
 	/**
 	 * Draw instance class grid masses - use _drawGridScalar method
 	 * @param animTimeMod
-	 * @param pincr
+	 * @param minMag minimum magnitude to draw scalar mass
 	 */
-	protected final void _drawGridMass(float animTimeMod) {		_drawGridScalar(gridMassClr, hostGridMass, hostGridPos);}	
+	@Override
+	protected final void _drawGridMass(float animTimeMod, float minMag) {		_drawGridScalar(gridMassClr, hostGridMass, hostGridPos, minMag);}	
 	
 	/**
 	 * Draw any colliders if they exist

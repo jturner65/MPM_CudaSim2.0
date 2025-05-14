@@ -180,8 +180,14 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 		
 		
 	}
+	/**
+	 * Draw instance class particle velocities
+	 * @param animTimeMod
+	 * @param minMag minimum magnitude per axis to draw vector
+	 * @param pincr
+	 */
 	@Override
-	protected final void _drawPartVel(float animTimeMod, int pincr) {
+	protected final void _drawPartVel(float animTimeMod, float vecScale, int pincr) {
 		
 		
 	}
@@ -201,14 +207,29 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 */
 	protected abstract void drawColliders_Indiv(float animTimeMod);
 
+	/**
+	 * Draw instance class grid velocities - use _drawGridVec method
+	 * @param animTimeMod
+	 * @param minMag minimum magnitude per axis to draw vector
+	 */
 	@Override
-	protected final void _drawGridVel(float animTimeMod) {}
+	protected final void _drawGridVel(float animTimeMod, float minMag) {}
 
+	/**
+	 * Draw instance class grid accelerations - use _drawGridVec method
+	 * @param animTimeMod
+	 * @param minMag minimum magnitude per axis to draw vector
+	 */
 	@Override
-	protected final void _drawGridAccel(float animTimeMod) {}
+	protected final void _drawGridAccel(float animTimeMod, float minMag) {}
 
+	/**
+	 * Draw instance class grid masses - use _drawGridScalar method
+	 * @param animTimeMod
+	 * @param minMag minimum magnitude to draw scalar mass
+	 */
 	@Override
-	protected final void _drawGridMass(float animTimeMod) {}
+	protected final void _drawGridMass(float animTimeMod, float minMag) {}
 
 	/**
 	 * check sim-specific central floating collider - 
