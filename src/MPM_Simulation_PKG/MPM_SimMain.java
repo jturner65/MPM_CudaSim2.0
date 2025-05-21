@@ -182,7 +182,7 @@ public class MPM_SimMain extends GUI_AppManager {
 					ri.getClr(IRenderInterface.gui_LightGray, 255),ri.getClr(IRenderInterface.gui_FaintGray, 255),
 					ri.getClr(IRenderInterface.gui_Black, 200),ri.getClr(IRenderInterface.gui_White, 255)});
 
-		dispWinFrames[wIdx] = new MPM_CudaSimWindow(ri, this, wIdx);
+		setDispWindow(wIdx, new MPM_CudaSimWindow(ri, this, wIdx));
 		
 		wIdx = dispMPMCudaWin2IDX;
 		//setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
@@ -191,7 +191,7 @@ public class MPM_SimMain extends GUI_AppManager {
 					ri.getClr(IRenderInterface.gui_LightGray, 255),ri.getClr(IRenderInterface.gui_FaintGray, 255),
 					ri.getClr(IRenderInterface.gui_Black, 200),ri.getClr(IRenderInterface.gui_White, 255)});
 
-		dispWinFrames[wIdx] = new MPM_CudaSimWindow(ri, this, wIdx);	
+		setDispWindow(wIdx, new MPM_CudaSimWindow(ri, this, wIdx));	
 		
 		wIdx = dispMPMCPUWinIDX;
 		//setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255}); 		
@@ -200,7 +200,7 @@ public class MPM_SimMain extends GUI_AppManager {
 					ri.getClr(IRenderInterface.gui_LightGray, 255),ri.getClr(IRenderInterface.gui_FaintGray, 255),
 					ri.getClr(IRenderInterface.gui_Black, 200),ri.getClr(IRenderInterface.gui_White, 255)});
 		
-		dispWinFrames[wIdx] = new MPM_CPUSimWindow(ri, this, wIdx);
+		setDispWindow(wIdx, new MPM_CPUSimWindow(ri, this, wIdx));
 			
 		
 	}//initVisOnce_Priv
@@ -225,7 +225,7 @@ public class MPM_SimMain extends GUI_AppManager {
 	protected void handleKeyPress(char key, int keyCode) {
 		switch (key){
 			case ' ' : {toggleSimIsRunning(); break;}							//run sim
-			case 'f' : {dispWinFrames[curFocusWin].setInitCamView();break;}					//reset camera
+			case 'f' : {getCurFocusDispWindow().setInitCamView();break;}					//reset camera
 			case 'a' :
 			case 'A' : {toggleSaveAnim();break;}						//start/stop saving every frame for making into animation
 			case 's' :

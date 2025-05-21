@@ -19,7 +19,7 @@ public enum SimResetProcess{
 	public static String[] getListOfValNames() {return _valName;}
 	private static Map<Integer, SimResetProcess> map = new HashMap<Integer, SimResetProcess>(); 
 	static { for (SimResetProcess enumV : SimResetProcess.values()) { map.put(enumV.ordinal(), enumV);}}
-	public int getVal(){return ordinal();}
+	public int getOrdinal() {return ordinal();}
 	public static SimResetProcess getEnumByIndex(int idx){return map.get(idx);}
 	public static SimResetProcess getEnumFromValue(int idx){return map.get(idx);}
 	public static int getNumVals(){return map.size();}						//get # of values in enum
