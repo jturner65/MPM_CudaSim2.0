@@ -167,7 +167,6 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		//build sim(s) here
 		currSim = buildSim();		
 		//initialize simulation here to simple world sim
-		custMenuOffset = uiClkCoords[3];	//495	
 		privFlags.setFlag(showParticles, true);
 		privFlags.setFlag(showLocColors, true);
 		//instance-class-specific init
@@ -443,13 +442,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		
 	//draw custom 2d constructs below interactive component of menu
 	@Override
-	public void drawCustMenuObjs(float animTimeMod){
-		ri.pushMatState();	
-		//all sub menu drawing within push mat call
-		ri.translate(0,custMenuOffset+AppMgr.getTextHeightOffset());		
-		//draw any custom menu stuff here
-		ri.popMatState();
-	}//drawCustMenuObjs
+	public void drawCustMenuObjs(float animTimeMod){	}//drawCustMenuObjs
 
 	//things to do when swapping this window out for another window - release objects that take up a lot of memory, for example.
 	@Override

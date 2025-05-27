@@ -24,7 +24,7 @@ public abstract class Base_MPMSim {
 	/**
 	 * Render interface to render results
 	 */
-	public static IRenderInterface pa;
+	public static IRenderInterface ri;
 	/**
 	 * Owning window
 	 */
@@ -147,7 +147,7 @@ public abstract class Base_MPMSim {
 	 * @param _currUIVals
 	 */
 	public Base_MPMSim(IRenderInterface _pa, Base_MPMSimWindow _win, String _simName, float[] _gravity, MPM_SimUpdateFromUIData _currUIVals) {
-		pa=_pa;win=_win;simName = _simName;	
+		ri=_pa;win=_win;simName = _simName;	
 		msgObj = win.getMsgObj();
 		currUIVals = new MPM_SimUpdateFromUIData(win);
 		gravity = new myVectorf(_gravity[0],_gravity[1],_gravity[2]);
@@ -486,10 +486,10 @@ public abstract class Base_MPMSim {
 		//render all particles - TODO determine better rendering method
 		//minimum magnitude to use for rendering cutoff
 		float minMag = MyMathUtils.EPS_F/vecLengthScale;
-		pa.pushMatState();
+		ri.pushMatState();
 		//set stroke values and visual scale
-			pa.setStrokeWt(2.0f/minSclAmt);
-			pa.scale(sclAmt[0], sclAmt[1], sclAmt[2]);	
+			ri.setStrokeWt(2.0f/minSclAmt);
+			ri.scale(sclAmt[0], sclAmt[1], sclAmt[2]);	
 			
 			//point-based rendering
 			if(simFlags.getShowParticles()){	_drawParts(animTimeMod, simFlags.getShowLocColors());}			
@@ -503,7 +503,7 @@ public abstract class Base_MPMSim {
 			if(simFlags.getShowGridVel()) {		_drawGridVel(animTimeMod, minMag);}
 			if(simFlags.getShowGridAccel()){	_drawGridAccel(animTimeMod, minMag);}
 			if(simFlags.getShowGridMass()) {	_drawGridMass(animTimeMod, minMag);}
-		pa.popMatState();
+		ri.popMatState();
 	}//drawMe
 	
 	/**
@@ -590,17 +590,17 @@ public abstract class Base_MPMSim {
 	 * Draw a representation of the eulerian grid
 	 */
 	protected final void _drawGrid() {
-		pa.pushMatState();		
-			pa.setStroke(255,255,255,20);
-			pa.translate(minSimBnds,minSimBnds,minSimBnds);
+		ri.pushMatState();		
+			ri.setStroke(255,255,255,20);
+			ri.translate(minSimBnds,minSimBnds,minSimBnds);
 			for(var dispGridAra : dispGridLines) {
 				for (var dispGridLinesAra : dispGridAra) {
 					for(myVectorf[] lineAra : dispGridLinesAra) {
-						pa.drawLine(lineAra[0],lineAra[1]);
+						ri.drawLine(lineAra[0],lineAra[1]);
 					}					
 				}
 			}
-		pa.popMatState();		
+		ri.popMatState();		
 	}//_drawGrid()
 
 	/**
@@ -613,20 +613,20 @@ public abstract class Base_MPMSim {
 	 * @param minMag minimum magnitude in any direction to display vector
 	 */
 	protected final void _drawGridVec(int[] clr, float[][] val, float[][] grid_pos, float minMag) {
-		pa.pushMatState();	
-		pa.setStroke(clr,180);
-		pa.translate(minSimBnds,minSimBnds,minSimBnds);
+		ri.pushMatState();	
+		ri.setStroke(clr,180);
+		ri.translate(minSimBnds,minSimBnds,minSimBnds);
 		for (int i=0; i<ttlGridCount;++i) {			
 			if(		(Math.abs(val[0][i]) > minMag) || 
 					(Math.abs(val[1][i]) > minMag) || 
 					(Math.abs(val[2][i]) > minMag)) {
-				pa.pushMatState();	
-				pa.translate(grid_pos[0][i], grid_pos[1][i], grid_pos[2][i]);
-				pa.drawLine(0,0,0, vecLengthScale*val[0][i],vecLengthScale*val[1][i],vecLengthScale*val[2][i]);
-				pa.popMatState();
+				ri.pushMatState();	
+				ri.translate(grid_pos[0][i], grid_pos[1][i], grid_pos[2][i]);
+				ri.drawLine(0,0,0, vecLengthScale*val[0][i],vecLengthScale*val[1][i],vecLengthScale*val[2][i]);
+				ri.popMatState();
 			}
 		}
-		pa.popMatState();
+		ri.popMatState();
 	}//_drawGridVec
 	/**
 	 * Draw grid scalar quantities
@@ -636,19 +636,19 @@ public abstract class Base_MPMSim {
 	 * @param minMag minimum magnitude in any direction to display scalar quanatity
 	 */
 	protected final void _drawGridScalar(int[] clr, float[] xVal, float[][] grid_pos, float minMag) {
-		pa.pushMatState();	
-		pa.setSphereDetail(3);
-		pa.setStroke(clr,111);
-		pa.translate(minSimBnds,minSimBnds,minSimBnds);
+		ri.pushMatState();	
+		ri.setSphereDetail(3);
+		ri.setStroke(clr,111);
+		ri.translate(minSimBnds,minSimBnds,minSimBnds);
 		for (int i=0; i<ttlGridCount;++i) {			
 			if((Math.abs(xVal[i]) > minMag)) {
-				pa.pushMatState();	
-				pa.translate(grid_pos[0][i], grid_pos[1][i], grid_pos[2][i]);
-				pa.drawSphere(xVal[i]*vecLengthScale);
-				pa.popMatState();
+				ri.pushMatState();	
+				ri.translate(grid_pos[0][i], grid_pos[1][i], grid_pos[2][i]);
+				ri.drawSphere(xVal[i]*vecLengthScale);
+				ri.popMatState();
 			}
 		}
-		pa.popMatState();		
+		ri.popMatState();		
 	}
 	
 	public final float getCellSize() {return cellSize;}

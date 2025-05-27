@@ -197,9 +197,9 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
 	 */
 	@Override
 	protected final void _drawColliders(float animTimeMod) {
-		pa.pushMatState();	
+		ri.pushMatState();	
 		drawColliders_Indiv(animTimeMod);
-		pa.popMatState();
+		ri.popMatState();
 	}
 	/**
 	 * draw internal-to-sim colliders, if they exist

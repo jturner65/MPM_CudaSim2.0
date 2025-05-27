@@ -14,21 +14,21 @@ public class MPM_CPURndrdPart extends Base_MPMCPUParticle{
 		color = new int[] {255,255,255,255};
 	}
 	
-	public void drawMe(IRenderInterface pa, float partRad) {
-		pa.pushMatState();
-		pa.translate(pos);
-		pa.drawSphere(partRad);
-		pa.popMatState();
+	public void drawMe(IRenderInterface ri, float partRad) {
+		ri.pushMatState();
+		ri.translate(pos);
+		ri.drawSphere(partRad);
+		ri.popMatState();
 
 	}//drawMe
 	
-	public void drawMeVel(IRenderInterface pa, float partRad) {
-		pa.pushMatState();
-		pa.translate(pos);
-		pa.drawSphere(partRad);
+	public void drawMeVel(IRenderInterface ri, float partRad) {
+		ri.pushMatState();
+		ri.translate(pos);
+		ri.drawSphere(partRad);
 		
-		pa.setStroke(190,20,70,155);
-		pa.drawLine(0,0,0,vel.x,vel.y,vel.z);
-		pa.popMatState();
+		ri.setStroke(190,20,70,155);
+		ri.drawLine(0,0,0,vel.x,vel.y,vel.z);
+		ri.popMatState();
 	}//drawMeVel
 }//class myRndrdPart

@@ -778,13 +778,13 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 */
 	@Override
 	protected final void _drawParts(float animTimeMod, boolean showLocColors) {
-		pa.pushMatState();
+		ri.pushMatState();
 		if (showLocColors) {
-			pa.drawPointCloudWithColors(hostPartPos[0].length, drawPointIncr, hostPartClrAra, hostPartPos[0], hostPartPos[1], hostPartPos[2]);
+			ri.drawPointCloudWithColors(hostPartPos[0].length, drawPointIncr, hostPartClrAra, hostPartPos[0], hostPartPos[1], hostPartPos[2]);
 		} else {
-			pa.drawPointCloudWithColors(hostPartPos[0].length, drawPointIncr, hostPartGreyAra, hostPartPos[0], hostPartPos[1], hostPartPos[2]);
+			ri.drawPointCloudWithColors(hostPartPos[0].length, drawPointIncr, hostPartGreyAra, hostPartPos[0], hostPartPos[1], hostPartPos[2]);
 		}
-		pa.popMatState();
+		ri.popMatState();
 	}//_drawParts
 	
 	/**
@@ -795,19 +795,19 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 */
 	@Override
 	protected final void _drawPartVel(float animTimeMod, float vecScale, int pincr) {
-		pa.pushMatState();		
+		ri.pushMatState();		
 		for(int i=0;i<=hostPartVel[0].length-pincr;i+=pincr) {					
 			if(		(Math.abs(hostPartVel[0][i]) > vecScale) || 
 					(Math.abs(hostPartVel[1][i]) > vecScale) || 
 					(Math.abs(hostPartVel[2][i]) > vecScale)) {
-				pa.pushMatState();
-				pa.setStroke(hostPartClrAra[i], 255);
-				pa.translate(hostPartPos[0][i], hostPartPos[1][i], hostPartPos[2][i]);
-				pa.drawLine(0,0,0, vecLengthScale*hostPartVel[0][i],vecLengthScale*hostPartVel[1][i],vecLengthScale*hostPartVel[2][i]);
-				pa.popMatState();
+				ri.pushMatState();
+				ri.setStroke(hostPartClrAra[i], 255);
+				ri.translate(hostPartPos[0][i], hostPartPos[1][i], hostPartPos[2][i]);
+				ri.drawLine(0,0,0, vecLengthScale*hostPartVel[0][i],vecLengthScale*hostPartVel[1][i],vecLengthScale*hostPartVel[2][i]);
+				ri.popMatState();
 			}
 		}			
-		pa.popMatState();		
+		ri.popMatState();		
 	}//_drawPartVel
 	
 	/**
@@ -840,9 +840,9 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 */
 	@Override
 	protected final void _drawColliders(float animTimeMod) {
-		pa.pushMatState();	
+		ri.pushMatState();	
 		drawColliders_Indiv(animTimeMod);
-		pa.popMatState();
+		ri.popMatState();
 	}
 	/**
 	 * draw internal-to-sim colliders, if they exist

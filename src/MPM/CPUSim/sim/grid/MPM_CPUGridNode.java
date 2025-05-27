@@ -69,42 +69,42 @@ public class MPM_CPUGridNode {
 		newvelocity = myVectorf._add(velocity, toAddV);		
 	}//calcVel
 		
-	public void drawMe(IRenderInterface pa) {
-		pa.pushMatState();
-		pa.translate(pos);
-		pa.setStrokeWt(1.0f);
-		pa.drawSphere(2.0f);
-		pa.popMatState();
+	public void drawMe(IRenderInterface ri) {
+		ri.pushMatState();
+		ri.translate(pos);
+		ri.setStrokeWt(1.0f);
+		ri.drawSphere(2.0f);
+		ri.popMatState();
 		
 	}//drawMe
 	
-	public void drawVel(IRenderInterface pa) {
+	public void drawVel(IRenderInterface ri) {
 		if(velocity.magn>0) {
-			pa.pushMatState();
-			pa.translate(pos);
-			pa.setStroke(255,100,60,255);
-			pa.drawLine(0,0,0,velocity.x, velocity.y, velocity.z);
-			pa.popMatState();
+			ri.pushMatState();
+			ri.translate(pos);
+			ri.setStroke(255,100,60,255);
+			ri.drawLine(0,0,0,velocity.x, velocity.y, velocity.z);
+			ri.popMatState();
 		}
 	}
 
-	public void drawAccel(IRenderInterface pa) {
+	public void drawAccel(IRenderInterface ri) {
 		if(accels.magn>0) {
-			pa.pushMatState();
-			pa.translate(pos);
-			pa.setStroke(0,255,0,255);
-			pa.drawLine(0,0,0,accels.x, accels.y, accels.z);	
-			pa.popMatState();
+			ri.pushMatState();
+			ri.translate(pos);
+			ri.setStroke(0,255,0,255);
+			ri.drawLine(0,0,0,accels.x, accels.y, accels.z);	
+			ri.popMatState();
 		}
 	}
 	
-	public void drawMass(IRenderInterface pa) {
+	public void drawMass(IRenderInterface ri) {
 		if(mass>0) {
-			pa.pushMatState();
-			pa.translate(pos);
-			pa.setStroke(0,255,255,255);
-			pa.drawLine(0,0,0,0,0,mass*.1f);		
-			pa.popMatState();
+			ri.pushMatState();
+			ri.translate(pos);
+			ri.setStroke(0,255,255,255);
+			ri.drawLine(0,0,0,0,0,mass*.1f);		
+			ri.popMatState();
 		}
 	}
 	
