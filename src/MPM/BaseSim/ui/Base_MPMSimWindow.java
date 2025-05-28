@@ -111,19 +111,19 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	@Override
 	//initialize all private-flag based UI buttons here - called by base class
 	public int initAllUIButtons(ArrayList<Object[]> tmpBtnNamesArray){	
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Visualization Debug",    "Enable Debug"},     Base_BoolFlags.debugIDX));          
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Resetting Sim Env",   	"Reset Sim Environment"},  resetSimIDX));      
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Remaking Simulation",    "Remake Simulation"},   rebuildSimIDX));
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Init Loc Clr",   "Show Init Loc Clr"},  showLocColors));          
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Collider",       "Show Collider"},      showCollider));          
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Particles",      "Show Particles"},     showParticles));  
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Particle Vel",   "Show Particle Vel"},  showParticleVelArrows));  
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Grid",           "Show Grid"},          showGrid));           
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Grid Vel",       "Show Grid Vel"},      showGridVelArrows));     
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Grid Accel",     "Show Grid Accel"},    showGridAccelArrows));    
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Grid Mass",      "Show Grid Mass"},     showGridMass));         
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Active Nodes",   "Show Active Nodes"},  showActiveNodes));     
-		tmpBtnNamesArray.add(uiObjInitAra_Btn(new String[] {"Showing Execution Time", "Show Execution Time"},showExecTime));   
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Visualization Debug",    "Enable Debug"},     Base_BoolFlags.debugIDX));          
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Resetting Sim Env",   	"Reset Sim Environment"},  resetSimIDX));      
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Remaking Simulation",    "Remake Simulation"},   rebuildSimIDX));
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Init Loc Clr",   "Show Init Loc Clr"},  showLocColors));          
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Collider",       "Show Collider"},      showCollider));          
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particles",      "Show Particles"},     showParticles));  
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particle Vel",   "Show Particle Vel"},  showParticleVelArrows));  
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid",           "Show Grid"},          showGrid));           
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Vel",       "Show Grid Vel"},      showGridVelArrows));     
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Accel",     "Show Grid Accel"},    showGridAccelArrows));    
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Mass",      "Show Grid Mass"},     showGridMass));         
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Active Nodes",   "Show Active Nodes"},  showActiveNodes));     
+		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Execution Time", "Show Execution Time"},showExecTime));   
 		
 		return initAllMPMPrivBtns_Indiv(tmpBtnNamesArray);
 	}//initAllPrivBtns
@@ -167,8 +167,8 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		//build sim(s) here
 		currSim = buildSim();		
 		//initialize simulation here to simple world sim
-		privFlags.setFlag(showParticles, true);
-		privFlags.setFlag(showLocColors, true);
+		uiMgr.setPrivFlag(showParticles, true);
+		uiMgr.setPrivFlag(showLocColors, true);
 		//instance-class-specific init
 		initMe_Indiv();
 	}//initMe	
@@ -283,24 +283,24 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	 */
 	@Override
 	protected final void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){		
-		tmpUIObjArray.put(gIDX_TimeStep , uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
-		tmpUIObjArray.put(gIDX_SimStepsPerFrame, uiObjInitAra_Int(new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame"));//gIDX_simStepsPerFrame  init 5
-		tmpUIObjArray.put(gIDX_NumParticles, uiObjInitAra_Int(getMinMaxModParts(), getInitNumParts(), "# of Particles"));//number of particles
-		tmpUIObjArray.put(gIDX_NumSnowballs, uiObjInitAra_Int(new double[]{2, 20, 1}, 1.0*initNumBalls, "# of Snowballs"));//number of snowballs
-		tmpUIObjArray.put(gIDX_InitVel, uiObjInitAra_Float(new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed"));//initial speed of collisions
-		tmpUIObjArray.put(gIDX_PartMass, uiObjInitAra_Float(new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass"));//particle mass
-		tmpUIObjArray.put(gIDX_GridCellSize, uiObjInitAra_Float(new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size"));//grid cell size
-		tmpUIObjArray.put(gIDX_GridCount, uiObjInitAra_Int(new double[]{50.0f, 300.0f, 10.0f}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side")); //# of grid cells per side
-		tmpUIObjArray.put(gIDX_InitYoungMod, uiObjInitAra_Float(new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Initial Young's Modulus"));//gIDX_InitYoungMod init 4.8e4f, 
-		tmpUIObjArray.put(gIDX_PoissonRatio, uiObjInitAra_Float(new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio"));//gIDX_PoissonRatio init 0.2f,  
-		tmpUIObjArray.put(gIDX_HardeningCoeff , uiObjInitAra_Float(new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient"));//gIDX_HardeningCoeff init 15.0f, 
-		tmpUIObjArray.put(gIDX_CriticalCompression, uiObjInitAra_Float(new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression"));//gIDX_CriticalCompression  init .019f, 
-		tmpUIObjArray.put(gIDX_CriticalStretch , uiObjInitAra_Float(new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch"));//gIDX_CriticalStretch init .0075f, 
-		tmpUIObjArray.put(gIDX_AlphaPicFlip, uiObjInitAra_Float(new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "PIC/FLIP Mix Slider (0==PIC, 1== FLIP)"));//gIDX_AlphaPicFlip init 0.95f, 
-		tmpUIObjArray.put(gIDX_wallFricCoeff, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient"));//gIDX_wallfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_CollFricCoeff, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient"));//gIDX_CollfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_DrawnValScale, uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors"));//gIDX_CollfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_DrawPointIncr, uiObjInitAra_Int(new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point"));//every x'th point to draw
+		tmpUIObjArray.put(gIDX_TimeStep , uiMgr.uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
+		tmpUIObjArray.put(gIDX_SimStepsPerFrame, uiMgr.uiObjInitAra_Int(new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame"));//gIDX_simStepsPerFrame  init 5
+		tmpUIObjArray.put(gIDX_NumParticles, uiMgr.uiObjInitAra_Int(getMinMaxModParts(), getInitNumParts(), "# of Particles"));//number of particles
+		tmpUIObjArray.put(gIDX_NumSnowballs, uiMgr.uiObjInitAra_Int(new double[]{2, 20, 1}, 1.0*initNumBalls, "# of Snowballs"));//number of snowballs
+		tmpUIObjArray.put(gIDX_InitVel, uiMgr.uiObjInitAra_Float(new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed"));//initial speed of collisions
+		tmpUIObjArray.put(gIDX_PartMass, uiMgr.uiObjInitAra_Float(new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass"));//particle mass
+		tmpUIObjArray.put(gIDX_GridCellSize, uiMgr.uiObjInitAra_Float(new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size"));//grid cell size
+		tmpUIObjArray.put(gIDX_GridCount, uiMgr.uiObjInitAra_Int(new double[]{50.0f, 300.0f, 10.0f}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side")); //# of grid cells per side
+		tmpUIObjArray.put(gIDX_InitYoungMod, uiMgr.uiObjInitAra_Float(new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Initial Young's Modulus"));//gIDX_InitYoungMod init 4.8e4f, 
+		tmpUIObjArray.put(gIDX_PoissonRatio, uiMgr.uiObjInitAra_Float(new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio"));//gIDX_PoissonRatio init 0.2f,  
+		tmpUIObjArray.put(gIDX_HardeningCoeff , uiMgr.uiObjInitAra_Float(new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient"));//gIDX_HardeningCoeff init 15.0f, 
+		tmpUIObjArray.put(gIDX_CriticalCompression, uiMgr.uiObjInitAra_Float(new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression"));//gIDX_CriticalCompression  init .019f, 
+		tmpUIObjArray.put(gIDX_CriticalStretch , uiMgr.uiObjInitAra_Float(new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch"));//gIDX_CriticalStretch init .0075f, 
+		tmpUIObjArray.put(gIDX_AlphaPicFlip, uiMgr.uiObjInitAra_Float(new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "PIC/FLIP Mix Slider (0==PIC, 1== FLIP)"));//gIDX_AlphaPicFlip init 0.95f, 
+		tmpUIObjArray.put(gIDX_wallFricCoeff, uiMgr.uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient"));//gIDX_wallfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_CollFricCoeff, uiMgr.uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient"));//gIDX_CollfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_DrawnValScale, uiMgr.uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors"));//gIDX_CollfricCoeffinit 1.0f  
+		tmpUIObjArray.put(gIDX_DrawPointIncr, uiMgr.uiObjInitAra_Int(new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point"));//every x'th point to draw
 
 		// populate instancing application objects
 		setupGUIObjsAras_Indiv(tmpUIObjArray, tmpListObjVals);
@@ -426,7 +426,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	//modAmtMillis is time passed per frame in milliseconds
 	protected final boolean simMe(float modAmtMillis) {//run simulation
 		boolean done = false;
-		if (privFlags.getFlag(showExecTime)){
+		if (uiMgr.getPrivFlag(showExecTime)){
 			done = currSim.simMeDebug(modAmtMillis);
 		} else {
 			done = currSim.simMe(modAmtMillis);	
@@ -452,20 +452,11 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	protected void stopMe() {	msgObj.dispInfoMessage(className,"stopMe","Simulation Finished");	}	
 
 	@Override
-	protected boolean hndlMouseMove_Indiv(int mouseX, int mouseY, myPoint mseClckInWorld){
-		return false;
-	}
-	
-	//alt key pressed handles trajectory
-	
-	//cntl key pressed handles unfocus of spherey
+	protected boolean hndlMouseMove_Indiv(int mouseX, int mouseY, myPoint mseClckInWorld){					return false;	}
 	@Override
-	protected boolean hndlMouseClick_Indiv(int mouseX, int mouseY, myPoint mseClckInWorld, int mseBtn) {	
-		return false;}//hndlMouseClickIndiv
+	protected boolean hndlMouseClick_Indiv(int mouseX, int mouseY, myPoint mseClckInWorld, int mseBtn) {	return false;}//hndlMouseClickIndiv
 	@Override
-	protected boolean hndlMouseDrag_Indiv(int mouseX, int mouseY, int pmouseX, int pmouseY, myPoint mouseClickIn3D, myVector mseDragInWorld, int mseBtn) {
-		boolean res = false;
-		return res;}	
+	protected boolean hndlMouseDrag_Indiv(int mouseX, int mouseY, int pmouseX, int pmouseY, myPoint mouseClickIn3D, myVector mseDragInWorld, int mseBtn) {return false;}	
 	@Override
 	protected void hndlMouseRel_Indiv() {	}
 	@Override
@@ -502,7 +493,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 				switch (btn) {
 					case 0: {
 						//Reset all UI vals to be initial values
-						resetUIVals(false);
+						uiMgr.resetUIVals(false);
 						resetButtonState();
 						break;
 					}
