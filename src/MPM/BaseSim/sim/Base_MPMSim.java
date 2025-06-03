@@ -1,7 +1,5 @@
 package MPM.BaseSim.sim;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import MPM.BaseSim.material.Base_MPMMaterial;
 import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
@@ -390,12 +388,11 @@ public abstract class Base_MPMSim {
 	 * @param bound furthest +/- value per axis to locate center of sphere.
 	 * @return a 3D center coord
 	 */
-	protected myPointf getRandSphereCenter(float bound) {
-		var randGen = ThreadLocalRandom.current();
+	protected myPointf getRandSphereCenter(float bound) {		
 		myPointf ctr = new myPointf(
-				randGen.nextDouble(-1,1), 
-				randGen.nextDouble(-1,1),
-				randGen.nextDouble(-1,1));
+				MyMathUtils.randomDouble(-1,1), 
+				MyMathUtils.randomDouble(-1,1),
+				MyMathUtils.randomDouble(-1,1));
 		ctr._mult(bound);
 		return ctr;
 	}//getRandSphereCenter

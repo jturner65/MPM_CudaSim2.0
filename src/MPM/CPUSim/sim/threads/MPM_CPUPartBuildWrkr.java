@@ -1,7 +1,5 @@
 package MPM.CPUSim.sim.threads;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import org.jblas.FloatMatrix;
 
 import MPM.BaseSim.material.Base_MPMMaterial;
@@ -12,6 +10,7 @@ import MPM.CPUSim.sim.particles.MPM_CPUNeighborNodeInfo;
 import MPM.CPUSim.sim.particles.MPM_CPURndrdPart;
 import MPM.CPUSim.sim.particles.base.Base_MPMCPUParticle;
 import MPM.CPUSim.sim.threads.base.Base_MPMCPUSimThreadExec;
+import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
@@ -47,9 +46,9 @@ public class MPM_CPUPartBuildWrkr extends Base_MPMCPUSimThreadExec {
 	//return a random position within a sphere of radius rad centered at ctr
 	private myPointf getRandPosInSphere(double rad, myVectorf ctr){
 		myVectorf pos = new myVectorf();
-		double u = ThreadLocalRandom.current().nextDouble(0,1), r = rad * Math.pow(u, lcl_third);
+		double u = MyMathUtils.randomDouble(0,1), r = rad * Math.pow(u, lcl_third);
 		do{
-			pos.set(ThreadLocalRandom.current().nextDouble(-1,1), ThreadLocalRandom.current().nextDouble(-1,1),ThreadLocalRandom.current().nextDouble(-1,1));
+			pos.set(MyMathUtils.randomDouble(-1,1), MyMathUtils.randomDouble(-1,1),MyMathUtils.randomDouble(-1,1));
 		} while (pos.sqMagn > 1.0f);
 		pos._mult(r);
 		pos._add(ctr);

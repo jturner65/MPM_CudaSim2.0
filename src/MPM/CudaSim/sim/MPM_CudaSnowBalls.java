@@ -9,7 +9,7 @@ import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM.CudaSim.sim.base.Base_MPMCudaSim;
 import MPM.CudaSim.sim.base.MPM_CudaSimFlags;
 import base_Render_Interface.IRenderInterface;
-import base_UI_Objects.windowUI.base.Base_DispWindow;
+import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
 
@@ -102,7 +102,7 @@ public class MPM_CudaSnowBalls extends Base_MPMCudaSim {
         for (int i=0;i<sphere_Ctrs.length;++i) {
         	//pick a custom target for the ball to point at for glancing blow potential
         	//float[] custCtrTarget = getRandPosInSphereAra(tarRad, ctrTarget);
-        	myPointf custCtrTarget = Base_DispWindow.AppMgr.getRandPosInSphere(tarRad, ctrTarget);
+        	myPointf custCtrTarget = MyMathUtils.getRandPosInSphere(tarRad, ctrTarget);
         	sphere_Vels[i] = new myVectorf(sphere_Ctrs[i], custCtrTarget);
         }   
 		

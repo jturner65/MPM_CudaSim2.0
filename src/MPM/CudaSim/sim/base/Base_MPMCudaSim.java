@@ -10,7 +10,7 @@ import MPM.BaseSim.sim.SimResetProcess;
 import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import base_Render_Interface.IRenderInterface;
-import base_UI_Objects.windowUI.base.Base_DispWindow;
+import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import jcuda.*;
 import jcuda.driver.*;
@@ -481,7 +481,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		returnIdxs[0] = posMap.size();
 		for (int i=0;i<numParts;++i) {
 			//float[] posVals = getRandPosInSphereAra(ballRad, ctr); 
-			float[] posVals = Base_DispWindow.AppMgr.getRandPosInSphere(ballRad, ctr).asArray(); 
+			float[] posVals = MyMathUtils.getRandPosInSphere(ballRad, ctr).asArray(); 
 			//find min/max values for all sphere particles
 			for (int v = 0; v < 3; ++v) {
 				if (posVals[v] < minVals[v]) {					minVals[v] = posVals[v];				} 

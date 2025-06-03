@@ -285,11 +285,6 @@ public class MPM_SimMain extends GUI_AppManager {
 	}//setFlags  
 	
 	@Override
-	public int[] getClr_Custom(int colorVal, int alpha) {	return new int[] {255,255,255,alpha};}
-
-	@Override
-	public void setSmoothing() {
-		ri.setSmoothing(0);		
-	}
+	public void setSmoothing() {		ri.setSmoothing(0);}
 
 }//class MPM.BaseSim
