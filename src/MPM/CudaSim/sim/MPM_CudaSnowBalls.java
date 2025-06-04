@@ -8,10 +8,10 @@ import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM.CudaSim.sim.base.Base_MPMCudaSim;
 import MPM.CudaSim.sim.base.MPM_CudaSimFlags;
-import base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
+import base_Render_Interface.IRenderInterface;
 
 /**
  * Instance of sim world with big snow boulders slamming into each other 

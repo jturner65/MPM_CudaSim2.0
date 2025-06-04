@@ -3,7 +3,6 @@
  */
 package MPM.CPUSim.ui;
 
-import java.util.ArrayList;
 import java.util.TreeMap;
 
 import MPM.BaseSim.sim.Base_MPMSim;
@@ -48,7 +47,7 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 	}
 	
 	@Override
-	protected int initAllMPMPrivBtns_Indiv(ArrayList<Object[]> tmpBtnNamesArray) {
+	protected int initAllMPMPrivBtns_Indiv(TreeMap<Integer, Object[]> tmpBtnNamesArray) {
 		return numPrivFlags;
 	}
 	

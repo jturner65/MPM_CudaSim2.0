@@ -1,8 +1,9 @@
 package MPM.CPUSim.sim.threads.base;
 
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Future;
 
 import MPM.CPUSim.sim.base.Base_MPMCPUSim;
 

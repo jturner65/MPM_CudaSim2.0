@@ -1,11 +1,10 @@
 package MPM.BaseSim.sim;
 
+import java.util.ArrayList;
+
 import MPM.BaseSim.material.Base_MPMMaterial;
 import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
-
-import java.util.ArrayList;
-
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;

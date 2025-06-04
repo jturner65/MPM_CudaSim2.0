@@ -3,7 +3,6 @@
  */
 package MPM.CudaSim.ui;
 
-import java.util.ArrayList;
 import java.util.TreeMap;
 
 import MPM.BaseSim.sim.Base_MPMSim;
@@ -55,7 +54,7 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
 	}
 	
 	@Override
-	protected final int initAllMPMPrivBtns_Indiv(ArrayList<Object[]> tmpBtnNamesArray) {
+	protected final int initAllMPMPrivBtns_Indiv(TreeMap<Integer, Object[]> tmpBtnNamesArray) {
 		return numPrivFlags;
 	}
 

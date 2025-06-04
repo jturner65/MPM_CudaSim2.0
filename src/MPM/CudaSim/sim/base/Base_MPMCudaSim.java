@@ -1,19 +1,40 @@
 package MPM.CudaSim.sim.base;
 
-import static jcuda.driver.JCudaDriver.*;
+import static jcuda.driver.JCudaDriver.cuCtxCreate;
+import static jcuda.driver.JCudaDriver.cuCtxSynchronize;
+import static jcuda.driver.JCudaDriver.cuDeviceGet;
+import static jcuda.driver.JCudaDriver.cuInit;
+import static jcuda.driver.JCudaDriver.cuLaunchKernel;
+import static jcuda.driver.JCudaDriver.cuMemAlloc;
+import static jcuda.driver.JCudaDriver.cuMemcpyDtoH;
+import static jcuda.driver.JCudaDriver.cuMemcpyHtoD;
+import static jcuda.driver.JCudaDriver.cuMemsetD32;
+import static jcuda.driver.JCudaDriver.cuModuleGetFunction;
+import static jcuda.driver.JCudaDriver.cuModuleLoad;
 
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeMap;
 
 import MPM.BaseSim.sim.Base_MPMSim;
 import MPM.BaseSim.sim.SimResetProcess;
 import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
-import base_Render_Interface.IRenderInterface;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
-import jcuda.*;
-import jcuda.driver.*;
+import base_Render_Interface.IRenderInterface;
+import jcuda.Pointer;
+import jcuda.Sizeof;
+import jcuda.driver.CUcontext;
+import jcuda.driver.CUdevice;
+import jcuda.driver.CUdeviceptr;
+import jcuda.driver.CUfunction;
+import jcuda.driver.CUmodule;
+import jcuda.driver.JCudaDriver;
 import jcuda.runtime.JCuda;
 
 /**

@@ -7,9 +7,9 @@ import java.util.TreeMap;
 import MPM.BaseSim.sim.Base_MPMSim;
 import MPM.BaseSim.sim.SimResetProcess;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
-import base_Render_Interface.IRenderInterface;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
+import base_Render_Interface.IRenderInterface;
 import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_UI_Objects.windowUI.drawnTrajectories.DrawnSimpleTraj;
@@ -95,7 +95,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		showCollider			= 4,			//show collider cylinder
 		showParticles			= 5,
 		showParticleVelArrows 	= 6,			//plot velocity arrows for each particle	
-		showGrid				= 7,  			//plot the computational grid
+		showGrid				= 7, 			//plot the computational grid
 		showGridVelArrows 		= 8,			//plot velocity arrows for each gridNode
 		showGridAccelArrows 	= 9,			//plot acceleration arrows for each gridNode
 		showGridMass  			= 10,			//plot variable sized spheres proportional to gridnode mass
@@ -110,20 +110,21 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	
 	@Override
 	//initialize all private-flag based UI buttons here - called by base class
-	public int initAllUIButtons(ArrayList<Object[]> tmpBtnNamesArray){	
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Visualization Debug",    "Enable Debug"},     Base_BoolFlags.debugIDX));          
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Resetting Sim Env",   	"Reset Sim Environment"},  resetSimIDX));      
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Remaking Simulation",    "Remake Simulation"},   rebuildSimIDX));
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Init Loc Clr",   "Show Init Loc Clr"},  showLocColors));          
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Collider",       "Show Collider"},      showCollider));          
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particles",      "Show Particles"},     showParticles));  
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particle Vel",   "Show Particle Vel"},  showParticleVelArrows));  
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid",           "Show Grid"},          showGrid));           
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Vel",       "Show Grid Vel"},      showGridVelArrows));     
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Accel",     "Show Grid Accel"},    showGridAccelArrows));    
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Mass",      "Show Grid Mass"},     showGridMass));         
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Active Nodes",   "Show Active Nodes"},  showActiveNodes));     
-		tmpBtnNamesArray.add(uiMgr.uiObjInitAra_Btn(new String[] {"Showing Execution Time", "Show Execution Time"},showExecTime));   
+	public int initAllUIButtons(TreeMap<Integer, Object[]> tmpBtnNamesArray){	
+		int idx=0;
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Visualization Debug", "Enable Debug"}, Base_BoolFlags.debugIDX));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Resetting Sim Env", "Reset Sim Environment"}, resetSimIDX));      
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Remaking Simulation", "Remake Simulation"}, rebuildSimIDX));
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Init Loc Clr", "Show Init Loc Clr"}, showLocColors));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Collider", "Show Collider"}, showCollider));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particles", "Show Particles"}, showParticles));  
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particle Vel", "Show Particle Vel"}, showParticleVelArrows));  
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid", "Show Grid"}, showGrid));           
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Vel", "Show Grid Vel"}, showGridVelArrows));     
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Accel", "Show Grid Accel"}, showGridAccelArrows));    
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Mass", "Show Grid Mass"}, showGridMass));         
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Active Nodes", "Show Active Nodes"}, showActiveNodes));     
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Execution Time", "Show Execution Time"},showExecTime));   
 		
 		return initAllMPMPrivBtns_Indiv(tmpBtnNamesArray);
 	}//initAllPrivBtns
@@ -140,7 +141,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	 * @return total number of privBtnFlags in instancing class (including those not
 	 *         displayed)
 	 */
-	protected abstract int initAllMPMPrivBtns_Indiv(ArrayList<Object[]> tmpBtnNamesArray);
+	protected abstract int initAllMPMPrivBtns_Indiv(TreeMap<Integer, Object[]> tmpBtnNamesArray);
 	/**
 	 * Initialize any UI control flags appropriate for all boids window application
 	 */
@@ -283,16 +284,16 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	 */
 	@Override
 	protected final void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){		
-		tmpUIObjArray.put(gIDX_TimeStep , uiMgr.uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT,  "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
+		tmpUIObjArray.put(gIDX_TimeStep , uiMgr.uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT, "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
 		tmpUIObjArray.put(gIDX_SimStepsPerFrame, uiMgr.uiObjInitAra_Int(new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame"));//gIDX_simStepsPerFrame  init 5
 		tmpUIObjArray.put(gIDX_NumParticles, uiMgr.uiObjInitAra_Int(getMinMaxModParts(), getInitNumParts(), "# of Particles"));//number of particles
 		tmpUIObjArray.put(gIDX_NumSnowballs, uiMgr.uiObjInitAra_Int(new double[]{2, 20, 1}, 1.0*initNumBalls, "# of Snowballs"));//number of snowballs
 		tmpUIObjArray.put(gIDX_InitVel, uiMgr.uiObjInitAra_Float(new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed"));//initial speed of collisions
 		tmpUIObjArray.put(gIDX_PartMass, uiMgr.uiObjInitAra_Float(new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass"));//particle mass
 		tmpUIObjArray.put(gIDX_GridCellSize, uiMgr.uiObjInitAra_Float(new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size"));//grid cell size
-		tmpUIObjArray.put(gIDX_GridCount, uiMgr.uiObjInitAra_Int(new double[]{50.0f, 300.0f, 10.0f}, 1.0*initNumGridCellsPerDim,  "Grid Cell Count Per Side")); //# of grid cells per side
+		tmpUIObjArray.put(gIDX_GridCount, uiMgr.uiObjInitAra_Int(new double[]{50.0f, 300.0f, 10.0f}, 1.0*initNumGridCellsPerDim, "Grid Cell Count Per Side")); //# of grid cells per side
 		tmpUIObjArray.put(gIDX_InitYoungMod, uiMgr.uiObjInitAra_Float(new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Initial Young's Modulus"));//gIDX_InitYoungMod init 4.8e4f, 
-		tmpUIObjArray.put(gIDX_PoissonRatio, uiMgr.uiObjInitAra_Float(new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio"));//gIDX_PoissonRatio init 0.2f,  
+		tmpUIObjArray.put(gIDX_PoissonRatio, uiMgr.uiObjInitAra_Float(new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio"));//gIDX_PoissonRatio init 0.2f, 
 		tmpUIObjArray.put(gIDX_HardeningCoeff , uiMgr.uiObjInitAra_Float(new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient"));//gIDX_HardeningCoeff init 15.0f, 
 		tmpUIObjArray.put(gIDX_CriticalCompression, uiMgr.uiObjInitAra_Float(new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression"));//gIDX_CriticalCompression  init .019f, 
 		tmpUIObjArray.put(gIDX_CriticalStretch , uiMgr.uiObjInitAra_Float(new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch"));//gIDX_CriticalStretch init .0075f, 
@@ -368,7 +369,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 			case gIDX_SimStepsPerFrame 		:{break;}
 			case gIDX_DrawPointIncr			:{break;}
 			default : {
-				boolean found = setUI_IntValsCustom_Indiv( UIidx,  ival,  oldVal);
+				boolean found = setUI_IntValsCustom_Indiv( UIidx, ival, oldVal);
 				if (!found) {
 					msgObj.dispWarningMessage(className, "setUI_IntValsCustom", "No int-defined gui object mapped to idx :"+UIidx);
 				}
