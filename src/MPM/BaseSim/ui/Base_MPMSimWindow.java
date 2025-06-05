@@ -106,42 +106,8 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		
 	public Base_MPMSimWindow(IRenderInterface _p, GUI_AppManager _AppMgr, int _winIdx) {
 		super(_p, _AppMgr, _winIdx);
-	}//DancingBallWin
-	
-	@Override
-	//initialize all private-flag based UI buttons here - called by base class
-	public int initAllUIButtons(TreeMap<Integer, Object[]> tmpBtnNamesArray){	
-		int idx=0;
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Visualization Debug", "Enable Debug"}, Base_BoolFlags.debugIDX));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Resetting Sim Env", "Reset Sim Environment"}, resetSimIDX));      
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Remaking Simulation", "Remake Simulation"}, rebuildSimIDX));
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Init Loc Clr", "Show Init Loc Clr"}, showLocColors));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Collider", "Show Collider"}, showCollider));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particles", "Show Particles"}, showParticles));  
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particle Vel", "Show Particle Vel"}, showParticleVelArrows));  
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid", "Show Grid"}, showGrid));           
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Vel", "Show Grid Vel"}, showGridVelArrows));     
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Accel", "Show Grid Accel"}, showGridAccelArrows));    
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Mass", "Show Grid Mass"}, showGridMass));         
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Active Nodes", "Show Active Nodes"}, showActiveNodes));     
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Execution Time", "Show Execution Time"},showExecTime));   
-		
-		return initAllMPMPrivBtns_Indiv(tmpBtnNamesArray);
-	}//initAllPrivBtns
-	
-	/**
-	 * Instancing class-specific (application driven) UI buttons to display are
-	 * built in this function. Add an entry to tmpBtnNamesArray for each button, in
-	 * the order they are to be displayed
-	 * 
-	 * @param tmpBtnNamesArray array list of Object arrays, where in each object
-	 *                         array : the first element is the true string label,
-	 *                         the 2nd elem is false string array, and the 3rd
-	 *                         element is integer flag idx
-	 * @return total number of privBtnFlags in instancing class (including those not
-	 *         displayed)
-	 */
-	protected abstract int initAllMPMPrivBtns_Indiv(TreeMap<Integer, Object[]> tmpBtnNamesArray);
+	}//Base_MPMSimWindow
+
 	/**
 	 * Initialize any UI control flags appropriate for all boids window application
 	 */
@@ -277,13 +243,17 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	 *           the 3rd elem is label for object                                                                       
 	 *           the 4th element is object type (GUIObj_Type enum)
 	 *           the 5th element is boolean array of : (unspecified values default to false)
-	 *           	{value is sent to owning window, 
-	 *           	value is sent on any modifications (while being modified, not just on release), 
-	 *           	changes to value must be explicitly sent to consumer (are not automatically sent)}    
-	 * @param tmpListObjVals : map of list object possible selection values
+	 *           	idx 0: value is sent to owning window,  
+	 *           	idx 1: value is sent on any modifications (while being modified, not just on release), 
+	 *           	idx 2: changes to value must be explicitly sent to consumer (are not automatically sent),
+	 *           the 6th element is a boolean array of format values :(unspecified values default to false)
+	 *           	idx 0: whether multi-line(stacked) or not                                                  
+	 *              idx 1: if true, build prefix ornament                                                      
+	 *              idx 2: if true and prefix ornament is built, make it the same color as the text fill color.
+	 * @param tmpListObjVals : map of string arrays, keyed by UI object idx, with array values being each element in the list
 	 */
 	@Override
-	protected final void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals){		
+	protected final void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals, TreeMap<Integer,Object[]> tmpBtnNamesArray){		
 		tmpUIObjArray.put(gIDX_TimeStep , uiMgr.uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT, "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
 		tmpUIObjArray.put(gIDX_SimStepsPerFrame, uiMgr.uiObjInitAra_Int(new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame"));//gIDX_simStepsPerFrame  init 5
 		tmpUIObjArray.put(gIDX_NumParticles, uiMgr.uiObjInitAra_Int(getMinMaxModParts(), getInitNumParts(), "# of Particles"));//number of particles
@@ -303,9 +273,48 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		tmpUIObjArray.put(gIDX_DrawnValScale, uiMgr.uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors"));//gIDX_CollfricCoeffinit 1.0f  
 		tmpUIObjArray.put(gIDX_DrawPointIncr, uiMgr.uiObjInitAra_Int(new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point"));//every x'th point to draw
 
+		int idx=0;
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Visualization Debug", "Enable Debug"}, Base_BoolFlags.debugIDX));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Resetting Sim Env", "Reset Sim Environment"}, resetSimIDX));      
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Remaking Simulation", "Remake Simulation"}, rebuildSimIDX));
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Init Loc Clr", "Show Init Loc Clr"}, showLocColors));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Collider", "Show Collider"}, showCollider));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particles", "Show Particles"}, showParticles));  
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particle Vel", "Show Particle Vel"}, showParticleVelArrows));  
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid", "Show Grid"}, showGrid));           
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Vel", "Show Grid Vel"}, showGridVelArrows));     
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Accel", "Show Grid Accel"}, showGridAccelArrows));    
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Mass", "Show Grid Mass"}, showGridMass));         
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Active Nodes", "Show Active Nodes"}, showActiveNodes));     
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Execution Time", "Show Execution Time"},showExecTime));
+		
 		// populate instancing application objects
-		setupGUIObjsAras_Indiv(tmpUIObjArray, tmpListObjVals);
+		setupGUIObjsAras_Indiv(tmpUIObjArray, tmpListObjVals,tmpBtnNamesArray.size(), tmpBtnNamesArray);
 	}//setupGUIObjsAras	
+	
+	/**
+	 * Build all UI objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
+	 * @param tmpUIObjArray : map of object data, keyed by UI object idx, with array values being :                    
+	 *           the first element double array of min/max/mod values                                                   
+	 *           the 2nd element is starting value                                                                      
+	 *           the 3rd elem is label for object                                                                       
+	 *           the 4th element is object type (GUIObj_Type enum)
+	 *           the 5th element is boolean array of : (unspecified values default to false)
+	 *           	idx 0: value is sent to owning window,  
+	 *           	idx 1: value is sent on any modifications (while being modified, not just on release), 
+	 *           	idx 2: changes to value must be explicitly sent to consumer (are not automatically sent),
+	 *           the 6th element is a boolean array of format values :(unspecified values default to false)
+	 *           	idx 0: whether multi-line(stacked) or not                                                  
+	 *              idx 1: if true, build prefix ornament                                                      
+	 *              idx 2: if true and prefix ornament is built, make it the same color as the text fill color.
+	 * @param tmpListObjVals : map of string arrays, keyed by UI object idx, with array values being each element in the list
+	 * @param firstBtnIDX : first index to place button objects in @tmpBtnNamesArray 
+	 * @param tmpBtnNamesArray : map of Object arrays to be built containing all button definitions, keyed by sequential value == objId
+	 * 				the first element is true label
+	 * 				the second element is false label
+	 * 				the third element is integer flag idx 
+	 */
+	protected abstract void setupGUIObjsAras_Indiv(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals, int firstBtnIDX, TreeMap<Integer, Object[]> tmpBtnNamesArray);
 	
 	/**
 	 * Return an array holding [min, max, mod] for particle count. This is simulation dependent due
@@ -320,20 +329,6 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	 * @return
 	 */
 	protected abstract double getInitNumParts();
-	
-	/**
-	 * Instancing class-specific (application driven) UI objects should be defined
-	 * in this function.  Add an entry to tmpBtnNamesArray for each button, in the order 
-	 * they are to be displayed
-	 * @param tmpUIObjArray map keyed by uiIDX of object, value is list of Object arrays, where in each object array : 
-	 * 			the first element double array of min/max/mod values
-	 * 			the 2nd element is starting value
-	 * 			the 3rd elem is label for object
-	 * 			the 4th element is boolean array of {treat as int, has list values, value is sent to owning window}
-	 * @param tmpListObjVals treemap keyed by object IDX and value is list of strings of values for all UI list select objects
-	 */
-	protected abstract void setupGUIObjsAras_Indiv(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals);	
-	
 	
 	/**
 	 * This function provides an instance of the override class for base_UpdateFromUIData, which would

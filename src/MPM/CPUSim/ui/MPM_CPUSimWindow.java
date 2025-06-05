@@ -45,11 +45,36 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 		//Show sphere collider
 		uiMgr.setPrivFlag(showCollider, true);
 	}
-	
+	/**
+	 * Retrieve the total number of defined privFlags booleans (application-specific state bools and interactive buttons)
+	 */
 	@Override
-	protected int initAllMPMPrivBtns_Indiv(TreeMap<Integer, Object[]> tmpBtnNamesArray) {
-		return numPrivFlags;
-	}
+	public int getTotalNumOfPrivBools() { return numPrivFlags;}
+	
+	/**
+	 * Build all UI objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
+	 * @param tmpUIObjArray : map of object data, keyed by UI object idx, with array values being :                    
+	 *           the first element double array of min/max/mod values                                                   
+	 *           the 2nd element is starting value                                                                      
+	 *           the 3rd elem is label for object                                                                       
+	 *           the 4th element is object type (GUIObj_Type enum)
+	 *           the 5th element is boolean array of : (unspecified values default to false)
+	 *           	idx 0: value is sent to owning window,  
+	 *           	idx 1: value is sent on any modifications (while being modified, not just on release), 
+	 *           	idx 2: changes to value must be explicitly sent to consumer (are not automatically sent),
+	 *           the 6th element is a boolean array of format values :(unspecified values default to false)
+	 *           	idx 0: whether multi-line(stacked) or not                                                  
+	 *              idx 1: if true, build prefix ornament                                                      
+	 *              idx 2: if true and prefix ornament is built, make it the same color as the text fill color.
+	 * @param tmpListObjVals : map of string arrays, keyed by UI object idx, with array values being each element in the list
+	 * @param firstBtnIDX : first index to place button objects in @tmpBtnNamesArray 
+	 * @param tmpBtnNamesArray : map of Object arrays to be built containing all button definitions, keyed by sequential value == objId
+	 * 				the first element is true label
+	 * 				the second element is false label
+	 * 				the third element is integer flag idx 
+	 */
+	@Override
+	protected void setupGUIObjsAras_Indiv(TreeMap<Integer, Object[]> tmpUIObjArray,	TreeMap<Integer, String[]> tmpListObjVals, int firstBtnIDX, TreeMap<Integer, Object[]> tmpBtnNamesArray) {}
 	
 	@Override
 	protected Base_MPMSim buildSim() {
@@ -61,23 +86,6 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
 		switch (idx) {//special actions for each flag
 			default						: {return;}
 		}
-	}
-
-	/**
-	 * Instancing class-specific (application driven) UI objects should be defined
-	 * in this function.  Add an entry to tmpBtnNamesArray for each button, in the order 
-	 * they are to be displayed
-	 * @param tmpUIObjArray array list of Object arrays, where in each object array : 
-	 * 			the first element double array of min/max/mod values
-	 * 			the 2nd element is starting value
-	 * 			the 3rd elem is label for object
-	 * 			the 4th element is boolean array of {treat as int, has list values, value is sent to owning window}
-	 * @param tmpListObjVals treemap keyed by object IDX and value is list of strings of values for all UI list select objects
-	 */
-	@Override
-	protected void setupGUIObjsAras_Indiv(TreeMap<Integer, Object[]> tmpUIObjArray,
-			TreeMap<Integer, String[]> tmpListObjVals) {
-
 	}
 
 	@Override
