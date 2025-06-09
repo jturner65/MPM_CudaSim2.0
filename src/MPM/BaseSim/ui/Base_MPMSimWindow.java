@@ -274,19 +274,19 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		tmpUIObjArray.put(gIDX_DrawPointIncr, uiMgr.uiObjInitAra_Int(new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point"));//every x'th point to draw
 
 		int idx=0;
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Visualization Debug", "Enable Debug"}, Base_BoolFlags.debugIDX));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Resetting Sim Env", "Reset Sim Environment"}, resetSimIDX));      
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Remaking Simulation", "Remake Simulation"}, rebuildSimIDX));
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Init Loc Clr", "Show Init Loc Clr"}, showLocColors));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Collider", "Show Collider"}, showCollider));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particles", "Show Particles"}, showParticles));  
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Particle Vel", "Show Particle Vel"}, showParticleVelArrows));  
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid", "Show Grid"}, showGrid));           
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Vel", "Show Grid Vel"}, showGridVelArrows));     
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Accel", "Show Grid Accel"}, showGridAccelArrows));    
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Grid Mass", "Show Grid Mass"}, showGridMass));         
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Active Nodes", "Show Active Nodes"}, showActiveNodes));     
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[] {"Showing Execution Time", "Show Execution Time"},showExecTime));
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Visualization Debug", "Enable Debug"}, Base_BoolFlags.debugIDX));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Resetting Sim Env", "Reset Sim Environment"}, resetSimIDX));      
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Remaking Simulation", "Remake Simulation"}, rebuildSimIDX));
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Init Loc Clr", "Show Init Loc Clr"}, showLocColors));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Collider", "Show Collider"}, showCollider));          
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Particles", "Show Particles"}, showParticles));  
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Particle Vel", "Show Particle Vel"}, showParticleVelArrows));  
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Grid", "Show Grid"}, showGrid));           
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Grid Vel", "Show Grid Vel"}, showGridVelArrows));     
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Grid Accel", "Show Grid Accel"}, showGridAccelArrows));    
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Grid Mass", "Show Grid Mass"}, showGridMass));         
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Active Nodes", "Show Active Nodes"}, showActiveNodes));     
+		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Execution Time", "Show Execution Time"},showExecTime));
 		
 		// populate instancing application objects
 		setupGUIObjsAras_Indiv(tmpUIObjArray, tmpListObjVals,tmpBtnNamesArray.size(), tmpBtnNamesArray);

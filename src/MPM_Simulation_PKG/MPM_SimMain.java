@@ -133,7 +133,7 @@ public class MPM_SimMain extends GUI_AppManager {
 		showInfo = true;
 		//titles and descs, need to be set before sidebar menu is defined
 		String[] _winTitles = new String[]{"","Snow Balls!","Snow Balls In The Alps!","CPU Snow Ball"},
-				_winDescr = new String[] {"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
+				_winDescr = new String[]{"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
 
 		//instanced window dims when open and closed - only showing 1 open at a time - and init cam vals
 		float[][] _floatDims  = getDefaultWinAndCameraDims();	
@@ -146,7 +146,7 @@ public class MPM_SimMain extends GUI_AppManager {
 			{"Func 10", "Func 11", "Func 12", "Func 13"},	//row 3
 			{"Func 20", "Func 21", "Func 22", "Func 23"},	//row 4		
 		};
-		String[] dbgBtnNames = new String[] {"Debug 0","Debug 1","Debug 2","Debug 3","Debug 4"};
+		String[] dbgBtnNames = new String[]{"Debug 0","Debug 1","Debug 2","Debug 3","Debug 4"};
 		buildSideBarMenu(_winTitles, menuBtnTitles, menuBtnNames, dbgBtnNames, true, false);
 
 		initXORWins(new int[]{dispMPMCudaWinIDX, dispMPMCudaWin2IDX, dispMPMCPUWinIDX},new int[]{dispMPMCudaWinIDX, dispMPMCudaWin2IDX, dispMPMCPUWinIDX});

@@ -59,7 +59,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * Lists of names of kernel functions to perform for MPM algorithm.   
 	 */
-	private String[] CUFileFuncNames = new String[] {
+	private String[] CUFileFuncNames = new String[]{
 			"projectToGridandComputeForces",
 			"projectToGridInit",
 			"computeVol",
@@ -72,7 +72,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * These are the individual kernel functions to execute in order for initialization of simulation
 	 */
-	private String[] initStepFuncKeys = new String[] {
+	private String[] initStepFuncKeys = new String[]{
 			"clearGrid",
 			"projectToGridInit",
 			"computeVol",
@@ -84,7 +84,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	/**
 	 * These are the individual kernel functions to execute in order for each sim step
 	 */
-	private String[] simStepFuncKeys = new String[] {
+	private String[] simStepFuncKeys = new String[]{
 			"clearGrid",
 			"projectToGridandComputeForces",
 			"compGridVelocities",
@@ -102,7 +102,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	private CUmodule module;
 	//private CUgraphicsResource pCudaResource;
 	// CUDA Device ptr constructions
-	private CUdeviceptr dvcPtrPartMass, devPtrPartVolume;
+	private CUdeviceptr devPtrPartMass, devPtrPartVolume;
 	private CUdeviceptr[] devPtrPartPos, devPtrPartVel; 
 	private CUdeviceptr[] devPtrGridVel, devPtrGridNewVel, devPtrGridForce;
     private CUdeviceptr[][] devPtrPartElasticF, devPtrPartPlasticF;    
@@ -183,7 +183,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 		//reset active ptrs
 		//NOTE these destructors will not be called when this Java object goes out of scope or is otherwise destroyed/GC'ed.
 		// It is the owning object's responsibility to clean these up when this object is about to be destroyed.
-		JCuda.cudaFree(dvcPtrPartMass);		  
+		JCuda.cudaFree(devPtrPartMass);		  
         JCuda.cudaFree(devPtrPartVolume); 
         JCuda.cudaFree(devPtrGridMass); 
         for(int i=0;i<devPtrPartPos.length;++i) {
@@ -220,15 +220,19 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 
 		//Set context
 		JCudaDriver.cuCtxSetCurrent(context);    
+		//initialize cude device and local/host constructs
+		initHostAndDevPtrs();
+		//rebuild cuda kernel configurations
+		cudaSetup();  	    
+		msgObj.dispDebugMessage("Base_MPMCudaSim("+simName+")", "resetSim_Indiv","Finished resetting sim");
+   }//resetSim_Indiv  
+    
+    protected final void initHostAndDevPtrs() {
         //init ptrs to particle-based arrays - numparts and numPartsFloatSz need to be initialized by here
 		initValues_Parts();		
         //init local reps of grid values and pointers to grid-based arrays
 		initValues_Grid();
-		
-		//rebuild cuda kernel configurations
-		cudaSetup();  	    
-		msgObj.dispDebugMessage("Base_MPMCudaSim("+simName+")", "resetSim_Indiv","Finished resetting sim");
-   }//resetSim_Indiv    
+    }
 
 	/**
 	 * Initialize environmental layout particle holders/arrays -  Reinitialize partVals map, called before sim environment is built
@@ -380,8 +384,8 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         //Allocate memory for particle-related cuda pointers
         cuMemAlloc(devPtrPartVolume, numPartsFloatSz); 
         cuMemsetD32(devPtrPartVolume, 0, numParts);	//part_vol is a calculated quantity
-        cuMemAlloc(dvcPtrPartMass, numPartsFloatSz);  
-        cuMemcpyHtoD(dvcPtrPartMass, Pointer.to(h_part_mass), numPartsFloatSz);
+        cuMemAlloc(devPtrPartMass, numPartsFloatSz);  
+        cuMemcpyHtoD(devPtrPartMass, Pointer.to(h_part_mass), numPartsFloatSz);
         //allocate for all particle constructs
         for(int i=0;i<devPtrPartPos.length;++i) {
            	cuMemAlloc(devPtrPartPos[i], numPartsFloatSz); 
@@ -458,7 +462,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 */
 	private final void buildCudaDeviceConstructs() {
 		// particle scalars
-		dvcPtrPartMass = new CUdeviceptr();   		devPtrPartVolume = new CUdeviceptr();
+		devPtrPartMass = new CUdeviceptr();   		devPtrPartVolume = new CUdeviceptr();
 		// grid scalar
 		devPtrGridMass = new CUdeviceptr();
 		// particle vectors - each idx is x,y,z
@@ -491,15 +495,15 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	 * @param numParts
 	 * @param initVel
 	 * @param ctr
-	 * @return
+	 * @return array with initial, and final, size of position values == array of [start IDX, end IDX] within posVals array for the points making up this sphere.
 	 */  		 
 	protected final int[] createSphere(TreeMap<String, ArrayList<float[]>> partVals, float ballRad, int numParts, myPointf ctr) {   		 
 		float[] minVals = partVals.get("minMaxVals").get(0);
 		float[] maxVals = partVals.get("minMaxVals").get(1); 
-		ArrayList<float[]> posMap = partVals.get("pos");
+		ArrayList<float[]> posAra = partVals.get("pos");
 		int[] returnIdxs = new int[2];
 		//start at beginning of current posMap
-		returnIdxs[0] = posMap.size();
+		returnIdxs[0] = posAra.size();
 		for (int i=0;i<numParts;++i) {
 			//float[] posVals = getRandPosInSphereAra(ballRad, ctr); 
 			float[] posVals = MyMathUtils.getRandPosInSphere(ballRad, ctr).asArray(); 
@@ -508,12 +512,12 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 				if (posVals[v] < minVals[v]) {					minVals[v] = posVals[v];				} 
 				else if (posVals[v] > maxVals[v]) {				maxVals[v] = posVals[v];				}	
 			}
-			posMap.add(posVals);
+			posAra.add(posVals);
         }
 		msgObj.dispDebugMessage("Base_MPMCudaSim("+simName+")", "createSphere",
 				"Created a sphere of radius " + ballRad + " with "+numParts+" particles, centered at [" +ctr.toStrBrf() + "].");
 		//Ending at final size of posMap
-		returnIdxs[1] = posMap.size();
+		returnIdxs[1] = posAra.size();
 		return returnIdxs;
 	}//createSphere
 	
@@ -560,7 +564,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
         kernelParams = new TreeMap<String, Pointer>();
         funcGridDimAndMemSize = new HashMap<String, int[][]>();
         Pointer numPartsPtr = Pointer.to(new int[] {numParts});
-        Pointer partMassPtr = Pointer.to(dvcPtrPartMass);
+        Pointer partMassPtr = Pointer.to(devPtrPartMass);
         Pointer partVolPtr = Pointer.to(devPtrPartVolume);
         Pointer gridMassPtr = Pointer.to(devPtrGridMass);
         Pointer[] partPosPtrAra = new Pointer[]{Pointer.to(devPtrPartPos[0]),Pointer.to(devPtrPartPos[1]),Pointer.to(devPtrPartPos[2])};
@@ -800,11 +804,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
 	@Override
 	protected final void _drawParts(float animTimeMod, boolean showLocColors) {
 		ri.pushMatState();
-		if (showLocColors) {
-			ri.drawPointCloudWithColors(hostPartPos[0].length, drawPointIncr, hostPartClrAra, hostPartPos[0], hostPartPos[1], hostPartPos[2]);
-		} else {
-			ri.drawPointCloudWithColors(hostPartPos[0].length, drawPointIncr, hostPartGreyAra, hostPartPos[0], hostPartPos[1], hostPartPos[2]);
-		}
+		ri.drawPointCloudWithColors(hostPartPos[0].length, drawPointIncr, (showLocColors ?  hostPartClrAra : hostPartGreyAra), hostPartPos[0], hostPartPos[1], hostPartPos[2]);
 		ri.popMatState();
 	}//_drawParts
 	

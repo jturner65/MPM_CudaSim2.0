@@ -407,7 +407,7 @@ public abstract class Base_MPMSim {
 	protected int[] getClrValInt(float[] val, float[] min, float[] max) {
 		int[] res = new int[3];
 		for (int i=0;i<3;++i) {
-			Float denom = (max[i]-min[i]);
+			float denom = (max[i]-min[i]);
 			if(denom <=0) {res[i] = 255;}
 			res[i] = (int) (55.0f + 200.0f * (val[i] - min[i])/denom);	
 		}
@@ -424,7 +424,7 @@ public abstract class Base_MPMSim {
 	protected int[] getGreyValInt(float[] val, float[] min, float[] max) {
 		int sum = 0;
 		for (int i=0;i<3;++i) {
-			Float denom = (max[i]-min[i]);
+			float denom = (max[i]-min[i]);
 			if(denom <=0) {sum += 255;}
 			sum += (int) (55.0f + 200.0f * (val[i] - min[i])/denom);	
 		}
