@@ -14,8 +14,8 @@ import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_UI_Objects.windowUI.drawnTrajectories.DrawnSimpleTraj;
 import base_UI_Objects.windowUI.uiData.UIDataUpdater;
+import base_UI_Objects.windowUI.uiObjs.base.GUIObj_Params;
 import base_Utils_Objects.io.messaging.MsgCodes;
-import base_Utils_Objects.tools.flags.Base_BoolFlags;
 
 public abstract class Base_MPMSimWindow extends Base_DispWindow {
 
@@ -237,84 +237,105 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 		
 	/**
 	 * Build all UI objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
-	 * @param tmpUIObjArray : map of object data, keyed by UI object idx, with array values being :                    
-	 *           the first element double array of min/max/mod values                                                   
-	 *           the 2nd element is starting value                                                                      
-	 *           the 3rd elem is label for object                                                                       
-	 *           the 4th element is object type (GUIObj_Type enum)
-	 *           the 5th element is boolean array of : (unspecified values default to false)
+	 * @param tmpUIObjMap : map of GUIObj_Params, keyed by unique string, with values describing the UI object
+	 * 			- The object IDX                   
+	 *          - A double array of min/max/mod values                                                   
+	 *          - The starting value                                                                      
+	 *          - The label for object                                                                       
+	 *          - The object type (GUIObj_Type enum)
+	 *          - A boolean array of behavior configuration values : (unspecified values default to false)
 	 *           	idx 0: value is sent to owning window,  
 	 *           	idx 1: value is sent on any modifications (while being modified, not just on release), 
 	 *           	idx 2: changes to value must be explicitly sent to consumer (are not automatically sent),
-	 *           the 6th element is a boolean array of format values :(unspecified values default to false)
+	 *          - A boolean array of renderer format values :(unspecified values default to false)
 	 *           	idx 0: whether multi-line(stacked) or not                                                  
 	 *              idx 1: if true, build prefix ornament                                                      
 	 *              idx 2: if true and prefix ornament is built, make it the same color as the text fill color.
-	 * @param tmpListObjVals : map of string arrays, keyed by UI object idx, with array values being each element in the list
 	 */
 	@Override
-	protected final void setupGUIObjsAras(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals, TreeMap<Integer,Object[]> tmpBtnNamesArray){		
-		tmpUIObjArray.put(gIDX_TimeStep , uiMgr.uiObjInitAra_Float(new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT, "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
-		tmpUIObjArray.put(gIDX_SimStepsPerFrame, uiMgr.uiObjInitAra_Int(new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame"));//gIDX_simStepsPerFrame  init 5
-		tmpUIObjArray.put(gIDX_NumParticles, uiMgr.uiObjInitAra_Int(getMinMaxModParts(), getInitNumParts(), "# of Particles"));//number of particles
-		tmpUIObjArray.put(gIDX_NumSnowballs, uiMgr.uiObjInitAra_Int(new double[]{2, 20, 1}, 1.0*initNumBalls, "# of Snowballs"));//number of snowballs
-		tmpUIObjArray.put(gIDX_InitVel, uiMgr.uiObjInitAra_Float(new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed"));//initial speed of collisions
-		tmpUIObjArray.put(gIDX_PartMass, uiMgr.uiObjInitAra_Float(new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass"));//particle mass
-		tmpUIObjArray.put(gIDX_GridCellSize, uiMgr.uiObjInitAra_Float(new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size"));//grid cell size
-		tmpUIObjArray.put(gIDX_GridCount, uiMgr.uiObjInitAra_Int(new double[]{50.0f, 300.0f, 10.0f}, 1.0*initNumGridCellsPerDim, "Grid Cell Count Per Side")); //# of grid cells per side
-		tmpUIObjArray.put(gIDX_InitYoungMod, uiMgr.uiObjInitAra_Float(new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Initial Young's Modulus"));//gIDX_InitYoungMod init 4.8e4f, 
-		tmpUIObjArray.put(gIDX_PoissonRatio, uiMgr.uiObjInitAra_Float(new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio"));//gIDX_PoissonRatio init 0.2f, 
-		tmpUIObjArray.put(gIDX_HardeningCoeff , uiMgr.uiObjInitAra_Float(new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient"));//gIDX_HardeningCoeff init 15.0f, 
-		tmpUIObjArray.put(gIDX_CriticalCompression, uiMgr.uiObjInitAra_Float(new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression"));//gIDX_CriticalCompression  init .019f, 
-		tmpUIObjArray.put(gIDX_CriticalStretch , uiMgr.uiObjInitAra_Float(new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch"));//gIDX_CriticalStretch init .0075f, 
-		tmpUIObjArray.put(gIDX_AlphaPicFlip, uiMgr.uiObjInitAra_Float(new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "PIC/FLIP Mix Slider (0==PIC, 1== FLIP)"));//gIDX_AlphaPicFlip init 0.95f, 
-		tmpUIObjArray.put(gIDX_wallFricCoeff, uiMgr.uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient"));//gIDX_wallfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_CollFricCoeff, uiMgr.uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient"));//gIDX_CollfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_DrawnValScale, uiMgr.uiObjInitAra_Float(new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors"));//gIDX_CollfricCoeffinit 1.0f  
-		tmpUIObjArray.put(gIDX_DrawPointIncr, uiMgr.uiObjInitAra_Int(new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point"));//every x'th point to draw
-
-		int idx=0;
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Visualization Debug", "Enable Debug"}, Base_BoolFlags.debugIDX));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Resetting Sim Env", "Reset Sim Environment"}, resetSimIDX));      
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Remaking Simulation", "Remake Simulation"}, rebuildSimIDX));
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Init Loc Clr", "Show Init Loc Clr"}, showLocColors));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Collider", "Show Collider"}, showCollider));          
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Particles", "Show Particles"}, showParticles));  
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Particle Vel", "Show Particle Vel"}, showParticleVelArrows));  
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Grid", "Show Grid"}, showGrid));           
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Grid Vel", "Show Grid Vel"}, showGridVelArrows));     
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Grid Accel", "Show Grid Accel"}, showGridAccelArrows));    
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Grid Mass", "Show Grid Mass"}, showGridMass));         
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Active Nodes", "Show Active Nodes"}, showActiveNodes));     
-		tmpBtnNamesArray.put(idx++, uiMgr.uiObjInitAra_Btn(new String[]{"Showing Execution Time", "Show Execution Time"},showExecTime));
+	protected final void setupGUIObjsAras(TreeMap<String, GUIObj_Params> tmpUIObjMap){		//keyed by object idx (uiXXXIDX), entries are lists of values to use for list select ui objects			
+//		//keyed by object idx (uiXXXIDX), entries are lists of values to use for list select ui objects
+		tmpUIObjMap.put("gIDX_TimeStep ", uiMgr.uiObjInitAra_Float(gIDX_TimeStep, new double[]{.00005f, .0010f, .00005f}, 1.0*initDeltaT, "Sim Time Step"));//delta T for simulation init  MPM_ABS_Sim.deltaT = 1e-3f;
+		tmpUIObjMap.put("gIDX_SimStepsPerFrame", uiMgr.uiObjInitAra_Int(gIDX_SimStepsPerFrame, new double[]{1, 20, 1}, 1.0*initSimStepsPerFrame, "Sim Steps per Drawn Frame"));//gIDX_simStepsPerFrame  init 5
+		tmpUIObjMap.put("gIDX_NumParticles", uiMgr.uiObjInitAra_Int(gIDX_NumParticles, getMinMaxModParts(), getInitNumParts(), "# of Particles"));//number of particles
+		tmpUIObjMap.put("gIDX_NumSnowballs", uiMgr.uiObjInitAra_Int(gIDX_NumSnowballs, new double[]{2, 20, 1}, 1.0*initNumBalls, "# of Snowballs"));//number of snowballs
+		tmpUIObjMap.put("gIDX_InitVel", uiMgr.uiObjInitAra_Float(gIDX_InitVel, new double[]{1, 40, .1}, 1.0*initVel, "Initial Speed"));//initial speed of collisions
+		tmpUIObjMap.put("gIDX_PartMass", uiMgr.uiObjInitAra_Float(gIDX_PartMass, new double[]{.0005, 5.00, .0005}, 1.0*initParticleMass, "Particle Mass"));//particle mass
+		tmpUIObjMap.put("gIDX_GridCellSize", uiMgr.uiObjInitAra_Float(gIDX_GridCellSize, new double[]{.001, .5, .001}, 1.0*initCellSize, "Grid Cell Size"));//grid cell size
+		tmpUIObjMap.put("gIDX_GridCount", uiMgr.uiObjInitAra_Int(gIDX_GridCount, new double[]{50.0f, 300.0f, 10.0f}, 1.0*initNumGridCellsPerDim, "Grid Cell Count Per Side")); //# of grid cells per side
+		tmpUIObjMap.put("gIDX_InitYoungMod", uiMgr.uiObjInitAra_Float(gIDX_InitYoungMod, new double[]{1000.0f, 200000.0f, 100.0f}, 1.0*init_initYoungMod, "Initial Young's Modulus"));//gIDX_InitYoungMod init 4.8e4f, 
+		tmpUIObjMap.put("gIDX_PoissonRatio", uiMgr.uiObjInitAra_Float(gIDX_PoissonRatio, new double[]{.01f, 0.6f, .01f}, 1.0*init_poissonRatio, "Poisson Ratio"));//gIDX_PoissonRatio init 0.2f, 
+		tmpUIObjMap.put("gIDX_HardeningCoeff ", uiMgr.uiObjInitAra_Float(gIDX_HardeningCoeff, new double[]{1.0f, 20.0f, 1.0f}, 1.0*init_hardeningCoeff, "Hardening Coefficient"));//gIDX_HardeningCoeff init 15.0f, 
+		tmpUIObjMap.put("gIDX_CriticalCompression", uiMgr.uiObjInitAra_Float(gIDX_CriticalCompression, new double[]{0.001f, 0.1f, 0.001f}, 1.0*init_criticalCompression, "Critical Compression"));//gIDX_CriticalCompression  init .019f, 
+		tmpUIObjMap.put("gIDX_CriticalStretch ", uiMgr.uiObjInitAra_Float(gIDX_CriticalStretch, new double[]{0.0005f, 0.01f, 0.0005f}, 1.0*init_criticalStretch, "Critical Stretch"));//gIDX_CriticalStretch init .0075f, 
+		tmpUIObjMap.put("gIDX_AlphaPicFlip", uiMgr.uiObjInitAra_Float(gIDX_AlphaPicFlip, new double[]{0.0f, 1.0f, 0.01f}, 1.0*init_alphaPicFlip, "PIC/FLIP Mix Slider (0==PIC, 1== FLIP)"));//gIDX_AlphaPicFlip init 0.95f, 
+		tmpUIObjMap.put("gIDX_wallFricCoeff", uiMgr.uiObjInitAra_Float(gIDX_wallFricCoeff, new double[]{0.01f, 1.0f, 0.01f}, 1.0*initWallFric, "Wall Friction Coefficient"));//gIDX_wallfricCoeffinit 1.0f  
+		tmpUIObjMap.put("gIDX_CollFricCoeff", uiMgr.uiObjInitAra_Float(gIDX_CollFricCoeff, new double[]{0.01f, 1.0f, 0.01f}, 1.0*initColFric, "Collider Friction Coefficient"));//gIDX_CollfricCoeffinit 1.0f  
+		tmpUIObjMap.put("gIDX_DrawnValScale", uiMgr.uiObjInitAra_Float(gIDX_DrawnValScale, new double[]{0.01f, 1.0f, 0.01f}, 1.0*initDrawnVecScale, "Scale Drawn Vectors"));//gIDX_CollfricCoeffinit 1.0f  
+		tmpUIObjMap.put("gIDX_DrawPointIncr", uiMgr.uiObjInitAra_Int(gIDX_DrawPointIncr, new double[]{1, 50, 1}, 1.0*initDrawPtIncr, "Draw Every x'th Point"));//every x'th point to draw
+		setupGUIObjsAras_Indiv(tmpUIObjMap);
+	}//setupGUIObjsAras
+	
+	/**
+	 * Build UI button objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
+	 * @param firstIdx : the first index to use in the map/as the objIdx
+	 * @param tmpUIBtnObjMap : map of GUIObj_Params to be built containing all button definitions, keyed by sequential value == objId
+	 * 				the first element is the object index
+	 * 				the second element is true label
+	 * 				the third element is false label
+	 * 				the final element is integer flag idx 
+	 */
+	@Override
+	protected final void setupGUIBtnAras(int firstIdx, TreeMap<String, GUIObj_Params> tmpUIBtnObjMap) {		
+		//add an entry for each button, in the order they are wished to be displayed
+		int idx=firstIdx;
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.buildDebugButton(idx++,"Debugging", "Enable Debug"));        
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Resetting Sim Env", "Reset Sim Environment", resetSimIDX));      
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Remaking Simulation", "Remake Simulation", rebuildSimIDX));
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Init Loc Clr", "Show Init Loc Clr", showLocColors));          
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Collider", "Show Collider", showCollider));          
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Particles", "Show Particles", showParticles));  
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Particle Vel", "Show Particle Vel", showParticleVelArrows));  
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Grid", "Show Grid", showGrid));           
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Grid Vel", "Show Grid Vel", showGridVelArrows));     
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Grid Accel", "Show Grid Accel", showGridAccelArrows));    
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Grid Mass", "Show Grid Mass", showGridMass));         
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Active Nodes", "Show Active Nodes", showActiveNodes));     
+		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Execution Time", "Show Execution Time",showExecTime));
 		
 		// populate instancing application objects
-		setupGUIObjsAras_Indiv(tmpUIObjArray, tmpListObjVals,tmpBtnNamesArray.size(), tmpBtnNamesArray);
-	}//setupGUIObjsAras	
+		setupGUIBtnAras_Indiv(tmpUIBtnObjMap);
+	}//setupGUIBtnAras
 	
 	/**
 	 * Build all UI objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
-	 * @param tmpUIObjArray : map of object data, keyed by UI object idx, with array values being :                    
-	 *           the first element double array of min/max/mod values                                                   
-	 *           the 2nd element is starting value                                                                      
-	 *           the 3rd elem is label for object                                                                       
-	 *           the 4th element is object type (GUIObj_Type enum)
-	 *           the 5th element is boolean array of : (unspecified values default to false)
+	 * @param tmpUIObjMap : map of GUIObj_Params, keyed by unique string, with values describing the UI object
+	 * 			- The object IDX                   
+	 *          - A double array of min/max/mod values                                                   
+	 *          - The starting value                                                                      
+	 *          - The label for object                                                                       
+	 *          - The object type (GUIObj_Type enum)
+	 *          - A boolean array of behavior configuration values : (unspecified values default to false)
 	 *           	idx 0: value is sent to owning window,  
 	 *           	idx 1: value is sent on any modifications (while being modified, not just on release), 
 	 *           	idx 2: changes to value must be explicitly sent to consumer (are not automatically sent),
-	 *           the 6th element is a boolean array of format values :(unspecified values default to false)
+	 *          - A boolean array of renderer format values :(unspecified values default to false)
 	 *           	idx 0: whether multi-line(stacked) or not                                                  
 	 *              idx 1: if true, build prefix ornament                                                      
 	 *              idx 2: if true and prefix ornament is built, make it the same color as the text fill color.
-	 * @param tmpListObjVals : map of string arrays, keyed by UI object idx, with array values being each element in the list
-	 * @param firstBtnIDX : first index to place button objects in @tmpBtnNamesArray 
-	 * @param tmpBtnNamesArray : map of Object arrays to be built containing all button definitions, keyed by sequential value == objId
-	 * 				the first element is true label
-	 * 				the second element is false label
-	 * 				the third element is integer flag idx 
 	 */
-	protected abstract void setupGUIObjsAras_Indiv(TreeMap<Integer, Object[]> tmpUIObjArray, TreeMap<Integer, String[]> tmpListObjVals, int firstBtnIDX, TreeMap<Integer, Object[]> tmpBtnNamesArray);
+	protected abstract void setupGUIObjsAras_Indiv(TreeMap<String, GUIObj_Params> tmpUIObjMap);
+
+	/**
+	 * Build all UI buttons to be shown in left side bar menu for this window. This is for instancing windows to add to button region
+	 * USE tmpUIBtnObjMap.size() for start idx
+	 * @param tmpUIBtnObjMap : map of GUIObj_Params to be built containing all button definitions, keyed by sequential value == objId
+	 * 				the first element is the object index
+	 * 				the second element is true label
+	 * 				the third element is false label
+	 * 				the final element is integer flag idx 
+	 */
+	protected abstract void setupGUIBtnAras_Indiv(TreeMap<String, GUIObj_Params> tmpUIBtnObjMap);	
 	
 	/**
 	 * Return an array holding [min, max, mod] for particle count. This is simulation dependent due
