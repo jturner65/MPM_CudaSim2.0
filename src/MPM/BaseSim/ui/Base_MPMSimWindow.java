@@ -185,13 +185,13 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 			case resetSimIDX			: {
 				if(val) {
 					reinitSim(SimResetProcess.RemakeKernel);
-					addPrivBtnToClear(resetSimIDX);
+					addPrivSwitchToClear(resetSimIDX);
 				}
 				break;}						
 			case rebuildSimIDX			: {//Rebuild sim environment
 				if(val) {
 					reinitSim(SimResetProcess.RebuildSim);
-					addPrivBtnToClear(rebuildSimIDX);
+					addPrivSwitchToClear(rebuildSimIDX);
 				}
 				break;}	
 			case showLocColors			: {
@@ -279,33 +279,33 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 	/**
 	 * Build UI button objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
 	 * @param firstIdx : the first index to use in the map/as the objIdx
-	 * @param tmpUIBtnObjMap : map of GUIObj_Params to be built containing all button definitions, keyed by sequential value == objId
+	 * @param tmpUIBoolSwitchObjMap : map of GUIObj_Params to be built containing all flag-backed boolean switch definitions, keyed by sequential value == objId
 	 * 				the first element is the object index
 	 * 				the second element is true label
 	 * 				the third element is false label
 	 * 				the final element is integer flag idx 
 	 */
 	@Override
-	protected final void setupGUIBtnAras(int firstIdx, TreeMap<String, GUIObj_Params> tmpUIBtnObjMap) {		
+	protected final void setupGUIBoolSwitchAras(int firstIdx, TreeMap<String, GUIObj_Params> tmpUIBoolSwitchObjMap) {		
 		//add an entry for each button, in the order they are wished to be displayed
 		int idx=firstIdx;
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.buildDebugButton(idx++,"Debugging", "Enable Debug"));        
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Resetting Sim Env", "Reset Sim Environment", resetSimIDX));      
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Remaking Simulation", "Remake Simulation", rebuildSimIDX));
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Init Loc Clr", "Show Init Loc Clr", showLocColors));          
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Collider", "Show Collider", showCollider));          
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Particles", "Show Particles", showParticles));  
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Particle Vel", "Show Particle Vel", showParticleVelArrows));  
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Grid", "Show Grid", showGrid));           
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Grid Vel", "Show Grid Vel", showGridVelArrows));     
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Grid Accel", "Show Grid Accel", showGridAccelArrows));    
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Grid Mass", "Show Grid Mass", showGridMass));         
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Active Nodes", "Show Active Nodes", showActiveNodes));     
-		tmpUIBtnObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Btn(idx++, "button_"+idx, "Showing Execution Time", "Show Execution Time",showExecTime));
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.buildDebugButton(idx++,"Debugging", "Enable Debug"));        
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Resetting Sim Env", "Reset Sim Environment", resetSimIDX));      
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Remaking Simulation", "Remake Simulation", rebuildSimIDX));
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Init Loc Clr", "Show Init Loc Clr", showLocColors));          
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Collider", "Show Collider", showCollider));          
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Particles", "Show Particles", showParticles));  
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Particle Vel", "Show Particle Vel", showParticleVelArrows));  
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Grid", "Show Grid", showGrid));           
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Grid Vel", "Show Grid Vel", showGridVelArrows));     
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Grid Accel", "Show Grid Accel", showGridAccelArrows));    
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Grid Mass", "Show Grid Mass", showGridMass));         
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Active Nodes", "Show Active Nodes", showActiveNodes));     
+		tmpUIBoolSwitchObjMap.put("Button_"+idx, uiMgr.uiObjInitAra_Switch(idx++, "button_"+idx, "Showing Execution Time", "Show Execution Time",showExecTime));
 		
 		// populate instancing application objects
-		setupGUIBtnAras_Indiv(tmpUIBtnObjMap);
-	}//setupGUIBtnAras
+		setupGUIBoolSwitchAras_Indiv(tmpUIBoolSwitchObjMap);
+	}//setupGUIBoolSwitchAras
 	
 	/**
 	 * Build all UI objects to be shown in left side bar menu for this window.  This is the first child class function called by initThisWin
@@ -328,14 +328,14 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
 
 	/**
 	 * Build all UI buttons to be shown in left side bar menu for this window. This is for instancing windows to add to button region
-	 * USE tmpUIBtnObjMap.size() for start idx
-	 * @param tmpUIBtnObjMap : map of GUIObj_Params to be built containing all button definitions, keyed by sequential value == objId
+	 * USE tmpUIBoolSwitchObjMap.size() for start idx
+	 * @param tmpUIBoolSwitchObjMap : map of GUIObj_Params to be built containing all flag-backed boolean switch definitions, keyed by sequential value == objId
 	 * 				the first element is the object index
 	 * 				the second element is true label
 	 * 				the third element is false label
 	 * 				the final element is integer flag idx 
 	 */
-	protected abstract void setupGUIBtnAras_Indiv(TreeMap<String, GUIObj_Params> tmpUIBtnObjMap);	
+	protected abstract void setupGUIBoolSwitchAras_Indiv(TreeMap<String, GUIObj_Params> tmpUIBoolSwitchObjMap);	
 	
 	/**
 	 * Return an array holding [min, max, mod] for particle count. This is simulation dependent due
