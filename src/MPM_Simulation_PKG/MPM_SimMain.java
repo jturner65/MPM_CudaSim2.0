@@ -200,9 +200,15 @@ public class MPM_SimMain extends GUI_AppManager {
                     ri.getClr(IRenderInterface.gui_Black, 200),ri.getClr(IRenderInterface.gui_White, 255)});
         
         setDispWindow(wIdx, new MPM_CPUSimWindow(ri, this, wIdx));
-            
-        
-    }//initVisOnce_Priv
+    }//initAllDispWindows
+    
+    /**
+     * Map indexed by window ID, holding an array of the titles (idx 0) and descriptions (idx 1) for every sub window
+     * return null if none exist, and only put an entry in the map if one exists for that window
+     * @return
+     */
+    @Override
+    protected final HashMap<Integer, String[]> getSubWindowTitles(){ return null;}
     
     @Override
     protected void initOnce_Indiv() {

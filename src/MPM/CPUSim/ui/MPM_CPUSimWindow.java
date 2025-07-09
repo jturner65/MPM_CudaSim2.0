@@ -46,6 +46,7 @@ public class MPM_CPUSimWindow extends Base_MPMSimWindow {
         //Show sphere collider
         uiMgr.setPrivFlag(showCollider, true);
     }
+   
     /**
      * Retrieve the total number of defined privFlags booleans (application-specific state bools and interactive buttons)
      */
