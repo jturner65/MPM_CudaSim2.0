@@ -8,7 +8,7 @@ import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_Utils_Objects.io.messaging.MessageObject;
 
@@ -21,7 +21,7 @@ public abstract class Base_MPMSim {
     /**
      * Render interface to render results
      */
-    public static IRenderInterface ri;
+    public static IGraphicsAppInterface ri;
     /**
      * Owning window
      */
@@ -143,7 +143,7 @@ public abstract class Base_MPMSim {
      * @param _gravity
      * @param _currUIVals
      */
-    public Base_MPMSim(IRenderInterface _pa, Base_MPMSimWindow _win, String _simName, float[] _gravity, MPM_SimUpdateFromUIData _currUIVals) {
+    public Base_MPMSim(IGraphicsAppInterface _pa, Base_MPMSimWindow _win, String _simName, float[] _gravity, MPM_SimUpdateFromUIData _currUIVals) {
         ri=_pa;win=_win;simName = _simName;    
         msgObj = win.getMsgObj();
         currUIVals = new MPM_SimUpdateFromUIData(win);

@@ -8,7 +8,7 @@ import MPM.CPUSim.sim.base.MPM_CPUSimFlags;
 import MPM.CPUSim.sim.particles.MPM_CPURndrdPart;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 
 /**
  * @author John Turner
@@ -33,7 +33,7 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
      * @param _gravity
      * @param _currUIVals
      */
-    public MPM_CPUSnowBall(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
+    public MPM_CPUSnowBall(IGraphicsAppInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
         super(_pa, _win, "Snowball Fall", _currUIVals);
         colLocation = new myVectorf();
     }

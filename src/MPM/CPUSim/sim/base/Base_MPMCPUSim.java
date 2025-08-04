@@ -15,7 +15,7 @@ import MPM.CPUSim.sim.threads.MPM_CPUGridBuilder;
 import MPM.CPUSim.sim.threads.MPM_CPUPartBuilder;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 
 /**
  * Base class for CPU-based multi-threaded MPM solver/sim
@@ -64,7 +64,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
      * @param _currUIVals
      */
     @SuppressWarnings("unchecked")
-    public Base_MPMCPUSim(IRenderInterface _pa, Base_MPMSimWindow _win, String _simName, MPM_SimUpdateFromUIData _currUIVals) {
+    public Base_MPMCPUSim(IGraphicsAppInterface _pa, Base_MPMSimWindow _win, String _simName, MPM_SimUpdateFromUIData _currUIVals) {
         super(_pa, _win, _simName, new float[] {0, 0, -9.8f}, _currUIVals);
         
         th_exec = Executors.newCachedThreadPool();    

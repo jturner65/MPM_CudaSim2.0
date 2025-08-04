@@ -9,7 +9,7 @@ import MPM.BaseSim.sim.Base_MPMSim;
 import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM.CudaSim.sim.MPM_CudaSnowBalls;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.windowUI.uiObjs.base.GUIObj_Params;
 
@@ -29,9 +29,9 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
      * @param _winIdx
      * @param _flagIdx
      */
-    public MPM_CudaSimWindow(IRenderInterface _p, GUI_AppManager _AppMgr, int _winIdx) {
+    public MPM_CudaSimWindow(IGraphicsAppInterface _p, GUI_AppManager _AppMgr, int _winIdx) {
         super(_p, _AppMgr, _winIdx);
-        super.initThisWin(false);
+        
     }
     
     @Override

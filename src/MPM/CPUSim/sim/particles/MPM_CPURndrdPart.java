@@ -2,7 +2,7 @@ package MPM.CPUSim.sim.particles;
 
 import MPM.CPUSim.sim.particles.base.Base_MPMCPUParticle;
 import base_Math_Objects.vectorObjs.floats.myPointf;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 
 public class MPM_CPURndrdPart extends Base_MPMCPUParticle{
     public int[] color;
@@ -14,7 +14,7 @@ public class MPM_CPURndrdPart extends Base_MPMCPUParticle{
         color = new int[] {255,255,255,255};
     }
     
-    public void drawMe(IRenderInterface ri, float partRad) {
+    public void drawMe(IGraphicsAppInterface ri, float partRad) {
         ri.pushMatState();
         ri.translate(pos);
         ri.drawSphere(partRad);
@@ -22,7 +22,7 @@ public class MPM_CPURndrdPart extends Base_MPMCPUParticle{
 
     }//drawMe
     
-    public void drawMeVel(IRenderInterface ri, float partRad) {
+    public void drawMeVel(IGraphicsAppInterface ri, float partRad) {
         ri.pushMatState();
         ri.translate(pos);
         ri.drawSphere(partRad);

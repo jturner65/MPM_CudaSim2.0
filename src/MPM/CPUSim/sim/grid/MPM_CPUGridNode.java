@@ -2,7 +2,7 @@ package MPM.CPUSim.sim.grid;
 
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 
 //class holding a single node of the grid structure encapsulating the material.  this is projected to with each particle's quantities
 public class MPM_CPUGridNode {
@@ -69,7 +69,7 @@ public class MPM_CPUGridNode {
         newvelocity = myVectorf._add(velocity, toAddV);        
     }//calcVel
         
-    public void drawMe(IRenderInterface ri) {
+    public void drawMe(IGraphicsAppInterface ri) {
         ri.pushMatState();
         ri.translate(pos);
         ri.setStrokeWt(1.0f);
@@ -78,7 +78,7 @@ public class MPM_CPUGridNode {
         
     }//drawMe
     
-    public void drawVel(IRenderInterface ri) {
+    public void drawVel(IGraphicsAppInterface ri) {
         if(velocity.magn>0) {
             ri.pushMatState();
             ri.translate(pos);
@@ -88,7 +88,7 @@ public class MPM_CPUGridNode {
         }
     }
 
-    public void drawAccel(IRenderInterface ri) {
+    public void drawAccel(IGraphicsAppInterface ri) {
         if(accels.magn>0) {
             ri.pushMatState();
             ri.translate(pos);
@@ -98,7 +98,7 @@ public class MPM_CPUGridNode {
         }
     }
     
-    public void drawMass(IRenderInterface ri) {
+    public void drawMass(IGraphicsAppInterface ri) {
         if(mass>0) {
             ri.pushMatState();
             ri.translate(pos);

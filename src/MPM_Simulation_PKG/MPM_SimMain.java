@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 import MPM.CPUSim.ui.MPM_CPUSimWindow;
 import MPM.CudaSim.ui.MPM_CudaSimWindow;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 import base_UI_Objects.GUI_AppManager;
 import base_Utils_Objects.io.messaging.MsgCodes;
 
@@ -177,27 +177,27 @@ public class MPM_SimMain extends GUI_AppManager {
         int wIdx = dispMPMCudaWinIDX;
         //setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255});         
         setInitDispWinVals(wIdx, _winTitles[wIdx], _winDescr[wIdx], getDfltBoolAra(true), _floatDims,        
-                new int[][] {ri.getClr(IRenderInterface.gui_White, 255),ri.getClr(IRenderInterface.gui_White, 255),
-                    ri.getClr(IRenderInterface.gui_LightGray, 255),ri.getClr(IRenderInterface.gui_FaintGray, 255),
-                    ri.getClr(IRenderInterface.gui_Black, 200),ri.getClr(IRenderInterface.gui_White, 255)});
+                new int[][] {ri.getClr(IGraphicsAppInterface.gui_White, 255),ri.getClr(IGraphicsAppInterface.gui_White, 255),
+                    ri.getClr(IGraphicsAppInterface.gui_LightGray, 255),ri.getClr(IGraphicsAppInterface.gui_FaintGray, 255),
+                    ri.getClr(IGraphicsAppInterface.gui_Black, 200),ri.getClr(IGraphicsAppInterface.gui_White, 255)});
 
         setDispWindow(wIdx, new MPM_CudaSimWindow(ri, this, wIdx));
         
         wIdx = dispMPMCudaWin2IDX;
         //setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255});         
         setInitDispWinVals(wIdx, _winTitles[wIdx], _winDescr[wIdx], getDfltBoolAra(true), _floatDims,        
-                new int[][] {ri.getClr(IRenderInterface.gui_White, 255),ri.getClr(IRenderInterface.gui_Black, 255),
-                    ri.getClr(IRenderInterface.gui_LightGray, 255),ri.getClr(IRenderInterface.gui_FaintGray, 255),
-                    ri.getClr(IRenderInterface.gui_Black, 200),ri.getClr(IRenderInterface.gui_White, 255)});
+                new int[][] {ri.getClr(IGraphicsAppInterface.gui_White, 255),ri.getClr(IGraphicsAppInterface.gui_Black, 255),
+                    ri.getClr(IGraphicsAppInterface.gui_LightGray, 255),ri.getClr(IGraphicsAppInterface.gui_FaintGray, 255),
+                    ri.getClr(IGraphicsAppInterface.gui_Black, 200),ri.getClr(IGraphicsAppInterface.gui_White, 255)});
 
         setDispWindow(wIdx, new MPM_CudaSimWindow(ri, this, wIdx));    
         
         wIdx = dispMPMCPUWinIDX;
         //setInitDispWinVals(wIdx, _dimOpen, _dimClosed,new boolean[]{false,true,true,true}, new int[]{255,245,255,255},new int[]{0,0,0,255},new int[]{180,180,180,255},new int[]{100,100,100,255});         
         setInitDispWinVals(wIdx, _winTitles[wIdx], _winDescr[wIdx], getDfltBoolAra(true), _floatDims,        
-                new int[][] {ri.getClr(IRenderInterface.gui_White, 255),ri.getClr(IRenderInterface.gui_White, 255),
-                    ri.getClr(IRenderInterface.gui_LightGray, 255),ri.getClr(IRenderInterface.gui_FaintGray, 255),
-                    ri.getClr(IRenderInterface.gui_Black, 200),ri.getClr(IRenderInterface.gui_White, 255)});
+                new int[][] {ri.getClr(IGraphicsAppInterface.gui_White, 255),ri.getClr(IGraphicsAppInterface.gui_White, 255),
+                    ri.getClr(IGraphicsAppInterface.gui_LightGray, 255),ri.getClr(IGraphicsAppInterface.gui_FaintGray, 255),
+                    ri.getClr(IGraphicsAppInterface.gui_Black, 200),ri.getClr(IGraphicsAppInterface.gui_White, 255)});
         
         setDispWindow(wIdx, new MPM_CPUSimWindow(ri, this, wIdx));
     }//initAllDispWindows

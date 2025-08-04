@@ -11,7 +11,7 @@ import MPM.CudaSim.sim.base.MPM_CudaSimFlags;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
 import base_Math_Objects.vectorObjs.floats.myVectorf;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 
 /**
  * Instance of sim world with big snow boulders slamming into each other 
@@ -44,7 +44,7 @@ public class MPM_CudaSnowBalls extends Base_MPMCudaSim {
      */
     private int[][] idxsForSpheres;
     
-    public MPM_CudaSnowBalls(IRenderInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
+    public MPM_CudaSnowBalls(IGraphicsAppInterface _pa, Base_MPMSimWindow _win, MPM_SimUpdateFromUIData _currUIVals) {
         super(_pa,_win,"Snowball Slam!", _currUIVals);
     }    
     

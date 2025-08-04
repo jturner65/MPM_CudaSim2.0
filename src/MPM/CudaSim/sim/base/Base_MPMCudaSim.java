@@ -26,7 +26,7 @@ import MPM.BaseSim.ui.Base_MPMSimWindow;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import base_Math_Objects.MyMathUtils;
 import base_Math_Objects.vectorObjs.floats.myPointf;
-import base_Render_Interface.IRenderInterface;
+import base_Render_Interface.IGraphicsAppInterface;
 import jcuda.Pointer;
 import jcuda.Sizeof;
 import jcuda.driver.CUcontext;
@@ -163,7 +163,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
      * @param _simName
      * @param _currUIVals
      */
-    public Base_MPMCudaSim(IRenderInterface _pa, Base_MPMSimWindow _win, String _simName, MPM_SimUpdateFromUIData _currUIVals) {
+    public Base_MPMCudaSim(IGraphicsAppInterface _pa, Base_MPMSimWindow _win, String _simName, MPM_SimUpdateFromUIData _currUIVals) {
         super(_pa, _win, _simName, new float[] {0, 0, -9.8f}, _currUIVals);
         //redundant, but placed to specify that cuda kernel needs to be loaded
         ((MPM_CudaSimFlags) simFlags).setCudaDevInit(false);
