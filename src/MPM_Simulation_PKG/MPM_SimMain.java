@@ -116,21 +116,23 @@ public class MPM_SimMain extends GUI_AppManager {
      */
     @Override
     protected final MsgCodes getMinLogMsgCodes() {return MsgCodes.info1;}
-
     
     @Override
-    protected void initBaseFlags_Indiv() {
-        setBaseFlagToShow_debugMode(true);
-        setBaseFlagToShow_saveAnim(true); 
-        setBaseFlagToShow_runSim(true);
-        setBaseFlagToShow_singleStep(true);
-        setBaseFlagToShow_showRtSideMenu(true);    
-        setBaseFlagToShow_showStatusBar(true);
-        setBaseFlagToShow_showDrawableCanvas(false);
-    }
+    protected boolean hideAppFlag_DebugMode() {             return false;}
+    @Override
+    protected boolean hideAppFlag_SaveAnim() {              return false;}
+    @Override
+    protected boolean hideAppFlag_RunSim() {                return false;}
+    @Override
+    protected boolean hideAppFlag_SingleStep() {            return false;}
+    @Override
+    protected boolean hideAppFlag_showRtSideInfoDisp() {    return false;}
+    @Override
+    protected boolean hideAppFlag_showStatusBar() {         return false;}
+    @Override
+    protected boolean hideAppFlag_showCanvas() {            return true;}
     @Override
     protected void initAllDispWindows() {
-        showInfo = true;
         //titles and descs, need to be set before sidebar menu is defined
         String[] _winTitles = new String[]{"","Snow Balls!","Snow Balls In The Alps!","CPU Snow Ball"},
                 _winDescr = new String[]{"", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Colliding Snowballs Simulated via MPM CUDA Solver", "Display Falling Snowball Simulated via CPU/MT Solver"};
@@ -213,8 +215,7 @@ public class MPM_SimMain extends GUI_AppManager {
     @Override
     protected void initOnce_Indiv() {
         //which objects to initially show
-        setWinVisFlag(dispMPMCudaWinIDX, true);    
-        setShowStatusBar(true);    
+        setWinVisFlag(dispMPMCudaWinIDX, true);
     }
     
     @Override
@@ -265,7 +266,7 @@ public class MPM_SimMain extends GUI_AppManager {
      * @param is3DDraw
      */
     @Override
-    protected void drawMePost_Indiv(float modAmtMillis, boolean is3DDraw) {}
+    protected void drawMePost_Indiv(float modAmtMillis, boolean is3DDraw, boolean isGlblAppDebug) {}
 
     //////////////////////////////////////////
     /// graphics and base functionality utilities and variables

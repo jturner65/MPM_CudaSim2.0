@@ -11,6 +11,7 @@ import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import MPM.CudaSim.sim.MPM_CudaSnowBalls;
 import base_Render_Interface.IGraphicsAppInterface;
 import base_UI_Objects.GUI_AppManager;
+import base_UI_Objects.baseApp.GUI_AppUIFlags;
 import base_UI_Objects.windowUI.uiObjs.base.GUIObj_Params;
 
 /**
@@ -44,8 +45,13 @@ public class MPM_CudaSimWindow extends Base_MPMSimWindow {
 
     @Override
     protected double getInitNumParts() {return 1.0*initNumParts;}
+    /**
+     * Initialize any UI control flags appropriate for specific instanced CUDA Simulation window
+     * @param appUIFlags Snapshot of the initial flags structure for the application. 
+     * Will not reflect future changes, so should not be retained
+     */
     @Override
-    protected void initDispFlags_Indiv() {}
+    protected void initDispFlags_Indiv(GUI_AppUIFlags appUIFlags) {}
     @Override
     protected final void initMe_Indiv() {
         //properly initialize gui objs

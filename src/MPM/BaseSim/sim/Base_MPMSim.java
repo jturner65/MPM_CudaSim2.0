@@ -168,7 +168,7 @@ public abstract class Base_MPMSim {
             return;
         }
         //stop simulation and reset
-        Base_DispWindow.AppMgr.setSimIsRunning(false);
+        Base_DispWindow.AppMgr.stopSim();
         simFlags.setSimIsBuilt(false);    
         //if only simulation/kernel parameters, don't rebuild simulation environment
         if (rebuildSim != SimResetProcess.RemakeKernel) {
@@ -477,7 +477,7 @@ public abstract class Base_MPMSim {
      * draw 1 frame of results    //animTimeMod is in seconds, counting # of seconds since last draw
      * @param animTimeMod
      */
-    public final void drawMe(float animTimeMod) {
+    public final void drawMe(float animTimeMod, boolean isGlblAppDebug) {
         if(!simFlags.getSimIsBuilt()) {return;}//if not built yet, don't try to draw anything
         //render all particles - TODO determine better rendering method
         //minimum magnitude to use for rendering cutoff
@@ -488,17 +488,17 @@ public abstract class Base_MPMSim {
             ri.scale(sclAmt[0], sclAmt[1], sclAmt[2]);    
             
             //point-based rendering
-            if(simFlags.getShowParticles()){    _drawParts(animTimeMod, simFlags.getShowLocColors());}            
-            if(simFlags.getShowPartVels()){        _drawPartVel(animTimeMod, minMag, drawPointIncr);}
+            if(simFlags.getShowParticles()){    _drawParts(animTimeMod, simFlags.getShowLocColors(), isGlblAppDebug);}            
+            if(simFlags.getShowPartVels()){        _drawPartVel(animTimeMod, minMag, drawPointIncr, isGlblAppDebug);}
             
             //draw colliders, if exist
-            if(simFlags.getShowCollider()){        _drawColliders(animTimeMod);}
+            if(simFlags.getShowCollider()){        _drawColliders(animTimeMod, isGlblAppDebug);}
             
             //Grid-based rendering
-            if(simFlags.getShowGrid()) {        _drawGrid();}
-            if(simFlags.getShowGridVel()) {        _drawGridVel(animTimeMod, minMag);}
-            if(simFlags.getShowGridAccel()){    _drawGridAccel(animTimeMod, minMag);}
-            if(simFlags.getShowGridMass()) {    _drawGridMass(animTimeMod, minMag);}
+            if(simFlags.getShowGrid()) {        _drawGrid(isGlblAppDebug);}
+            if(simFlags.getShowGridVel()) {        _drawGridVel(animTimeMod, minMag, isGlblAppDebug);}
+            if(simFlags.getShowGridAccel()){    _drawGridAccel(animTimeMod, minMag, isGlblAppDebug);}
+            if(simFlags.getShowGridMass()) {    _drawGridMass(animTimeMod, minMag, isGlblAppDebug);}
         ri.popMatState();
     }//drawMe
     
@@ -507,7 +507,7 @@ public abstract class Base_MPMSim {
      * @param animTimeMod
      * @param showLocColors
      */
-    protected abstract void _drawParts(float animTimeMod, boolean showLocColors);
+    protected abstract void _drawParts(float animTimeMod, boolean showLocColors, boolean isGlblAppDebug);
     
     /**
      * Draw instance class particle velocities
@@ -515,34 +515,34 @@ public abstract class Base_MPMSim {
      * @param minMag minimum magnitude per axis to draw vector
      * @param pincr
      */
-    protected abstract void _drawPartVel(float animTimeMod, float minMag, int pincr);
+    protected abstract void _drawPartVel(float animTimeMod, float minMag, int pincr, boolean isGlblAppDebug);
     
     /**
      * draw internal-to-sim colliders, if they exist
      * @param animTimeMod
      */
-    protected abstract void _drawColliders(float animTimeMod);
+    protected abstract void _drawColliders(float animTimeMod, boolean isGlblAppDebug);
     
     /**
      * Draw instance class grid velocities - use _drawGridVec method
      * @param animTimeMod
      * @param minMag minimum magnitude per axis to draw vector
      */
-    protected abstract void _drawGridVel(float animTimeMod, float minMag);
+    protected abstract void _drawGridVel(float animTimeMod, float minMag, boolean isGlblAppDebug);
 
     /**
      * Draw instance class grid accelerations - use _drawGridVec method
      * @param animTimeMod
      * @param minMag minimum magnitude per axis to draw vector
      */
-    protected abstract void _drawGridAccel(float animTimeMod, float minMag);
+    protected abstract void _drawGridAccel(float animTimeMod, float minMag, boolean isGlblAppDebug);
     
     /**
      * Draw instance class grid masses - use _drawGridScalar method
      * @param animTimeMod
      * @param minMag minimum magnitude to draw scalar mass
      */
-    protected abstract void _drawGridMass(float animTimeMod, float minMag);    
+    protected abstract void _drawGridMass(float animTimeMod, float minMag, boolean isGlblAppDebug);    
     
     /**
      * Build a graphical representation of the computational grid, for rendering.
@@ -585,7 +585,7 @@ public abstract class Base_MPMSim {
     /**
      * Draw a representation of the eulerian grid
      */
-    protected final void _drawGrid() {
+    protected final void _drawGrid(boolean isGlblAppDebug) {
         ri.pushMatState();        
             ri.setStroke(255,255,255,20);
             ri.translate(minSimBnds,minSimBnds,minSimBnds);
@@ -608,7 +608,7 @@ public abstract class Base_MPMSim {
      * @param grid_pos 2d array of grid positions w/ first idx is x/y/z and 2nd is quantity
      * @param minMag minimum magnitude in any direction to display vector
      */
-    protected final void _drawGridVec(int[] clr, float[][] val, float[][] grid_pos, float minMag) {
+    protected final void _drawGridVec(int[] clr, float[][] val, float[][] grid_pos, float minMag, boolean isGlblAppDebug) {
         ri.pushMatState();    
         ri.setStroke(clr,180);
         ri.translate(minSimBnds,minSimBnds,minSimBnds);
@@ -631,7 +631,7 @@ public abstract class Base_MPMSim {
      * @param grid_pos 2d array of grid positions w/ first idx is x/y/z and 2nd is quantity
      * @param minMag minimum magnitude in any direction to display scalar quanatity
      */
-    protected final void _drawGridScalar(int[] clr, float[] xVal, float[][] grid_pos, float minMag) {
+    protected final void _drawGridScalar(int[] clr, float[] xVal, float[][] grid_pos, float minMag, boolean isGlblAppDebug) {
         ri.pushMatState();    
         ri.setSphereDetail(3);
         ri.setStroke(clr,111);

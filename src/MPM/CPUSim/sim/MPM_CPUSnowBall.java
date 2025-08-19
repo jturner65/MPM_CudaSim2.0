@@ -57,7 +57,7 @@ public class MPM_CPUSnowBall extends Base_MPMCPUSim {
     
     
     @Override
-    protected void drawColliders_Indiv(float animTimeMod) {
+    protected void drawColliders_Indiv(float animTimeMod, boolean isGlblAppDebug) {
         ri.pushMatState();    
         ri.setSphereDetail(20);
         ri.translate(colLocation);

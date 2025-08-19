@@ -175,7 +175,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
     @Override
     protected final boolean simMePost_Indiv(float modAmtMillis) {    return false;    }
     @Override
-    protected final void _drawParts(float animTimeMod, boolean showLocColors) {
+    protected final void _drawParts(float animTimeMod, boolean showLocColors, boolean isGlblAppDebug) {
         
         
         
@@ -187,7 +187,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
      * @param pincr
      */
     @Override
-    protected final void _drawPartVel(float animTimeMod, float vecScale, int pincr) {
+    protected final void _drawPartVel(float animTimeMod, float vecScale, int pincr, boolean isGlblAppDebug) {
         
         
     }
@@ -196,16 +196,16 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
      * @param animTimeMod
      */
     @Override
-    protected final void _drawColliders(float animTimeMod) {
+    protected final void _drawColliders(float animTimeMod, boolean isGlblAppDebug) {
         ri.pushMatState();    
-        drawColliders_Indiv(animTimeMod);
+        drawColliders_Indiv(animTimeMod, isGlblAppDebug);
         ri.popMatState();
     }
     /**
      * draw internal-to-sim colliders, if they exist
      * @param animTimeMod
      */
-    protected abstract void drawColliders_Indiv(float animTimeMod);
+    protected abstract void drawColliders_Indiv(float animTimeMod, boolean isGlblAppDebug);
 
     /**
      * Draw instance class grid velocities - use _drawGridVec method
@@ -213,7 +213,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
      * @param minMag minimum magnitude per axis to draw vector
      */
     @Override
-    protected final void _drawGridVel(float animTimeMod, float minMag) {}
+    protected final void _drawGridVel(float animTimeMod, float minMag, boolean isGlblAppDebug) {}
 
     /**
      * Draw instance class grid accelerations - use _drawGridVec method
@@ -221,7 +221,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
      * @param minMag minimum magnitude per axis to draw vector
      */
     @Override
-    protected final void _drawGridAccel(float animTimeMod, float minMag) {}
+    protected final void _drawGridAccel(float animTimeMod, float minMag, boolean isGlblAppDebug) {}
 
     /**
      * Draw instance class grid masses - use _drawGridScalar method
@@ -229,7 +229,7 @@ public abstract class Base_MPMCPUSim extends Base_MPMSim {
      * @param minMag minimum magnitude to draw scalar mass
      */
     @Override
-    protected final void _drawGridMass(float animTimeMod, float minMag) {}
+    protected final void _drawGridMass(float animTimeMod, float minMag, boolean isGlblAppDebug) {}
 
     /**
      * check sim-specific central floating collider - 

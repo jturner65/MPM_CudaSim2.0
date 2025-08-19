@@ -11,6 +11,7 @@ import base_Math_Objects.vectorObjs.doubles.myPoint;
 import base_Math_Objects.vectorObjs.doubles.myVector;
 import base_Render_Interface.IGraphicsAppInterface;
 import base_UI_Objects.GUI_AppManager;
+import base_UI_Objects.baseApp.GUI_AppUIFlags;
 import base_UI_Objects.windowUI.base.Base_DispWindow;
 import base_UI_Objects.windowUI.base.GUI_AppWinVals;
 import base_UI_Objects.windowUI.drawnTrajectories.DrawnSimpleTraj;
@@ -110,23 +111,27 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
     }//Base_MPMSimWindow
 
     /**
-     * Initialize any UI control flags appropriate for all boids window application
+     * Initialize any UI control flags appropriate for window application
+     * @param appUIFlags Snapshot of the initial flags structure for the application. 
+     * Will not reflect future changes, so should not be retained
      */
     @Override
-    protected final void initDispFlags() {
+    protected final void initDispFlags(GUI_AppUIFlags appUIFlags) {
         //this window is runnable
         dispFlags.setIsRunnable(true);
         //this window uses a customizable camera
         dispFlags.setUseCustCam(true);
         // capable of using right side menu
-        dispFlags.setHasRtSideMenu(true);
+        dispFlags.setHasRtSideInfoDisp(true);
         //any app-specific disp flags to set
-        initDispFlags_Indiv();
+        initDispFlags_Indiv(appUIFlags);
     }
     /**
-     * Initialize any UI control flags appropriate for specific instanced boids window
+     * Initialize any UI control flags appropriate for specific instanced MPM window
+     * @param appUIFlags Snapshot of the initial flags structure for the application. 
+     * Will not reflect future changes, so should not be retained
      */
-    protected abstract void initDispFlags_Indiv();
+    protected abstract void initDispFlags_Indiv(GUI_AppUIFlags appUIFlags);
     
     @Override
     protected void initMe() {//all ui objects set by here
@@ -134,9 +139,6 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
         msgObj.dispInfoMessage(className,"initMe","Start building simulation now.");
         //build sim(s) here
         currSim = buildSim();        
-        //initialize simulation here to simple world sim
-        uiMgr.setPrivFlag(showParticles, true);
-        uiMgr.setPrivFlag(showLocColors, true);
         //instance-class-specific init
         initMe_Indiv();
     }//initMe    
@@ -165,8 +167,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
     
     @Override
     protected int[] getFlagIDXsToInitToTrue() {
-        //Does not pass value to button handler, just sets value in flag array to true
-        return null;// new int[] {showLocColors, showParticles};
+        return new int[] {showLocColors, showParticles};
     }
 
     //call this to initialize or reinitialize simulation (on reset)
@@ -473,13 +474,13 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
     
     @Override
     //animTimeMod is in seconds.
-    protected void drawMe(float animTimeMod) {
-        currSim.drawMe(animTimeMod);
+    protected void drawMe(float animTimeMod, boolean isGlblAppDebug) {
+        currSim.drawMe(animTimeMod, isGlblAppDebug);
     }//drawMe    
         
     //draw custom 2d constructs below interactive component of menu
     @Override
-    public void drawCustMenuObjs(float animTimeMod){    }//drawCustMenuObjs
+    public void drawCustMenuObjs(float animTimeMod, boolean isGlblAppDebug){    }//drawCustMenuObjs
 
     //things to do when swapping this window out for another window - release objects that take up a lot of memory, for example.
     @Override
@@ -533,7 +534,7 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
                 switch (btn) {
                     case 0: {
                         //Reset all UI vals to be initial values
-                        uiMgr.resetUIVals(false);
+                        uiMgr.resetUIVals(true);
                         resetButtonState();
                         break;
                     }
@@ -687,9 +688,9 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
     @Override
     public ArrayList<String> hndlFileSave(File file) {        return null;    }
     @Override
-    protected void drawOnScreenStuffPriv(float modAmtMillis) {    }
+    protected void drawOnScreenStuffPriv(float modAmtMillis, boolean isGlblAppDebug) {    }
     @Override
-    protected void drawRightSideInfoBarPriv(float modAmtMillis) {    }
+    protected void drawRightSideInfoBarPriv(float modAmtMillis, boolean isGlblAppDebug) {    }
     @Override
     public void processTraj_Indiv(DrawnSimpleTraj drawnTraj) {    }
 

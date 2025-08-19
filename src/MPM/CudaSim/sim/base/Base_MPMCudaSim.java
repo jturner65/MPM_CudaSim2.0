@@ -802,7 +802,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
      * @param showLocColors
      */
     @Override
-    protected final void _drawParts(float animTimeMod, boolean showLocColors) {
+    protected final void _drawParts(float animTimeMod, boolean showLocColors, boolean isGlblAppDebug) {
         ri.pushMatState();
         ri.drawPointCloudWithColors(hostPartPos[0].length, drawPointIncr, (showLocColors ?  hostPartClrAra : hostPartGreyAra), hostPartPos[0], hostPartPos[1], hostPartPos[2]);
         ri.popMatState();
@@ -815,7 +815,7 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
      * @param pincr
      */
     @Override
-    protected final void _drawPartVel(float animTimeMod, float vecScale, int pincr) {
+    protected final void _drawPartVel(float animTimeMod, float vecScale, int pincr, boolean isGlblAppDebug) {
         ri.pushMatState();        
         for(int i=0;i<=hostPartVel[0].length-pincr;i+=pincr) {                    
             if(        (Math.abs(hostPartVel[0][i]) > vecScale) || 
@@ -837,7 +837,9 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
      * @param minMag minimum magnitude per axis to draw vector
      */
     @Override
-    protected final void _drawGridVel(float animTimeMod, float minMag) {        _drawGridVec(gridVelClr, hostGridVel, hostGridPos, minMag);}
+    protected final void _drawGridVel(float animTimeMod, float minMag, boolean isGlblAppDebug) {        
+        _drawGridVec(gridVelClr, hostGridVel, hostGridPos, minMag, isGlblAppDebug);
+    }
 
     /**
      * Draw instance class grid accelerations - use _drawGridVec method
@@ -845,7 +847,9 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
      * @param minMag minimum magnitude per axis to draw vector
      */
     @Override
-    protected final void _drawGridAccel(float animTimeMod, float minMag) {    _drawGridVec(gridAccelClr, hostGridAccel, hostGridPos, minMag);}
+    protected final void _drawGridAccel(float animTimeMod, float minMag, boolean isGlblAppDebug) {    
+        _drawGridVec(gridAccelClr, hostGridAccel, hostGridPos, minMag, isGlblAppDebug);
+    }
     
     /**
      * Draw instance class grid masses - use _drawGridScalar method
@@ -853,14 +857,16 @@ public abstract class Base_MPMCudaSim extends Base_MPMSim{
      * @param minMag minimum magnitude to draw scalar mass
      */
     @Override
-    protected final void _drawGridMass(float animTimeMod, float minMag) {        _drawGridScalar(gridMassClr, hostGridMass, hostGridPos, minMag);}    
+    protected final void _drawGridMass(float animTimeMod, float minMag, boolean isGlblAppDebug) {        
+        _drawGridScalar(gridMassClr, hostGridMass, hostGridPos, minMag, isGlblAppDebug);
+    }    
     
     /**
      * Draw any colliders if they exist
      * @param animTimeMod
      */
     @Override
-    protected final void _drawColliders(float animTimeMod) {
+    protected final void _drawColliders(float animTimeMod, boolean isGlblAppDebug) {
         ri.pushMatState();    
         drawColliders_Indiv(animTimeMod);
         ri.popMatState();
