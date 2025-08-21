@@ -8,7 +8,6 @@ import MPM.BaseSim.sim.Base_MPMSim;
 import MPM.BaseSim.sim.SimResetProcess;
 import MPM.BaseSim.utils.MPM_SimUpdateFromUIData;
 import base_Math_Objects.vectorObjs.doubles.myPoint;
-import base_Math_Objects.vectorObjs.doubles.myVector;
 import base_Render_Interface.IGraphicsAppInterface;
 import base_UI_Objects.GUI_AppManager;
 import base_UI_Objects.baseApp.GUI_AppUIFlags;
@@ -490,11 +489,11 @@ public abstract class Base_MPMSimWindow extends Base_DispWindow {
     protected void stopMe() {    msgObj.dispInfoMessage(className,"stopMe","Simulation Finished");    }    
 
     @Override
-    protected boolean hndlMouseMove_Indiv(int mouseX, int mouseY, myPoint mseClckInWorld){                    return false;    }
+    protected boolean hndlMouseMove_Indiv(int mouseX, int mouseY){                    return false;    }
     @Override
-    protected boolean hndlMouseClick_Indiv(int mouseX, int mouseY, myPoint mseClckInWorld, int mseBtn) {    return false;}//hndlMouseClickIndiv
+    protected boolean hndlMouseClick_Indiv(int mouseX, int mouseY, int mseBtn) {    return false;}//hndlMouseClickIndiv
     @Override
-    protected boolean hndlMouseDrag_Indiv(int mouseX, int mouseY, int pmouseX, int pmouseY, myPoint mouseClickIn3D, myVector mseDragInWorld, int mseBtn) {return false;}    
+    protected boolean hndlMouseDrag_Indiv(int mouseX, int mouseY, int pmouseX, int pmouseY, int mseBtn) {return false;}    
     @Override
     protected boolean handleMouseWheel_Indiv(int ticks, float mult) {        return false;    }
     
